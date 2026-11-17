@@ -34,7 +34,7 @@ public struct EditorSession: Sendable {
     public static let replaceActionName = "Replace Image"
     public static let clearActionName = "Clear Content"
 
-    public private(set) var history: UndoStack<EditorDocument>
+    public internal(set) var history: UndoStack<EditorDocument>
 
     public init(document: EditorDocument = EditorDocument()) {
         history = UndoStack(document)

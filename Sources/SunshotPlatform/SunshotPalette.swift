@@ -5,8 +5,7 @@ public enum SunshotPalette {
     public static let primaryText = NSColor.labelColor
     /// System `secondaryLabelColor` is ~4:1 on white (below WCAG AA), so Sunshot uses its own greys.
     public static let secondaryText = NSColor(name: "SunshotSecondaryText") { appearance in
-        let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        return isDark
+        isDark(appearance)
             ? NSColor(srgbRed: 0.66, green: 0.66, blue: 0.68, alpha: 1)
             : NSColor(srgbRed: 0.40, green: 0.40, blue: 0.43, alpha: 1)
     }
@@ -16,6 +15,23 @@ public enum SunshotPalette {
     public static let dropZoneFill = NSColor.controlBackgroundColor
     public static let dropZoneStroke = NSColor.separatorColor
     public static let dropZoneHighlight = NSColor.controlAccentColor
+    /// Outlines of custom controls (light-source pad, crosshair). WCAG non-text contrast ≥ 3:1.
+    public static let controlStroke = NSColor(name: "SunshotControlStroke") { appearance in
+        isDark(appearance)
+            ? NSColor(srgbRed: 0.60, green: 0.60, blue: 0.63, alpha: 1)
+            : NSColor(srgbRed: 0.45, green: 0.45, blue: 0.49, alpha: 1)
+    }
+    /// Resting colour of the glass inspector panel, used as the contrast reference (glass adapts its own tint
+    /// to what is behind it; this is the typical settled value per appearance).
+    public static let inspectorSurface = NSColor(name: "SunshotInspectorSurface") { appearance in
+        isDark(appearance)
+            ? NSColor(srgbRed: 0.20, green: 0.20, blue: 0.22, alpha: 1)
+            : NSColor(srgbRed: 0.93, green: 0.93, blue: 0.95, alpha: 1)
+    }
+
+    private static func isDark(_ appearance: NSAppearance) -> Bool {
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+    }
 }
 
 public enum Contrast {

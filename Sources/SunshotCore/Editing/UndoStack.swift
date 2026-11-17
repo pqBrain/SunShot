@@ -4,6 +4,8 @@ public struct UndoStack<State: Sendable>: Sendable {
     private var undoEntries: [Entry] = []
     private var redoEntries: [Entry] = []
     private let limit: Int
+    /// State when a continuous gesture (e.g. a slider drag) began; the whole gesture becomes one undo entry.
+    private var gestureStart: State?
 
     private struct Entry: Sendable {
         let name: String
@@ -41,6 +43,30 @@ public struct UndoStack<State: Sendable>: Sendable {
         return true
     }
 
+    // MARK: Continuous gestures
+
+    public var isInGesture: Bool { gestureStart != nil }
+
+    /// Starts a gesture. Changes made with `updateGesture` are not recorded until `endGesture`.
+    public mutating func beginGesture() {
+        if gestureStart == nil { gestureStart = current }
+    }
+
+    /// Live change during a gesture (no undo entry). Outside a gesture this behaves like `apply`.
+    public mutating func updateGesture(_ name: String, _ change: (inout State) -> Void) {
+        guard gestureStart != nil else { return apply(name, change) }
+        change(&current)
+    }
+
+    /// Ends the gesture, recording a single entry named `name` from the gesture's start state.
+    public mutating func endGesture(_ name: String) {
+        guard let start = gestureStart else { return }
+        gestureStart = nil
+        undoEntries.append(Entry(name: name, state: start))
+        if undoEntries.count > limit { undoEntries.removeFirst(undoEntries.count - limit) }
+        redoEntries.removeAll()
+    }
+
     public var canUndo: Bool { !undoEntries.isEmpty }
     public var canRedo: Bool { !redoEntries.isEmpty }
     public var undoActionName: String? { undoEntries.last?.name }
@@ -48,4 +74,27 @@ public struct UndoStack<State: Sendable>: Sendable {
     public var undoCount: Int { undoEntries.count }
     /// Names from oldest to newest.
     public var undoNames: [String] { undoEntries.map(\.name) }
+}
+
+extension UndoStack where State: Equatable {
+    /// Like `apply`, but records nothing when the change leaves the state equal (e.g. resetting defaults).
+    /// Returns whether an entry was recorded.
+    @discardableResult
+    public mutating func applyIfChanged(_ name: String, _ change: (inout State) -> Void) -> Bool {
+        var next = current
+        change(&next)
+        guard next != current else { return false }
+        apply(name) { $0 = next }
+        return true
+    }
+
+    /// Ends a gesture; records nothing if the state ended where it started.
+    public mutating func endGestureIfChanged(_ name: String) {
+        guard let start = gestureStart else { return }
+        if start == current {
+            gestureStart = nil
+        } else {
+            endGesture(name)
+        }
+    }
 }

@@ -1,7 +1,7 @@
 public import AppKit
 public import Foundation
 public import Observation
-import SunshotCore
+public import SunshotCore
 public import SunshotRender
 
 public struct AlertContent: Identifiable, Equatable, Sendable {
@@ -30,6 +30,8 @@ public final class EditorModel {
     public private(set) var isImporting = false
     public private(set) var showsProgress = false
     public var alert: AlertContent?
+    /// Whether the style inspector panel is visible.
+    public var showsInspector = true
     public var notice: String?
     private var renderGeneration = 0
     private let progressDelay: Duration
@@ -121,6 +123,41 @@ public final class EditorModel {
         guard canRedo else { return }
         session.redo()
         await refreshPreview()
+    }
+
+    // MARK: Style (border, shadow)
+
+    public var project: Project { session.project }
+
+    /// Inspector controls are only enabled (and only show values) when there is content.
+    public var isInspectorEnabled: Bool { hasContent }
+
+    /// Applies an edit synchronously (so controls stay in step) and re-renders the preview in the background.
+    /// Await the returned task to wait for the new preview.
+    @discardableResult
+    public func perform(_ change: (inout EditorSession) -> Void) -> Task<Void, Never> {
+        change(&session)
+        return Task { await refreshPreview() }
+    }
+
+    /// Starts a continuous change (slider or handle drag); `endGesture` records it as a single undo step.
+    public func beginGesture() { session.beginGesture() }
+
+    public func endGesture(_ actionName: String) { session.endGesture(actionName) }
+
+    /// Typed corner radius. Returns false (value unchanged) for non-numeric text.
+    @discardableResult
+    public func setCornerRadius(text: String) -> Bool {
+        var accepted = false
+        perform { accepted = $0.setCornerRadius(text: text) }
+        return accepted
+    }
+
+    /// Moves the light handle by one keyboard step (`large` = ⇧).
+    public func nudgeLight(dx: Double, dy: Double, large: Bool) {
+        let step = large ? UnitOffset.largeKeyboardStep : UnitOffset.keyboardStep
+        let position = project.shadow.lightPosition.nudged(dx: dx * step, dy: dy * step)
+        perform { $0.setLightPosition(position) }
     }
 
     // MARK: Export

@@ -18,7 +18,7 @@ agents), and keep preview and export pixel-identical.
 4. **Value-type document** (`Project`): mutations produce new values → undo/redo and snapshot testing are trivial.
 5. **Swift Testing** for all tests; image snapshot testing implemented in-repo (pixel diff with tolerance).
 6. **Quality gate as a script** (`scripts/gate.sh`) shared by hooks and CI, with its own self-test.
-7. **Minimum macOS 15.**
+7. **Minimum macOS 26** (raised from 15 in S2 so the UI can use Liquid Glass natively; see DECISIONS.md).
 
 ## Consequences
 - UI-level automation (XCUITest) is not available with a pure SwiftPM app; mitigated by keeping logic out of

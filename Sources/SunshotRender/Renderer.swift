@@ -32,7 +32,7 @@ public enum Renderer {
         context.interpolationQuality = .high
 
         drawBackdrop(project.backdrop, size: layout.canvasSize, in: context)
-        drawContent(content, in: layout.contentRect, context: context)
+        drawContent(content, in: layout.contentRect, project: project, scale: safeScale, context: context)
 
         guard let image = context.makeImage() else { throw RenderError.imageCreationFailed }
         return image
@@ -62,13 +62,33 @@ public enum Renderer {
         }
     }
 
-    private static func drawContent(_ image: CGImage, in rect: LayoutRect, context: CGContext) {
+    /// Draws the content clipped to its corner shape, with a shadow derived from the clipped content's alpha
+    /// (so transparent cut-outs cast no shadow).
+    private static func drawContent(
+        _ image: CGImage, in rect: LayoutRect, project: Project, scale: Double, context: CGContext
+    ) {
         let target = CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
-        // Images draw bottom-up; undo the flip locally so content is not mirrored.
+        guard target.width > 0, target.height > 0 else { return }
+        let shape = ContentShape.path(for: project.border, in: target)
+        let metrics = ShadowMetrics.of(project.shadow).scaled(by: scale)
+
         context.saveGState()
+        if metrics.opacity > 0 {
+            // Shadow offsets are in device space (y up), unaffected by our flipped CTM: negate y to fall down.
+            context.setShadow(
+                offset: CGSize(width: metrics.offsetX, height: -metrics.offsetY), blur: metrics.blur,
+                color: CGColor(gray: 0, alpha: metrics.opacity))
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+        }
+        context.saveGState()
+        context.addPath(shape)
+        context.clip()
+        // Images draw bottom-up; undo the flip locally so content is not mirrored.
         context.translateBy(x: 0, y: target.minY + target.maxY)
         context.scaleBy(x: 1, y: -1)
         context.draw(image, in: target)
+        context.restoreGState()
+        if metrics.opacity > 0 { context.endTransparencyLayer() }
         context.restoreGState()
     }
 }

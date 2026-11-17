@@ -48,7 +48,7 @@ struct PaletteTests {
 }
 
 extension NSAppearance {
-    fileprivate func performAsCurrentDrawingAppearanceThrowing(_ body: () throws -> Void) throws {
+    func performAsCurrentDrawingAppearanceThrowing(_ body: () throws -> Void) throws {
         var thrown: (any Error)?
         performAsCurrentDrawingAppearance {
             do { try body() } catch { thrown = error }

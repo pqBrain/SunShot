@@ -9,8 +9,10 @@ struct SunshotApplication: App {
     var body: some Scene {
         Window("Sunshot", id: "main") {
             EditorView(model: model)
-                .frame(minWidth: 720, minHeight: 480)
+                .frame(minWidth: 820, minHeight: 540)
         }
+        .windowBackgroundDragBehavior(.enabled)
+        .defaultSize(width: 1180, height: 760)
         .commands { SunshotCommands(model: model) }
     }
 }
@@ -28,6 +30,10 @@ struct SunshotCommands: Commands {
             Button(UIStrings.exportPNG) { Task { await Panels.exportPNG(from: model) } }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
                 .disabled(!model.hasContent)
+        }
+        CommandGroup(after: .sidebar) {
+            Button(model.showsInspector ? "Hide Inspector" : "Show Inspector") { model.showsInspector.toggle() }
+                .keyboardShortcut("e", modifiers: [.command, .option])
         }
         CommandGroup(replacing: .undoRedo) {
             Button(model.undoTitle) { Task { await model.undo() } }

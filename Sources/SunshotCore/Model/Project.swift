@@ -19,14 +19,32 @@ public struct Project: Codable, Hashable, Sendable {
     public var backdrop: Backdrop
     /// Padding around the content on every side, in canvas pixels (0...`SunshotDefaults.maxPadding`).
     public var padding: Double
+    public var border: Border
+    public var shadow: Shadow
 
     public init(
         canvas: CanvasSpec = .auto,
         backdrop: Backdrop = .solid(SunshotDefaults.backdropColor),
-        padding: Double = SunshotDefaults.padding
+        padding: Double = SunshotDefaults.padding,
+        border: Border = Border(),
+        shadow: Shadow = Shadow()
     ) {
         self.canvas = canvas
         self.backdrop = backdrop
+        self.border = border
+        self.shadow = shadow
         self.padding = padding.isFinite ? min(max(padding, 0), SunshotDefaults.maxPadding) : SunshotDefaults.padding
+    }
+}
+
+extension Project {
+    /// No rounding and no shadow: the S1 look, used where tests need content pixels untouched.
+    public static func plain(
+        canvas: CanvasSpec = .auto, backdrop: Backdrop = .solid(SunshotDefaults.backdropColor),
+        padding: Double = SunshotDefaults.padding
+    ) -> Project {
+        Project(
+            canvas: canvas, backdrop: backdrop, padding: padding, border: Border(style: .sharp),
+            shadow: Shadow(style: .none))
     }
 }

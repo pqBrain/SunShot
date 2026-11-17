@@ -38,7 +38,7 @@ struct RendererTests {
     @Test("[S0] transparent backdrop leaves padding transparent")
     func transparentBackdrop() throws {
         let pixels = try PixelBuffer(
-            Renderer.render(project: Project(backdrop: .none), content: SampleContent.image()))
+            Renderer.render(project: .plain(backdrop: .none), content: SampleContent.image()))
         #expect(pixels.pixel(x: 1, y: 1)[3] == 0)
     }
 

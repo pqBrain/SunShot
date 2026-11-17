@@ -13,7 +13,7 @@ struct DefaultCanvasTests {
     @Test("[S1-AC6] 1000×600 content → 1128×728 canvas, #EDEDF2 backdrop, content at (64, 64) unscaled")
     func defaultComposition() throws {
         let content = try SampleContent.image(width: 1000, height: 600)
-        var session = EditorSession()
+        var session = EditorSession(document: EditorDocument(project: .plain()))
         session.setContent(content)
         let image = try #require(try session.render())
         #expect((image.width, image.height) == (1128, 728))
@@ -38,7 +38,7 @@ struct DefaultCanvasTests {
             context.setFillColor(CGColor(srgbRed: 0, green: 0, blue: 1, alpha: 0.5))
             context.fill(CGRect(x: 100, y: 0, width: 100, height: 100))
         }
-        var session = EditorSession()
+        var session = EditorSession(document: EditorDocument(project: .plain()))
         session.setContent(try ImageLoader.load(Fixtures.encode(content, as: .png)))
         let image = try #require(try session.render())
         let pixels = try PixelBuffer(image)

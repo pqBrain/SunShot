@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 import PackageDescription
 
 // Module rules (enforced by scripts/check-architecture.sh):
@@ -14,7 +14,7 @@ let strictSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "Sunshot",
-    platforms: [.macOS(.v15)],
+    platforms: [.macOS(.v26)],
     products: [
         .executable(name: "Sunshot", targets: ["SunshotApp"])
     ],

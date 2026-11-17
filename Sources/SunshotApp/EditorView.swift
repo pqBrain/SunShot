@@ -2,22 +2,45 @@ import SunshotPlatform
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Main window: translucent (desktop shows through), canvas in the middle, floating glass inspector on the right.
 struct EditorView: View {
     @Bindable var model: EditorModel
     @State private var isDropTargeted = false
 
     var body: some View {
+        HStack(spacing: 0) {
+            canvasArea
+            if model.showsInspector {
+                InspectorView(model: model)
+                    .frame(width: 292)
+                    .padding([.top, .bottom, .trailing], 12)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .animation(.smooth(duration: 0.3), value: model.showsInspector)
+        .containerBackground(.ultraThinMaterial, for: .window)
+        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+        .toolbar(removing: .title)
+        .toolbar { EditorToolbar(model: model) }
+        .alert(
+            model.alert?.title ?? "", isPresented: alertBinding, presenting: model.alert,
+            actions: { _ in Button("OK") {} }, message: { Text($0.message) })
+    }
+
+    private var canvasArea: some View {
         ZStack {
-            Color(nsColor: SunshotPalette.workspaceBackground).ignoresSafeArea()
             if let preview = model.preview, model.hasContent {
                 CanvasPreview(image: preview, accessibilityLabel: model.previewAccessibilityLabel)
             } else {
                 EmptyStateView(isTargeted: isDropTargeted) { Task { await Panels.openImage(into: model) } }
             }
             if model.showsProgress {
-                ProgressView(UIStrings.importing).padding().background(.regularMaterial, in: .rect(cornerRadius: 10))
+                ProgressView(UIStrings.importing)
+                    .padding(20)
+                    .glassEffect(.regular, in: .rect(cornerRadius: 18))
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
         .dropDestination(for: URL.self) { urls, _ in
             guard urls.contains(where: isSupportedImageFile) else { return false }
@@ -26,10 +49,6 @@ struct EditorView: View {
         } isTargeted: {
             isDropTargeted = $0
         }
-        .toolbar { EditorToolbar(model: model) }
-        .alert(
-            model.alert?.title ?? "", isPresented: alertBinding, presenting: model.alert,
-            actions: { _ in Button("OK") {} }, message: { Text($0.message) })
     }
 
     private var alertBinding: Binding<Bool> {
@@ -37,7 +56,7 @@ struct EditorView: View {
     }
 }
 
-/// Shows the rendered canvas, fitted to the window, never larger than 1 image pixel per screen pixel.
+/// The rendered canvas, fitted to the space, never larger than 1 image pixel per screen pixel.
 struct CanvasPreview: View {
     let image: CGImage
     let accessibilityLabel: String
@@ -48,11 +67,10 @@ struct CanvasPreview: View {
             .resizable()
             .interpolation(.high)
             .aspectRatio(contentMode: .fit)
-            .frame(
-                maxWidth: CGFloat(image.width) / displayScale, maxHeight: CGFloat(image.height) / displayScale
-            )
-            .shadow(color: .black.opacity(0.12), radius: 8, y: 2)
-            .padding(32)
+            .frame(maxWidth: CGFloat(image.width) / displayScale, maxHeight: CGFloat(image.height) / displayScale)
+            .clipShape(.rect(cornerRadius: 10, style: .continuous))
+            .shadow(color: .black.opacity(0.22), radius: 24, y: 10)
+            .padding(36)
             .accessibilityElement()
             .accessibilityLabel(accessibilityLabel)
             .accessibilityAddTraits(.isImage)
@@ -64,15 +82,17 @@ struct EmptyStateView: View {
     let choose: () -> Void
 
     var body: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 44, weight: .light))
-                .foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
+        VStack(spacing: 16) {
+            Image(systemName: "sparkles.rectangle.stack")
+                .font(.system(size: 52, weight: .thin))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(isTargeted ? Color.accentColor : Color(nsColor: SunshotPalette.secondaryText))
                 .accessibilityHidden(true)
             Text(UIStrings.dropTitle)
-                .font(.title2.weight(.medium))
+                .font(.title2.weight(.semibold))
                 .foregroundStyle(Color(nsColor: SunshotPalette.primaryText))
             Button(UIStrings.chooseImage, action: choose)
+                .buttonStyle(.glassProminent)
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
                 .accessibilityLabel(UIStrings.chooseImageAccessibility)
@@ -80,15 +100,17 @@ struct EmptyStateView: View {
                 .font(.callout)
                 .foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
         }
-        .padding(48)
-        .frame(maxWidth: 460, maxHeight: 320)
-        .background(Color(nsColor: SunshotPalette.dropZoneFill), in: .rect(cornerRadius: 16))
+        .padding(.horizontal, 56)
+        .padding(.vertical, 44)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 32))
         .overlay {
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
                 .strokeBorder(
-                    Color(nsColor: isTargeted ? SunshotPalette.dropZoneHighlight : SunshotPalette.dropZoneStroke),
-                    style: StrokeStyle(lineWidth: isTargeted ? 3 : 1.5, dash: [7, 5]))
+                    isTargeted ? Color.accentColor : Color.primary.opacity(0.12),
+                    style: StrokeStyle(lineWidth: isTargeted ? 2.5 : 1, dash: isTargeted ? [] : [8, 6]))
         }
+        .scaleEffect(isTargeted ? 1.03 : 1)
+        .animation(.smooth(duration: 0.2), value: isTargeted)
         .padding(40)
     }
 }
@@ -123,15 +145,28 @@ struct EditorToolbar: ToolbarContent {
             .help(UIStrings.copyAccessibility)
             .accessibilityLabel(UIStrings.copyAccessibility)
             .disabled(!model.hasContent)
-
+        }
+        ToolbarSpacer(.fixed, placement: .primaryAction)
+        ToolbarItem(placement: .primaryAction) {
             Button {
                 Task { await Panels.exportPNG(from: model) }
             } label: {
                 Label("Export", systemImage: "square.and.arrow.up")
             }
+            .buttonStyle(.glassProminent)
             .help(UIStrings.exportAccessibility)
             .accessibilityLabel(UIStrings.exportAccessibility)
             .disabled(!model.hasContent)
+        }
+        ToolbarSpacer(.fixed, placement: .primaryAction)
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                model.showsInspector.toggle()
+            } label: {
+                Label(UIStrings.inspector, systemImage: "sidebar.trailing")
+            }
+            .help(UIStrings.toggleInspector)
+            .accessibilityLabel(UIStrings.toggleInspector)
         }
     }
 }
@@ -143,10 +178,10 @@ struct NoticeBanner: View {
     var body: some View {
         if let notice = model.notice {
             Text(notice)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(.regularMaterial, in: .capsule)
-                .padding(.bottom, 16)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .glassEffect(.regular, in: .capsule)
+                .padding(.bottom, 20)
                 .task(id: notice) {
                     try? await Task.sleep(for: .seconds(3))
                     if model.notice == notice { model.notice = nil }

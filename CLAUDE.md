@@ -1,6 +1,6 @@
 # Sunshot — engineering conventions
 
-Lightweight native macOS screenshot beautifier. Swift 6, SwiftUI, macOS 15+, zero third-party dependencies.
+Lightweight native macOS screenshot beautifier. Swift 6, SwiftUI, macOS 26+ (Liquid Glass), zero third-party dependencies.
 
 ## Not a clone
 `postspark-macos-spec.md` + `ref/` (local-only, gitignored) describe controls that exist in this product category. Use them for *what*
