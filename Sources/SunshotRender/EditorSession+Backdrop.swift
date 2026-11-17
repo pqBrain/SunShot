@@ -109,9 +109,13 @@ extension EditorSession {
         setBackdropImage(try ImageLoader.load(data), data: data, fileName: fileName)
     }
 
-    /// Back to the default (solid #EDEDF2). Other types keep their last-used values. No-op when already default.
+    /// Back to the default (solid #EDEDF2, effects off). Other types keep their last-used values. No-op when
+    /// already default.
     public mutating func resetBackdrop() {
-        editProject(Self.resetBackdropActionName) { $0.backdrop = .solid(SunshotDefaults.backdropColor) }
+        editProject(Self.resetBackdropActionName) {
+            $0.backdrop = .solid(SunshotDefaults.backdropColor)
+            $0.backdropSettings.effects = BackdropEffects()
+        }
     }
 
     /// The user image currently referenced by the backdrop settings, if any.

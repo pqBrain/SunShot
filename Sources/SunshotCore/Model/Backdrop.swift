@@ -59,15 +59,22 @@ public struct BackdropSettings: Codable, Hashable, Sendable {
     public var solidColor: RGBAColor
     public var gradient: GradientSpec
     public var image: BackdropImage
+    /// S8: blur / noise / saturation / opacity, pattern, vignette and overlay (all off by default).
+    public var effects: BackdropEffects
+    /// S8: the current Auto-background arrangement (changed by Shuffle).
+    public var autoShuffle: UInt64
 
     public init(
         kind: BackdropKind = .solid, solidColor: RGBAColor = SunshotDefaults.backdropColor,
-        gradient: GradientSpec = SunshotDefaults.gradient, image: BackdropImage = .wallpaper(SunshotDefaults.wallpaper)
+        gradient: GradientSpec = SunshotDefaults.gradient, image: BackdropImage = .wallpaper(SunshotDefaults.wallpaper),
+        effects: BackdropEffects = BackdropEffects(), autoShuffle: UInt64 = 0
     ) {
         self.kind = kind
         self.solidColor = solidColor
         self.gradient = gradient
         self.image = image
+        self.effects = effects
+        self.autoShuffle = autoShuffle
     }
 
     /// The backdrop being drawn. Setting it selects that type and remembers its value.
@@ -95,5 +102,23 @@ public struct BackdropSettings: Codable, Hashable, Sendable {
     public var mediaReference: MediaReference? {
         if case .file(let reference) = image { return reference }
         return nil
+    }
+}
+
+extension BackdropSettings {
+    private enum CodingKeys: String, CodingKey {
+        case kind, solidColor, gradient, image, effects, autoShuffle
+    }
+
+    /// Documents saved before S8 have no `effects` / `autoShuffle`: they decode with the defaults.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            kind: try container.decode(BackdropKind.self, forKey: .kind),
+            solidColor: try container.decode(RGBAColor.self, forKey: .solidColor),
+            gradient: try container.decode(GradientSpec.self, forKey: .gradient),
+            image: try container.decode(BackdropImage.self, forKey: .image),
+            effects: try container.decodeIfPresent(BackdropEffects.self, forKey: .effects) ?? BackdropEffects(),
+            autoShuffle: try container.decodeIfPresent(UInt64.self, forKey: .autoShuffle) ?? 0)
     }
 }

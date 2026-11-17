@@ -223,3 +223,37 @@ Decisions made by the delivery lead within scope. Each one names what it settled
   (budget 500); 8000² content + 8000² backdrop save 2 ms (original bytes are copied, nothing re-encoded) and load
   0.63 s (budget 3 s), peak growth 0.72 GB (budget 1.5). The perf fixtures are solid-colour PNGs, so the save time
   reflects small files; real photos are dominated by disk speed.
+
+## S8 implementation notes (2026-11-17)
+- **Effects live in `BackdropSettings.effects`** (`BackdropEffects`: adjustments, pattern, vignette, overlay) plus
+  `BackdropSettings.autoShuffle`; no new `Project` field. `BackdropSettings` and every effect struct decode
+  tolerantly (`decodeIfPresent`, unknown enum values fall back to none, values clamped), so pre-S8 documents and
+  S7 save/load need nothing extra. All values are clamped by `didSet`, like `Border.radius`.
+- **Defaults are all off**, and with `isIdentityBelowContent` the renderer takes the unchanged S3 path, so every
+  existing snapshot is byte-identical (none were re-recorded).
+- **Render order:** backdrop → blur → saturation → pattern → vignette → grain → opacity → underlay texture, then
+  content, then the overlay texture when position = above (`EffectsRenderer.drawAboveContent`, one call after
+  `drawContent` in `Renderer.render`). Adjustments never touch content.
+- **Resolution independence:** every length is canvas pixels at 1× (pattern period 32, blur radius, grain cell =
+  1 canvas px); overlay textures and vignettes are laid out relative to the canvas, so they never tile. Edges are
+  anti-aliased over one output pixel, so 4K is sharper but the same picture (4K→1× SSIM 0.993 with all effects).
+- **Determinism:** blur is a four-pass vImage box blur (≈ Gaussian, edge-extended) on the CPU rather than Core
+  Image (GPU results aren't guaranteed byte-stable); grain and value noise use integer hashes; per-pixel passes reuse
+  S3's dither. Preview and export are byte-identical.
+- **Preview checkerboard with effects:** effects are applied to the backdrop alone, then the grid is composited
+  underneath (destination-over) when the backdrop or opacity is translucent, so opacity shows the checkerboard in
+  the preview only.
+- **Overlay textures are Sunshot's own procedural set** (Blinds, Window, Leaves, Lattice, Ripples, Dapple): soft
+  shadow fields drawn as black at `opacity × 0.9`. No bitmaps.
+- **Own defaults/ranges:** blur 0–50 px, noise 0–100 %, saturation 0–200 %, opacity 0–100 %; pattern intensity 20 %,
+  thickness 100 % (25–300 %), colour #23232B (visible on the light default backdrop); vignette spread/intensity
+  50 %; overlay opacity 30 %, above content.
+- **Auto backgrounds are generated `Wallpaper` recipes** (base gradient + soft colour fields in five tones: as found,
+  radial, pastel, deep, mid) chosen in the Image type, so no new `Backdrop` case and they save like any wallpaper.
+  Palette: 64-px sample, 5-bit histogram, greedy pick by prominence with shrinking minimum distance, then tints /
+  shades to reach six. Shuffle derives the next seed with SplitMix64 and applies the first new suggestion
+  ("Shuffle Auto Backgrounds"); the palette is cached per content image in `AutoBackgroundStore`.
+- **Reset Backdrop now also resets the effects**; each effect popover has its own Reset.
+- **Measured (release, M-series, machine loaded by parallel agent builds):** 4K image backdrop + every effect
+  (blur 24) 229 ms median (budget 500); the S3 4K gradient read 186 ms in the same run (72 ms when idle), so the
+  effects cost roughly 40–150 ms.

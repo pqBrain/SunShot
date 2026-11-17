@@ -36,6 +36,8 @@ struct BackdropControls: View {
             case .image:
                 ImageBackdropControls(model: model)
             }
+            BackdropEffectsControls(model: model)
+            AutoBackgroundControls(model: model)
         }
         .animation(.smooth(duration: 0.2), value: settings.kind)
     }

@@ -42,8 +42,10 @@ public enum Renderer {
         context.scaleBy(x: CGFloat(safeScale), y: -CGFloat(safeScale))
         context.interpolationQuality = .high
 
-        BackdropRenderer.draw(project.backdrop, size: layout.canvasSize, media: media, grid: grid, in: context)
+        EffectsRenderer.drawBackdrop(
+            project.backdropSettings, size: layout.canvasSize, media: media, grid: grid, in: context)
         drawContent(content, layout: layout, project: project, scale: safeScale, context: context)
+        EffectsRenderer.drawAboveContent(project.backdropSettings.effects, size: layout.canvasSize, in: context)
 
         guard let image = context.makeImage() else { throw RenderError.imageCreationFailed }
         return image
