@@ -184,36 +184,13 @@ public final class EditorModel {
         return Task { await refreshPreview() }
     }
 
-    // MARK: Export
-
-    public func pngData() async throws -> Data {
-        let session = self.session
-        return try await Task.detached(priority: .userInitiated) { try session.exportPNG() }.value
-    }
-
-    /// Copies exactly one PNG representation of the full canvas.
-    public func copyPNG(to pasteboard: NSPasteboard) async {
-        do {
-            PasteboardIO.writePNG(try await pngData(), to: pasteboard)
-        } catch {
-            alert = AlertContent(title: Self.exportFailedTitle, message: error.localizedDescription)
-        }
-    }
-
-    /// Writes the PNG atomically; on failure nothing is left at `url` and an alert is shown.
-    public func exportPNG(to url: URL) async {
-        do {
-            try FileExport.write(try await pngData(), to: url)
-        } catch FileExportError.writeFailed(let reason) {
-            alert = AlertContent(title: Self.exportFailedTitle, message: reason)
-        } catch {
-            alert = AlertContent(title: Self.exportFailedTitle, message: error.localizedDescription)
-        }
-    }
-
-    public func suggestedExportName(now: Date = Date()) -> String { ExportNaming.interimFileName(date: now) }
-
     // MARK: Preview
+
+    /// 1, or less for canvases whose long edge exceeds `SunshotDefaults.previewMaxSide` (huge custom sizes).
+    public var previewScale: Double {
+        guard let size = session.canvasSize else { return 1 }
+        return min(1, Double(SunshotDefaults.previewMaxSide) / Double(max(size.width, size.height)))
+    }
 
     /// Re-renders the preview through the same renderer as export. Stale renders are discarded.
     public func refreshPreview() async {
@@ -221,8 +198,9 @@ public final class EditorModel {
         let generation = renderGeneration
         let document = session.document
         let grid = SunshotPalette.transparencyGrid(dark: isDarkAppearance)
+        let scale = previewScale
         let image = try? await Task.detached(priority: .userInitiated) {
-            try Renderer.render(document: document, scale: 1, showsTransparencyGrid: true, grid: grid)
+            try Renderer.render(document: document, scale: scale, showsTransparencyGrid: true, grid: grid)
         }.value
         if generation == renderGeneration { preview = image ?? nil }
     }

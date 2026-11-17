@@ -152,16 +152,18 @@ struct EditorToolbar: ToolbarContent {
             .disabled(!model.hasContent)
         }
         ToolbarSpacer(.fixed, placement: .primaryAction)
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItemGroup(placement: .primaryAction) {
+            ExportOptionsButton(model: model)
             Button {
-                Task { await Panels.exportPNG(from: model) }
+                Task { await Panels.export(from: model) }
             } label: {
-                Label("Export", systemImage: "square.and.arrow.up")
+                Label(model.exportButtonTitle, systemImage: "square.and.arrow.up")
+                    .labelStyle(.titleAndIcon)
             }
             .buttonStyle(.glassProminent)
-            .help(UIStrings.exportAccessibility)
-            .accessibilityLabel(UIStrings.exportAccessibility)
-            .disabled(!model.hasContent)
+            .help(model.exportAccessibilityLabel)
+            .accessibilityLabel(model.exportAccessibilityLabel)
+            .disabled(!model.canExport)
         }
         ToolbarSpacer(.fixed, placement: .primaryAction)
         ToolbarItem(placement: .primaryAction) {
@@ -172,6 +174,26 @@ struct EditorToolbar: ToolbarContent {
             }
             .help(UIStrings.toggleInspector)
             .accessibilityLabel(UIStrings.toggleInspector)
+        }
+    }
+}
+
+/// Opens the export options popover (format, size, file name).
+struct ExportOptionsButton: View {
+    let model: EditorModel
+    @State private var showsOptions = false
+
+    var body: some View {
+        Button {
+            showsOptions.toggle()
+        } label: {
+            Label(UIStrings.exportOptions, systemImage: "slider.horizontal.3")
+        }
+        .help(UIStrings.exportOptionsAccessibility)
+        .accessibilityLabel(UIStrings.exportOptionsAccessibility)
+        .disabled(!model.hasContent)
+        .popover(isPresented: $showsOptions, arrowEdge: .bottom) {
+            ExportOptionsPopover(model: model) { showsOptions = false }
         }
     }
 }

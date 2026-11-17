@@ -73,7 +73,7 @@ stage_smoke() {
 }
 
 stage_perf() {
-  SUNSHOT_PERF=1 swift test -c release --filter RenderPerformanceTests 2>&1 | tee "$GATE_DIR/perf-output.log" \
+  SUNSHOT_PERF=1 swift test -c release --no-parallel --filter RenderPerformanceTests 2>&1 | tee "$GATE_DIR/perf-output.log" \
     | grep -E 'perf\.|✘|↳|Test run with|error:' || true
   ! grep -qE '✘|error:' "$GATE_DIR/perf-output.log" && grep -q 'passed' "$GATE_DIR/perf-output.log"
 }
@@ -105,6 +105,8 @@ for stage in "${stages[@]}"; do
     echo "${C_GREEN}✔ $stage${C_OFF} ${C_DIM}(${elapsed}s)${C_OFF}"
   else
     echo "${C_RED}✘ $stage${C_OFF} ${C_DIM}(${elapsed}s) — last lines of $log:${C_OFF}"
+    # Failing test expectations first (a broad failure can push them out of the tail), then the tail.
+    { grep -E 'recorded an issue' "$log" || true; } | head -12 | sed 's/^/    /'
     grep -vE '^[[:space:]]*$' "$log" | tail -25 | sed 's/^/    /'
   fi
 done

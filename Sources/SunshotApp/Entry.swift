@@ -35,6 +35,10 @@ enum SmokeTest {
                 Data(
                     "smoke-test backdrops \(swatches.count) swatches \(presets.count) gradients \(wallpapers.count) wallpapers\n"
                         .utf8))
+            // Canvas presets must load too; an empty catalog fails the smoke test.
+            let canvasPresets = try CanvasPresetCatalog.load()
+            guard !canvasPresets.presets.isEmpty else { throw CanvasPresetCatalogError.invalid("no canvas presets") }
+            FileHandle.standardOutput.write(Data("smoke-test canvas presets \(canvasPresets.presets.count)\n".utf8))
             var session = EditorSession()
             session.setContent(try SampleContent.image())
             guard let image = try session.render(scale: 2) else { throw RenderError.noContent }

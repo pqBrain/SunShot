@@ -13,6 +13,18 @@ public enum SunshotDefaults {
     public static let shadowStyle = ShadowStyle.spread
     public static let shadowIntensity = ShadowIntensity.medium
     public static let shadowOffset = UnitOffset(x: 0, y: 0.35)
+    /// Largest canvas or export side in pixels (custom sizes and exports beyond this are refused).
+    public static let maxCanvasSide = 16384
+    /// New documents export PNG at 2×.
+    public static let exportFormat = ExportFormat.png
+    public static let exportScale = ExportScale.x2
+    /// Lossy quality for JPEG and HEIC (0…1).
+    public static let lossyQuality: Double = 0.9
+    /// Export file name template and the `{TEMPLATE}` value until the template gallery exists (S12).
+    public static let filenameTemplate = "{TEMPLATE}_{SCALE}_sunshot_{DATE}"
+    public static let templateName = "screenshot"
+    /// The live preview renders at most this many pixels on its long edge (exports are unaffected).
+    public static let previewMaxSide = 6144
     /// How many undo steps are kept.
     public static let undoLimit = 100
     /// Gradient offered when the backdrop type is first switched to Gradient ("Sunrise Drift" in the presets).

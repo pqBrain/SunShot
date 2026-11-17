@@ -3,6 +3,7 @@ import CoreGraphics
 import Foundation
 import ImageIO
 import SunshotRender
+import Testing
 import UniformTypeIdentifiers
 
 enum TestImages {
@@ -71,3 +72,8 @@ func memoryFootprint() -> UInt64 {
     }
     return result == KERN_SUCCESS ? info.phys_footprint : 0
 }
+
+/// Suites that render very large images or measure peak memory. Their children run one after another so a
+/// heavy test can't inflate another test's process-wide memory reading (S1-AC17 vs S4-AC12).
+@Suite(.serialized)
+enum MemoryHeavySuites {}

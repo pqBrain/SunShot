@@ -104,7 +104,7 @@ struct EditorModelTests {
         let model = EditorModel()
         await model.importData(try TestImages.png(width: 1000, height: 600))
         #expect(model.previewAccessibilityLabel == "Preview, 1128 by 728 pixels")
-        #expect(UIStrings.exportAccessibility == "Export as PNG, ⇧⌘E")
+        #expect(model.exportAccessibilityLabel == "Export at 2 times as PNG, ⇧⌘E")
         #expect(UIStrings.copyAccessibility == "Copy PNG, ⌘C")
         #expect(UIStrings.chooseImageAccessibility == "Choose Image, ⌘O")
         #expect(!UIStrings.clearAccessibility.isEmpty)

@@ -26,9 +26,9 @@ struct SunshotCommands: Commands {
                 .keyboardShortcut("o")
         }
         CommandGroup(replacing: .importExport) {
-            Button(UIStrings.exportPNG) { Task { await Panels.exportPNG(from: model) } }
+            Button(UIStrings.exportImage) { Task { await Panels.export(from: model) } }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
-                .disabled(!model.hasContent)
+                .disabled(!model.canExport)
         }
         CommandGroup(after: .sidebar) {
             Button(model.showsInspector ? "Hide Inspector" : "Show Inspector") { model.showsInspector.toggle() }
@@ -56,7 +56,7 @@ struct SunshotCommands: Commands {
     }
 }
 
-/// Open and save panels (AppKit, so the save panel can start in Pictures with the interim file name).
+/// Open and save panels (AppKit, so the save panel can start in Pictures with the templated file name).
 @MainActor
 enum Panels {
     static func openImage(into model: EditorModel) async {
@@ -77,13 +77,14 @@ enum Panels {
         await model.importBackdropFile(at: url)
     }
 
-    static func exportPNG(from model: EditorModel) async {
-        guard model.hasContent else { return }
+    /// Saves with the current format, size and file-name template.
+    static func export(from model: EditorModel) async {
+        guard model.canExport else { return }
         let panel = NSSavePanel()
-        panel.allowedContentTypes = [.png]
+        panel.allowedContentTypes = [model.exportContentType]
         panel.nameFieldStringValue = model.suggestedExportName()
         panel.directoryURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        await model.exportPNG(to: url)
+        await model.export(to: url)
     }
 }

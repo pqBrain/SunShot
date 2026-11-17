@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "groups": [
+    { "id": "general", "name": "General" },
+    { "id": "social", "name": "Social" },
+    { "id": "store", "name": "App stores" }
+  ],
+  "sources": [
+    {
+      "about": "App Store screenshot sizes",
+      "url": "https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications",
+      "checked": "2026-11-17"
+    },
+    {
+      "about": "Google Play icon, feature graphic and screenshot sizes",
+      "url": "https://support.google.com/googleplay/android-developer/answer/9866151",
+      "checked": "2026-11-17"
+    },
+    {
+      "about": "Chrome Web Store screenshot and promo tile sizes",
+      "url": "https://developer.chrome.com/docs/webstore/images",
+      "checked": "2026-11-17"
+    }
+  ],
+  "presets": [
+    { "id": "general.square", "group": "general", "name": "Square", "ratioW": 1, "ratioH": 1 },
+    { "id": "general.standard", "group": "general", "name": "Standard", "ratioW": 4, "ratioH": 3 },
+    { "id": "general.classic", "group": "general", "name": "Classic", "ratioW": 3, "ratioH": 2 },
+    { "id": "general.photo", "group": "general", "name": "Photo", "ratioW": 5, "ratioH": 4 },
+    { "id": "general.widescreen", "group": "general", "name": "Widescreen", "ratioW": 16, "ratioH": 9 },
+    { "id": "general.display", "group": "general", "name": "Display", "ratioW": 16, "ratioH": 10 },
+    { "id": "general.ultrawide", "group": "general", "name": "Ultrawide", "ratioW": 21, "ratioH": 9 },
+    { "id": "general.golden", "group": "general", "name": "Golden", "ratioW": 1.618, "ratioH": 1 },
+    { "id": "general.portrait", "group": "general", "name": "Portrait", "ratioW": 3, "ratioH": 4 },
+    { "id": "general.poster", "group": "general", "name": "Poster", "ratioW": 2, "ratioH": 3 },
+
+    { "id": "social.square-post", "group": "social", "name": "Square post", "ratioW": 1, "ratioH": 1 },
+    { "id": "social.portrait-post", "group": "social", "name": "Portrait post", "ratioW": 4, "ratioH": 5 },
+    { "id": "social.landscape-post", "group": "social", "name": "Landscape post", "ratioW": 16, "ratioH": 9 },
+    { "id": "social.story", "group": "social", "name": "Story / vertical video", "ratioW": 9, "ratioH": 16 },
+    { "id": "social.link-preview", "group": "social", "name": "Link preview", "ratioW": 1.91, "ratioH": 1 },
+    { "id": "social.tall-post", "group": "social", "name": "Tall post", "ratioW": 2, "ratioH": 3 },
+    { "id": "social.header", "group": "social", "name": "Profile header", "ratioW": 3, "ratioH": 1 },
+    { "id": "social.cover", "group": "social", "name": "Page cover", "ratioW": 4, "ratioH": 1 },
+    { "id": "social.thumbnail", "group": "social", "name": "Video thumbnail", "ratioW": 16, "ratioH": 9 },
+    { "id": "social.portfolio", "group": "social", "name": "Portfolio shot", "ratioW": 4, "ratioH": 3 },
+
+    { "id": "store.iphone-6-9", "group": "store", "name": "iPhone 6.9″", "ratioW": 9, "ratioH": 19.5, "pixelW": 1320, "pixelH": 2868 },
+    { "id": "store.iphone-6-7", "group": "store", "name": "iPhone 6.7″", "ratioW": 9, "ratioH": 19.5, "pixelW": 1290, "pixelH": 2796 },
+    { "id": "store.iphone-6-5", "group": "store", "name": "iPhone 6.5″", "ratioW": 9, "ratioH": 19.5, "pixelW": 1284, "pixelH": 2778 },
+    { "id": "store.iphone-6-1", "group": "store", "name": "iPhone 6.1″", "ratioW": 9, "ratioH": 19.5, "pixelW": 1179, "pixelH": 2556 },
+    { "id": "store.ipad-13", "group": "store", "name": "iPad 13″", "ratioW": 3, "ratioH": 4, "pixelW": 2064, "pixelH": 2752 },
+    { "id": "store.mac", "group": "store", "name": "Mac", "ratioW": 16, "ratioH": 10, "pixelW": 2880, "pixelH": 1800 },
+    { "id": "store.apple-tv", "group": "store", "name": "Apple TV", "ratioW": 16, "ratioH": 9, "pixelW": 3840, "pixelH": 2160 },
+    { "id": "store.android-phone", "group": "store", "name": "Android phone", "ratioW": 9, "ratioH": 16, "pixelW": 1080, "pixelH": 1920 },
+    { "id": "store.android-tablet", "group": "store", "name": "Android tablet", "ratioW": 16, "ratioH": 9, "pixelW": 1920, "pixelH": 1080 },
+    { "id": "store.feature-graphic", "group": "store", "name": "Store feature graphic", "ratioW": 2.048, "ratioH": 1, "pixelW": 1024, "pixelH": 500 },
+    { "id": "store.listing-icon", "group": "store", "name": "Store listing icon", "ratioW": 1, "ratioH": 1, "pixelW": 512, "pixelH": 512 },
+    { "id": "store.extension-screenshot", "group": "store", "name": "Browser extension screenshot", "ratioW": 16, "ratioH": 10, "pixelW": 1280, "pixelH": 800 },
+    { "id": "store.extension-small-tile", "group": "store", "name": "Browser extension small tile", "ratioW": 11, "ratioH": 7, "pixelW": 440, "pixelH": 280 },
+    { "id": "store.extension-marquee", "group": "store", "name": "Browser extension marquee", "ratioW": 5, "ratioH": 2, "pixelW": 1400, "pixelH": 560 }
+  ]
+}

@@ -4,8 +4,40 @@ public enum CanvasSpec: Codable, Hashable, Sendable {
     case auto
     /// Fixed aspect ratio (width / height); the canvas grows around the unscaled content.
     case ratio(Double)
-    /// Exact pixel size (e.g. store screenshots); content is scaled to fit inside the padding.
+    /// Exact pixel size: the padded content is scaled uniformly to fit and exports ignore the scale choice.
     case exact(PixelSize)
+    /// A catalog preset (kept whole so a saved document doesn't depend on the catalog version).
+    case preset(CanvasPreset)
+    /// Custom W×H at 1×; a nil side follows the Auto canvas's ratio. Both nil behaves like `auto`.
+    case custom(CustomCanvasSize)
+}
+
+/// User-entered canvas size; each side is 1…`SunshotDefaults.maxCanvasSide` or nil (Auto).
+public struct CustomCanvasSize: Codable, Hashable, Sendable {
+    public let width: Int?
+    public let height: Int?
+
+    public init(width: Int?, height: Int?) {
+        self.width = width
+        self.height = height
+    }
+}
+
+extension CanvasSpec {
+    /// Store presets and exact sizes export at their own pixel size; the scale choice doesn't apply.
+    public var nativeSize: PixelSize? {
+        switch self {
+        case .exact(let size): size
+        case .preset(let preset): preset.exactSize
+        case .auto, .ratio, .custom: nil
+        }
+    }
+
+    /// The selected preset, if any.
+    public var preset: CanvasPreset? {
+        if case .preset(let preset) = self { return preset }
+        return nil
+    }
 }
 
 /// The style of a document (everything except the content image). Value type, so undo is trivial.
@@ -17,13 +49,16 @@ public struct Project: Codable, Hashable, Sendable {
     public var padding: Double
     public var border: Border
     public var shadow: Shadow
+    /// Format and scale chosen in the export options.
+    public var export: ExportOptions
 
     public init(
         canvas: CanvasSpec = .auto,
         backdrop: Backdrop = .solid(SunshotDefaults.backdropColor),
         padding: Double = SunshotDefaults.padding,
         border: Border = Border(),
-        shadow: Shadow = Shadow()
+        shadow: Shadow = Shadow(),
+        export: ExportOptions = ExportOptions()
     ) {
         self.canvas = canvas
         var settings = BackdropSettings()
@@ -31,6 +66,7 @@ public struct Project: Codable, Hashable, Sendable {
         self.backdropSettings = settings
         self.border = border
         self.shadow = shadow
+        self.export = export
         self.padding = padding.isFinite ? min(max(padding, 0), SunshotDefaults.maxPadding) : SunshotDefaults.padding
     }
 }

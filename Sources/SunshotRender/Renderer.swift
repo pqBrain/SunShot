@@ -31,8 +31,8 @@ public enum Renderer {
         let contentSize = PixelSize(width: content.width, height: content.height)
         let layout = CanvasLayout.compute(contentSize: contentSize, project: project)
         let safeScale = scale.isFinite && scale > 0 ? scale : 1
-        let pixelWidth = Int((Double(layout.canvasSize.width) * safeScale).rounded())
-        let pixelHeight = Int((Double(layout.canvasSize.height) * safeScale).rounded())
+        let pixelWidth = ExportPlan.scaled(layout.canvasSize.width, by: safeScale)
+        let pixelHeight = ExportPlan.scaled(layout.canvasSize.height, by: safeScale)
 
         guard let context = makeContext(width: pixelWidth, height: pixelHeight) else {
             throw RenderError.contextCreationFailed
@@ -43,7 +43,7 @@ public enum Renderer {
         context.interpolationQuality = .high
 
         BackdropRenderer.draw(project.backdrop, size: layout.canvasSize, media: media, grid: grid, in: context)
-        drawContent(content, in: layout.contentRect, project: project, scale: safeScale, context: context)
+        drawContent(content, layout: layout, project: project, scale: safeScale, context: context)
 
         guard let image = context.makeImage() else { throw RenderError.imageCreationFailed }
         return image
@@ -78,16 +78,22 @@ public enum Renderer {
     }
 
     /// Draws the content clipped to its corner shape, with a shadow derived from the clipped content's alpha
-    /// (so transparent cut-outs cast no shadow).
+    /// (so transparent cut-outs cast no shadow). On exact canvases the content, its corners and its shadow are
+    /// scaled together by `layout.styleScale`, so the look is the same as on an Auto canvas, just resized.
     private static func drawContent(
-        _ image: CGImage, in rect: LayoutRect, project: Project, scale: Double, context: CGContext
+        _ image: CGImage, layout: CanvasLayout, project: Project, scale: Double, context: CGContext
     ) {
-        let target = CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
-        guard target.width > 0, target.height > 0 else { return }
+        let rect = layout.contentRect
+        let style = layout.styleScale.isFinite && layout.styleScale > 0 ? layout.styleScale : 1
+        guard rect.width > 0, rect.height > 0 else { return }
+        // Work in unscaled content units: the radius and shadow keep their 1× meaning.
+        let target = CGRect(x: 0, y: 0, width: rect.width / style, height: rect.height / style)
         let shape = ContentShape.path(for: project.border, in: target)
-        let metrics = ShadowMetrics.of(project.shadow).scaled(by: scale)
+        let metrics = ShadowMetrics.of(project.shadow).scaled(by: scale * style)
 
         context.saveGState()
+        context.translateBy(x: rect.x, y: rect.y)
+        context.scaleBy(x: style, y: style)
         if metrics.opacity > 0 {
             // Shadow offsets are in device space (y up), unaffected by our flipped CTM: negate y to fall down.
             context.setShadow(

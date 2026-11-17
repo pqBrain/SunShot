@@ -50,20 +50,24 @@ struct CanvasLayoutTests {
         #expect(layout.canvasSize.width == layout.canvasSize.height)
     }
 
-    @Test("[S0] exact canvas keeps its size and scales content to fit the padded area")
+    @Test("[S0][S4] exact canvas keeps its size; content + padding scale uniformly to fit, centred")
     func exactCanvas() {
         let canvas = PixelSize(width: 1290, height: 2796)
         let layout = CanvasLayout.compute(contentSize: content, project: Project(canvas: .exact(canvas), padding: 45))
+        let scale = 1290.0 / 1090.0
         #expect(layout.canvasSize == canvas)
-        #expect(abs(layout.contentRect.width - 1200) < 0.001)
-        #expect(abs(layout.contentRect.midY - 1398) < 0.001)
+        #expect(abs(layout.styleScale - scale) < 1e-9)
+        #expect(abs(layout.contentRect.width - 1000 * scale) < 0.001)
+        #expect(abs(layout.contentRect.midX - 645) < 0.001 && abs(layout.contentRect.midY - 1398) < 0.001)
     }
 
-    @Test("[S0] exact canvas smaller than the padding leaves an empty content rect")
+    @Test("[S0][S4] exact canvas smaller than content + padding scales everything down, never to nothing")
     func exactCanvasTooSmall() {
         let layout = CanvasLayout.compute(
             contentSize: content, project: Project(canvas: .exact(PixelSize(width: 100, height: 100)), padding: 64))
-        #expect(layout.contentRect.width == 0 && layout.contentRect.midX == 50)
+        let scale = 100.0 / 1128.0
+        #expect(abs(layout.styleScale - scale) < 1e-9)
+        #expect(abs(layout.contentRect.width - 1000 * scale) < 1e-9 && layout.contentRect.midX == 50)
     }
 
     @Test("[S1] padding is clamped to 0...maxPadding, non-finite falls back to default; pixel sizes ≥ 1")

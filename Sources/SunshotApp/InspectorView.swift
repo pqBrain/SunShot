@@ -9,11 +9,16 @@ struct InspectorView: View {
     @State private var borderExpanded = true
     @State private var shadowExpanded = true
     @State private var backdropExpanded = true
+    @State private var canvasExpanded = true
 
     var body: some View {
         ScrollView {
             VStack(spacing: 10) {
                 if model.isInspectorEnabled {
+                    InspectorSection(
+                        title: UIStrings.canvasSection, isExpanded: $canvasExpanded,
+                        reset: { model.perform { $0.resetCanvas() } }
+                    ) { CanvasSizeControls(model: model) }
                     InspectorSection(
                         title: UIStrings.backdropSection, isExpanded: $backdropExpanded,
                         reset: { model.perform { $0.resetBackdrop() } }
