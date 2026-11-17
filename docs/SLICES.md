@@ -26,9 +26,9 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 | S7 | Documents, themes, settings & menus | In progress | §2.3 drafts/cleanup, §9 Save theme, §15, §16 |
 | S8 | Backdrop effects & auto backgrounds | In progress | §9.1 effects/pattern/vignette/overlay/auto |
 | S9 | Annotate | In progress | §7.2 |
-| S10 | Crop & capture (screen, website URL) | Planned | §3.2, §3.3 |
+| S10 | Crop & capture (screen, website URL) | In progress | §3.2, §3.3 |
 | S11 | Code snippet template | In progress | §12 (Code Snippet) |
-| S12 | Device mockups & template gallery | Planned | §3.4, §12 (Device), §13 |
+| S12 | Device mockups & template gallery | In progress | §3.4, §12 (Device), §13 |
 | S13 | Animate & video export | Planned | §7.3, §8, §10.2 |
 | S14 | Bulk edit & batch export | In progress | §11 |
 

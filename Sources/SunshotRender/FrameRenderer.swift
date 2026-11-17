@@ -15,6 +15,12 @@ public enum FrameRenderer {
         context.translateBy(x: box.minX, y: box.minY)
         defer { context.restoreGState() }
 
+        // S12: a device mockup replaces the frame chrome.
+        if let device = DeviceLayout(frame: project.frame) {
+            let local = CGRect(origin: .zero, size: box.size)
+            DeviceRenderer.draw(image, layout: device, annotations: annotations, box: local, context: context)
+            return
+        }
         switch project.frame.kind {
         case .none:
             drawClippedContent(image, border: project.border, geometry: geometry, context: context)

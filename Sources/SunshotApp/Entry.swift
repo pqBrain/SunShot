@@ -49,6 +49,13 @@ enum SmokeTest {
                 throw RenderError.imageCreationFailed
             }
             FileHandle.standardOutput.write(Data("smoke-test layout presets \(layouts.count)\n".utf8))
+            // S12: devices and templates must load, and a device template must render.
+            let templates = try TemplateCatalog.load().templates
+            guard let deviceTemplate = templates.first(where: \.usesDevice),
+                try TemplateThumbnails.render(deviceTemplate, document: sample) != nil
+            else { throw TemplateCatalogError.invalid("no device template") }
+            FileHandle.standardOutput.write(
+                Data("smoke-test templates \(templates.count) devices \(DeviceCatalog.bundled.models.count)\n".utf8))
             var session = EditorSession()
             session.setContent(try SampleContent.image())
             guard let image = try session.render(scale: 2) else { throw RenderError.noContent }

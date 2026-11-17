@@ -1,0 +1,104 @@
+{
+  "about": "Sunshot's own generic device mockups (S12). Parts are rounded rectangles in device units, drawn back to front; exactly one 'screen' per model. Roles: shell (finish gradient), edge, bezel, detail, lens, screen. recommended = media that fills the screen exactly (its aspect must match the screen within 1%). captureSizes = common capture sizes that make the device suggestion certain. Arrangement slots: x / y = centre offset in primary widths / heights, height = fraction of the primary height; model omitted = the selected model.",
+  "finishes": [
+    { "id": "graphite", "name": "Graphite", "shell": "#3B3E44", "highlight": "#5C6069", "edge": "#26282C", "bezel": "#0C0D0F", "detail": "#2E3035" },
+    { "id": "silver", "name": "Silver", "shell": "#C9CDD3", "highlight": "#EEF0F3", "edge": "#9DA3AB", "bezel": "#0E0F12", "detail": "#B3B8BF" },
+    { "id": "sand", "name": "Sand", "shell": "#CDB896", "highlight": "#EADCC4", "edge": "#A08A69", "bezel": "#12100D", "detail": "#B9A27F" },
+    { "id": "sage", "name": "Sage", "shell": "#93A390", "highlight": "#C4D0C1", "edge": "#6B7A68", "bezel": "#0E100E", "detail": "#82927F" }
+  ],
+  "models": [
+    {
+      "id": "phone", "name": "Phone", "category": "phone", "rotatable": true,
+      "recommended": { "width": 1080, "height": 2340 },
+      "captureSizes": [
+        { "width": 1080, "height": 2340 }, { "width": 1080, "height": 2400 }, { "width": 1125, "height": 2436 },
+        { "width": 1170, "height": 2532 }, { "width": 1179, "height": 2556 }, { "width": 1206, "height": 2622 },
+        { "width": 1284, "height": 2778 }, { "width": 1290, "height": 2796 }, { "width": 1320, "height": 2868 },
+        { "width": 1440, "height": 3120 }, { "width": 828, "height": 1792 }
+      ],
+      "parts": [
+        { "role": "edge", "x": -3, "y": 170, "width": 4, "height": 52, "radius": 2 },
+        { "role": "edge", "x": -3, "y": 236, "width": 4, "height": 52, "radius": 2 },
+        { "role": "edge", "x": 399, "y": 206, "width": 4, "height": 84, "radius": 2 },
+        { "role": "shell", "x": 0, "y": 0, "width": 400, "height": 820, "radius": 66 },
+        { "role": "bezel", "x": 7, "y": 7, "width": 386, "height": 806, "radius": 59 },
+        { "role": "screen", "x": 20, "y": 20, "width": 360, "height": 780, "radius": 47 },
+        { "role": "lens", "x": 196, "y": 9.5, "width": 8, "height": 8, "radius": 4 }
+      ]
+    },
+    {
+      "id": "tablet", "name": "Tablet", "category": "tablet", "rotatable": true,
+      "recommended": { "width": 2064, "height": 2752 },
+      "captureSizes": [
+        { "width": 2064, "height": 2752 }, { "width": 2048, "height": 2732 }, { "width": 1668, "height": 2388 },
+        { "width": 1640, "height": 2360 }, { "width": 1668, "height": 2420 }, { "width": 1620, "height": 2160 },
+        { "width": 1536, "height": 2048 }, { "width": 1488, "height": 2266 }, { "width": 1600, "height": 2560 }
+      ],
+      "parts": [
+        { "role": "edge", "x": 500, "y": -3, "width": 64, "height": 4, "radius": 2 },
+        { "role": "edge", "x": 647, "y": 110, "width": 4, "height": 56, "radius": 2 },
+        { "role": "shell", "x": 0, "y": 0, "width": 648, "height": 848, "radius": 44 },
+        { "role": "bezel", "x": 5, "y": 5, "width": 638, "height": 838, "radius": 39 },
+        { "role": "screen", "x": 24, "y": 24, "width": 600, "height": 800, "radius": 20 },
+        { "role": "lens", "x": 320, "y": 10.5, "width": 8, "height": 8, "radius": 4 }
+      ]
+    },
+    {
+      "id": "laptop", "name": "Laptop", "category": "laptop", "rotatable": false,
+      "recommended": { "width": 2560, "height": 1600 },
+      "captureSizes": [
+        { "width": 2560, "height": 1600 }, { "width": 2880, "height": 1800 }, { "width": 3024, "height": 1964 },
+        { "width": 3456, "height": 2234 }, { "width": 2940, "height": 1912 }, { "width": 2560, "height": 1664 },
+        { "width": 1920, "height": 1200 }, { "width": 1440, "height": 900 }, { "width": 1280, "height": 800 },
+        { "width": 1512, "height": 982 }, { "width": 1728, "height": 1117 }
+      ],
+      "parts": [
+        { "role": "shell", "x": 0, "y": 0, "width": 860, "height": 552, "radius": 24 },
+        { "role": "bezel", "x": 4, "y": 4, "width": 852, "height": 544, "radius": 20 },
+        { "role": "screen", "x": 30, "y": 26, "width": 800, "height": 500, "radius": 8 },
+        { "role": "lens", "x": 426, "y": 11, "width": 8, "height": 8, "radius": 4 },
+        { "role": "edge", "x": -40, "y": 566, "width": 940, "height": 8, "radius": 4 },
+        { "role": "shell", "x": -56, "y": 550, "width": 972, "height": 20, "radius": 8 },
+        { "role": "detail", "x": 380, "y": 550, "width": 100, "height": 7, "radius": 3.5 }
+      ]
+    },
+    {
+      "id": "desktop", "name": "Monitor", "category": "desktop", "rotatable": false,
+      "recommended": { "width": 2560, "height": 1440 },
+      "captureSizes": [
+        { "width": 2560, "height": 1440 }, { "width": 1920, "height": 1080 }, { "width": 3840, "height": 2160 },
+        { "width": 5120, "height": 2880 }, { "width": 4480, "height": 2520 }, { "width": 3008, "height": 1692 },
+        { "width": 1366, "height": 768 }, { "width": 1600, "height": 900 }
+      ],
+      "parts": [
+        { "role": "shell", "x": 440, "y": 560, "width": 120, "height": 150, "radius": 0 },
+        { "role": "detail", "x": 440, "y": 580, "width": 120, "height": 10, "radius": 0 },
+        { "role": "shell", "x": 350, "y": 700, "width": 300, "height": 20, "radius": 10 },
+        { "role": "shell", "x": 0, "y": 0, "width": 1000, "height": 580, "radius": 20 },
+        { "role": "bezel", "x": 5, "y": 5, "width": 990, "height": 570, "radius": 16 },
+        { "role": "screen", "x": 20, "y": 20, "width": 960, "height": 540, "radius": 5 },
+        { "role": "lens", "x": 496, "y": 8.5, "width": 8, "height": 8, "radius": 4 }
+      ]
+    }
+  ],
+  "arrangements": [
+    { "id": "single", "name": "Single", "slots": [{ "primary": true }] },
+    { "id": "pair", "name": "Pair", "slots": [{ "x": 0.58, "y": -0.05, "height": 0.94 }, { "primary": true }] },
+    {
+      "id": "trio", "name": "Trio",
+      "slots": [{ "x": -0.6, "y": -0.04, "height": 0.9 }, { "x": 0.6, "y": -0.04, "height": 0.9 }, { "primary": true }]
+    },
+    {
+      "id": "laptop-phone", "name": "Laptop & Phone",
+      "slots": [{ "model": "laptop", "primary": true }, { "model": "phone", "x": 0.47, "y": 0.17, "height": 0.72 }]
+    },
+    {
+      "id": "monitor-phone", "name": "Monitor & Phone",
+      "slots": [{ "model": "desktop", "primary": true }, { "model": "phone", "x": 0.46, "y": 0.2, "height": 0.6 }]
+    },
+    {
+      "id": "tablet-phone", "name": "Tablet & Phone",
+      "slots": [{ "model": "tablet", "primary": true }, { "model": "phone", "x": 0.44, "y": 0.14, "height": 0.76 }]
+    }
+  ]
+}

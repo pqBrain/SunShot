@@ -14,6 +14,7 @@ struct SunshotCommands: Commands {
         CommandGroup(replacing: .newItem) {
             item(.new) { Task { await DocumentFlows.newDocument(controller) } }
             item(.newCodeSnippet) { model.newCodeSnippet() }
+            item(.templateGallery) { model.showTemplateGallery() }
             item(.open) { Task { await DocumentFlows.open(controller) } }
             Menu(MenuCatalog.title(.openRecent)) {
                 ForEach(controller.recents.items) { recent in

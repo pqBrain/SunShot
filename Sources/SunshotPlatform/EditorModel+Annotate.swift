@@ -14,8 +14,10 @@ public enum AnnotateKey: Equatable, Sendable {
 extension EditorModel {
     /// Annotating needs image content shown flat: pointer mapping (S9 `ContentMapping`) doesn't yet invert the S6
     /// position / zoom / rotation / tilt, and code snippets (S11) are drawn at output density (see DECISIONS, integration notes).
+    /// S12: nor the crop of a device screen, so device mockups can't be annotated either.
     public var canAnnotate: Bool {
         session.document.content != nil && session.document.project.placement.transform.isIdentity
+            && session.document.project.frame.device == nil
     }
 
     public var hasAnnotations: Bool { !session.annotations.isEmpty }

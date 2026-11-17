@@ -47,6 +47,7 @@ extension Theme {
             ThemeField("shadow", \.shadow),
             ThemeField("frameKind", \.frame.kind),
             ThemeField("frameScale", \.frame.uiScale),
+            ThemeField("frameDevice", \.frame.device),
             ThemeField("tokens", \.tokens),
         ]
     }

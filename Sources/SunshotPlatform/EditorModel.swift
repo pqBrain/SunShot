@@ -42,6 +42,8 @@ public final class EditorModel {
     /// S10: screen / website capture state and the crop dialog's draft.
     public let capture = CaptureController()
     public let crop = CropEditor()
+    /// S12: template gallery state and previews.
+    public let templates = TemplateGalleryState()
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
     var renderGeneration = 0

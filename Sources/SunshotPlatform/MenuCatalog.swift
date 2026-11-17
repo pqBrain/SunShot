@@ -3,7 +3,7 @@
 public enum MenuCommand: String, CaseIterable, Sendable {
     case settings, hide, hideOthers, quit
     case new, newCodeSnippet, open, importMultiple, openRecent, close, save, saveAs, exportImage, exportAll, startOver
-    case captureArea, captureWindow, captureWebsite
+    case captureArea, captureWindow, captureWebsite, templateGallery
     case undo, redo, cut, copy, paste, selectAll, clearContent, crop
     case toggleInspector, enterFullScreen
     case minimize, zoom
@@ -77,6 +77,7 @@ public enum MenuCatalog {
             items: [
                 MenuItemSpec(.new, "New", KeyShortcut("n")),
                 MenuItemSpec(.newCodeSnippet, "New Code Snippet", KeyShortcut("n", [.command, .option])),
+                MenuItemSpec(.templateGallery, "Templates…", KeyShortcut("t", [.command, .shift])),
                 MenuItemSpec(.open, "Open…", KeyShortcut("o")),
                 MenuItemSpec(.importMultiple, "Import Multiple…", KeyShortcut("o", [.command, .shift])),
                 MenuItemSpec(.openRecent, "Open Recent"),

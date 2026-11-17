@@ -8,6 +8,7 @@ public struct SettingsStore {
     enum Key: String, CaseIterable {
         case appearance, filenameTemplate, exportFolderPath, exportFolderBookmark, confirmReset, defaultTemplate
         case captureHotkey
+        case suggestDevice
         var name: String { SettingsStore.prefix + rawValue }
     }
 
@@ -28,6 +29,9 @@ public struct SettingsStore {
         }
         if let template = defaults.string(forKey: Key.defaultTemplate.name) { settings.defaultTemplate = template }
         settings.captureHotkeyEnabled = defaults.bool(forKey: Key.captureHotkey.name)
+        if defaults.object(forKey: Key.suggestDevice.name) != nil {
+            settings.suggestDevice = defaults.bool(forKey: Key.suggestDevice.name)
+        }
         settings.exportFolder = BookmarkedURL.resolve(
             bookmark: defaults.data(forKey: Key.exportFolderBookmark.name),
             path: defaults.string(forKey: Key.exportFolderPath.name))
@@ -40,6 +44,7 @@ public struct SettingsStore {
         defaults.set(settings.confirmReset, forKey: Key.confirmReset.name)
         defaults.set(settings.defaultTemplate, forKey: Key.defaultTemplate.name)
         defaults.set(settings.captureHotkeyEnabled, forKey: Key.captureHotkey.name)
+        defaults.set(settings.suggestDevice, forKey: Key.suggestDevice.name)
         if let folder = settings.exportFolder {
             if defaults.string(forKey: Key.exportFolderPath.name) != folder.path {
                 defaults.set(folder.path, forKey: Key.exportFolderPath.name)

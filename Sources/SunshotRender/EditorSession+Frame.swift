@@ -21,7 +21,10 @@ extension EditorSession {
     }
 
     public mutating func setFrameKind(_ kind: FrameKind) {
-        editProject(Self.frameKindActionName) { $0.frame.kind = kind }
+        editProject(Self.frameKindActionName) { project in
+            project.frame.kind = kind
+            project.frame.device = nil  // S12: a frame kind replaces a device mockup
+        }
     }
 
     /// Sets the title (sanitised by `Frame`). Inside a gesture (inline editing) it updates live.

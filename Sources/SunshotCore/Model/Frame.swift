@@ -54,23 +54,29 @@ public struct Frame: Codable, Hashable, Sendable {
     public var uiScale: Double {
         didSet { if uiScale != Self.clampScale(uiScale) { uiScale = Self.clampScale(uiScale) } }
     }
+    /// S12: a device mockup drawn instead of the `kind` chrome (nil = none; the session keeps `kind` at none
+    /// while a device is set). Encoded only when set, so documents without a device encode as before.
+    public var device: DeviceSelection?
 
     public init(
-        kind: FrameKind = SunshotDefaults.frameKind, title: String = "", uiScale: Double = SunshotDefaults.frameUIScale
+        kind: FrameKind = SunshotDefaults.frameKind, title: String = "", uiScale: Double = SunshotDefaults.frameUIScale,
+        device: DeviceSelection? = nil
     ) {
         self.kind = kind
         self.title = Self.sanitizeTitle(title)
         self.uiScale = Self.clampScale(uiScale)
+        self.device = device
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, title, uiScale }
+    private enum CodingKeys: String, CodingKey { case kind, title, uiScale, device }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             kind: try container.decodeIfPresent(FrameKind.self, forKey: .kind) ?? SunshotDefaults.frameKind,
             title: try container.decodeIfPresent(String.self, forKey: .title) ?? "",
-            uiScale: try container.decodeIfPresent(Double.self, forKey: .uiScale) ?? SunshotDefaults.frameUIScale)
+            uiScale: try container.decodeIfPresent(Double.self, forKey: .uiScale) ?? SunshotDefaults.frameUIScale,
+            device: try? container.decodeIfPresent(DeviceSelection.self, forKey: .device))
     }
 
     /// UI scale as a factor (1 = 100 %).

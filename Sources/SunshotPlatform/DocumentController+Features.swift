@@ -55,11 +55,14 @@ extension DocumentController {
 
 extension DocumentController {
     /// Whether File ▸ Start Over should ask first ("Confirm before resetting" on and something to reset).
-    public var startOverNeedsConfirmation: Bool { settings.confirmReset && model.session.canStartOver }
+    public var startOverNeedsConfirmation: Bool {
+        settings.confirmReset && model.session.canStartOver(to: defaultTemplateDocument)
+    }
 
     /// Resets content and style to the default template (one undo step "Start Over"). Settings are untouched.
     public func startOver() {
-        model.perform { $0.startOver() }
+        let start = defaultTemplateDocument
+        model.perform { $0.startOver(to: start) }
     }
 }
 
@@ -166,7 +169,7 @@ extension DocumentController {
         case .crop: model.canCrop
         case .captureArea, .captureWindow: !model.capture.isCapturingScreen
         case .captureWebsite: !model.capture.isCapturingWebsite
-        case .startOver: model.session.canStartOver
+        case .startOver: model.session.canStartOver(to: defaultTemplateDocument)
         case .undo: model.canUndo
         case .redo: model.canRedo
         default: true

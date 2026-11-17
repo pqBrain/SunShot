@@ -60,7 +60,7 @@ public final class DocumentController {
     /// Opened from a newer schema: never written in place.
     public private(set) var isReadOnly = false
     /// The document as last written (or opened); changes since then make it dirty.
-    public private(set) var savedDocument: EditorDocument
+    public internal(set) var savedDocument: EditorDocument
     public internal(set) var themes: [Theme] = []
     public private(set) var recents: RecentList<RecentDocument>
     public var placeholderOffer: PlaceholderOffer?
@@ -93,6 +93,7 @@ public final class DocumentController {
         savedDocument = model.session.document
         themes = themeStore.load()
         model.filenameTemplate = settings.effectiveFilenameTemplate
+        openDefaultTemplateAtLaunch()
         observeDocument()
     }
 
@@ -114,7 +115,7 @@ public final class DocumentController {
 
     /// A fresh untitled document from the default template. Call after `close(discardChanges:)`.
     public func newDocument() async {
-        await replaceDocument(with: EditorSession.defaultDocument, fileURL: nil, readOnly: false)
+        await replaceDocument(with: defaultTemplateDocument, fileURL: nil, readOnly: false)
         draftURL = Self.newDraftURL(in: locations.drafts)
     }
 
