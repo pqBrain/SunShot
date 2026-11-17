@@ -52,16 +52,16 @@ extension EditorModel {
         UTType(exportOptions.format.typeIdentifier) ?? .png
     }
 
-    /// File name for the save panel, from the default template (S7 makes it configurable).
+    /// File name for the save panel, from `template` or else the Settings template (`filenameTemplate`).
     public func suggestedExportName(
-        now: Date = Date(), template: String = SunshotDefaults.filenameTemplate,
+        now: Date = Date(), template: String? = nil,
         random: () -> String = { FilenameTemplate.randomToken() }
     ) -> String {
         let plan = exportPlan
         let context = FilenameContext(
             scale: plan?.isNativeSize == true ? .x1 : exportOptions.scale, date: now, width: plan?.width ?? 0,
             height: plan?.height ?? 0, format: exportOptions.format)
-        return FilenameTemplate.fileName(template: template, context: context, random: random)
+        return FilenameTemplate.fileName(template: template ?? filenameTemplate, context: context, random: random)
     }
 
     /// The encoded file for the current options, rendered off the main actor.

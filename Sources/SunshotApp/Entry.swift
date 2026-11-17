@@ -44,6 +44,13 @@ enum SmokeTest {
             guard let image = try session.render(scale: 2) else { throw RenderError.noContent }
             let output = directory.appendingPathComponent("sunshot-smoke.png")
             try ImageCodec.pngData(image).write(to: output)
+            // A document must save and reopen inside the sandbox.
+            let package = directory.appendingPathComponent("sunshot-smoke.\(DocumentPackage.fileExtension)")
+            try DocumentPackage.write(session.document, to: package)
+            guard try DocumentPackage.read(from: package).document == session.document else {
+                throw RenderError.imageCreationFailed
+            }
+            FileHandle.standardOutput.write(Data("smoke-test document ok\n".utf8))
             FileHandle.standardOutput.write(Data("smoke-test ok \(image.width)x\(image.height) \(output.path)\n".utf8))
             return 0
         } catch {

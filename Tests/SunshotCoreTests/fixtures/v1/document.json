@@ -1,0 +1,44 @@
+{
+  "schemaVersion" : 1,
+  "generator" : "Sunshot 0.7 (unknown keys like this one must be ignored)",
+  "content" : {
+    "mediaID" : "3C1B5E2A-0000-4000-8000-000000000002",
+    "pixelSize" : { "height" : 600, "width" : 1000 }
+  },
+  "media" : [
+    {
+      "id" : "3C1B5E2A-0000-4000-8000-000000000002",
+      "path" : "media/3C1B5E2A-0000-4000-8000-000000000002.png",
+      "fileName" : "window.png"
+    }
+  ],
+  "project" : {
+    "backdropSettings" : {
+      "kind" : "gradient",
+      "gradient" : {
+        "angle" : 135,
+        "kind" : "linear",
+        "stops" : [
+          { "color" : { "alpha" : 1, "blue" : 0.4196078431372549, "green" : 0.7019607843137254, "red" : 1 }, "position" : 0 },
+          { "color" : { "alpha" : 1, "blue" : 0.5686274509803921, "green" : 0.43529411764705883, "red" : 1 }, "position" : 0.5 },
+          { "color" : { "alpha" : 1, "blue" : 0.9647058823529412, "green" : 0.4235294117647059, "red" : 0.4823529411764706 }, "position" : 1 }
+        ]
+      },
+      "solidColor" : { "alpha" : 1, "blue" : 0.23529411764705882, "green" : 0.16862745098039217, "red" : 0.10196078431372549 }
+    },
+    "border" : { "radius" : 40, "style" : "round" },
+    "canvas" : { "ratio" : { "_0" : 1.5 } },
+    "export" : { "format" : "jpeg", "scale" : "4k" },
+    "padding" : 80,
+    "shadow" : { "intensity" : "high", "style" : "hug" },
+    "someFutureStyle" : { "enabled" : true }
+  },
+  "theme" : {
+    "id" : "6F1E0C1A-0000-4000-8000-000000000001",
+    "name" : "Ocean",
+    "schemaVersion" : 1,
+    "style" : {
+      "border" : { "radius" : 40, "style" : "round" }
+    }
+  }
+}

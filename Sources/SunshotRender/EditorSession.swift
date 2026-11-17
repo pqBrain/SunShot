@@ -6,10 +6,13 @@ public import SunshotCore
 public struct ContentImage: Equatable, Sendable {
     public let id: UUID
     public let image: CGImage
+    /// The imported file's original bytes (saved unchanged in documents); nil for generated content.
+    public let data: Data?
 
-    public init(_ image: CGImage, id: UUID = UUID()) {
+    public init(_ image: CGImage, id: UUID = UUID(), data: Data? = nil) {
         self.id = id
         self.image = image
+        self.data = data
     }
 
     public var pixelSize: PixelSize { PixelSize(width: image.width, height: image.height) }
@@ -22,11 +25,17 @@ public struct EditorDocument: Equatable, Sendable {
     public var project: Project
     public var content: ContentImage?
     public var media: [String: MediaAsset]
+    /// The theme last applied ("No Theme" when nil); undo restores it with the style.
+    public var theme: Theme?
 
-    public init(project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:]) {
+    public init(
+        project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:],
+        theme: Theme? = nil
+    ) {
         self.project = project
         self.content = content
         self.media = media
+        self.theme = theme
     }
 }
 
@@ -52,14 +61,14 @@ public struct EditorSession: Sendable {
     }
 
     /// Sets (or replaces) the content image as one undoable step.
-    public mutating func setContent(_ image: CGImage) {
+    public mutating func setContent(_ image: CGImage, data: Data? = nil) {
         let name = hasContent ? Self.replaceActionName : Self.importActionName
-        history.apply(name) { $0.content = ContentImage(image) }
+        history.apply(name) { $0.content = ContentImage(image, data: data) }
     }
 
     /// Decodes `data` and sets it as content. Throws without touching state if the data isn't a usable image.
     public mutating func importImage(data: Data) throws {
-        setContent(try ImageLoader.load(data))
+        setContent(try ImageLoader.load(data), data: data)
     }
 
     /// Removes the content (undoable). No-op when already empty.

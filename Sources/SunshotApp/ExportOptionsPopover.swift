@@ -7,6 +7,7 @@ import SwiftUI
 struct ExportOptionsPopover: View {
     let model: EditorModel
     let dismiss: () -> Void
+    @Environment(DocumentController.self) private var controller
 
     private var options: ExportOptions { model.exportOptions }
 
@@ -79,7 +80,7 @@ struct ExportOptionsPopover: View {
                 Spacer(minLength: 0)
                 Button {
                     dismiss()
-                    Task { await Panels.export(from: model) }
+                    Task { await DocumentFlows.export(controller) }
                 } label: {
                     Text(UIStrings.exportNow)
                 }
