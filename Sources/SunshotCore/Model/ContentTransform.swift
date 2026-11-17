@@ -89,8 +89,7 @@ public struct ContentTransform: Hashable, Sendable {
             Self.clampTilt(lerp(tiltY, target.tiltY)))
     }
 
-    private init(unchecked x: Double, _ y: Double, _ zoom: Double, _ rotation: Double, _ tiltX: Double, _ tiltY: Double)
-    {
+    init(unchecked x: Double, _ y: Double, _ zoom: Double, _ rotation: Double, _ tiltX: Double, _ tiltY: Double) {
         self.x = x
         self.y = y
         self.zoom = zoom

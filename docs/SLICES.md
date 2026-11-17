@@ -29,7 +29,7 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 | S10 | Crop & capture (screen, website URL) | In progress | §3.2, §3.3 |
 | S11 | Code snippet template | In progress | §12 (Code Snippet) |
 | S12 | Device mockups & template gallery | In progress | §3.4, §12 (Device), §13 |
-| S13 | Animate & video export | Planned | §7.3, §8, §10.2 |
+| S13 | Animate & video export | In progress | §7.3, §8, §10.2 |
 | S14 | Bulk edit & batch export | In progress | §11 |
 
 **MVP = S1–S7** (a complete, saveable, still-image beautifier).

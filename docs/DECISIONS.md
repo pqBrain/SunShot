@@ -553,3 +553,72 @@ S5, S6, S7, S8, S9, S11 and S14 were built in parallel and merged on main. What 
 - **Not done / follow-ups:** `{TEMPLATE}` in file names still reads "screenshot"; video templates and the
   All · Image · Video filter wait for S13; no device perf budget was added (device drawing is a handful of vector
   fills on top of the S5 frame path).
+
+## S13 implementation notes (2026-11-17)
+- **Timeline model:** `Project.animation: AnimationTimeline?` (read/write through `Project.timeline`; stored as nil
+  while it equals the default, so a document that never used Animate encodes exactly as before and S1–S11
+  snapshots are untouched). One more key in the tolerant `Project+Coding.swift` decoder. The timeline is a lead-in
+  (500 ms) then clips played **back to back**; each clip = target `ContentTransform` + duration (0…10 000 ms,
+  default 1000; 0 = jump cut) + easing + hold (0…10 000 ms, default 500). The start state is the document's own
+  S6 transform, so the still layout is frame 0 and an empty timeline shows the still. "Adds a clip at the playhead"
+  inserts after the clip under the playhead, zoomed in 20 % from the state there. Reorder = Move Earlier / Later
+  (context menu); free placement on the ruler with gaps is not modelled — the hold makes gaps.
+- **Interpolation:** `AnimationTimeline.transform(at:from:)` is pure and exact at every keyframe (end points are
+  returned as stored values, not recomputed). Easings: spring (ζ 0.7, ω 8.5 per clip, normalised to land on 1;
+  4.6 % overshoot, within 2 % from 80 %), linear, cubic (S6's in-out), out (cubic out), in-out (sine), out-circ.
+  The spring's overshoot uses `ContentTransform.blended(to:progress:)`, which extrapolates up to ±50 % and keeps
+  fractional zoom (S6's private unchecked initialiser became internal for this; nothing else in S6 changed).
+- **Length:** max(animation, video length), at least 1 s, at most 120 s. Videos longer than 120 s (+50 ms
+  tolerance) are refused at import.
+- **Video content:** `EditorDocument.video: VideoContent?` (new field, defaulted). The video's first frame is the
+  document's `content` (`ContentImage` with id `video.posterID`), so every existing path (canvas size, still
+  export, copy, layouts, themes, S7 placeholders) works unchanged; `EditorDocument.activeVideo` is the video only
+  while `content` is still that frame, so importing an image or snippet later replaces the video without other
+  slices having to know about it. The movie is copied to `$TMPDIR/SunshotVideo/<uuid>.<ext>` on import/open so
+  documents never depend on the original file. Frames are decoded at render time by `VideoFrameSource`
+  (`AVAssetReader`, BGRA, orientation from `preferredTransform`, one frame + one look-ahead in memory; sequential
+  reads never seek, a jump back or > 2 s ahead restarts the reader 0.25 s before the time).
+  `AVAssetImageGenerator` is not used: its synchronous API is deprecated and the reader serves both preview and
+  export.
+- **One drawing path:** `AnimationRenderer` never draws; it builds the document at time t (interpolated transform,
+  video frame as content) and calls `Renderer.render(document:)`. Preview playback and export both go through it.
+- **Export:** `VideoExporter` — `AVAssetWriter` + pixel-buffer adaptor pool (BGRA, premultiplied alpha
+  attachment), written to a temp file and moved into place, so a failed or cancelled export never leaves a partial
+  file. Resolution presets = shorter side 720 / 1080 / 1440, even sides, ≤ 4096 px per side. H.264 / HEVC in
+  `.mp4`; a see-through backdrop (`!backdrop.isOpaque` or backdrop opacity < 1 — this includes user image
+  backdrops, which may have alpha) forces HEVC with alpha in `.mov` and disables the codec picker. At most 6 pooled
+  buffers are with the encoder at once (`kCVPixelBufferPoolAllocationThresholdKey`). Audio: the first audio track
+  is passed through without re-encoding (`outputSettings: nil`), interleaved after each frame, trimmed by
+  `endSession`; muting omits it. If the container refuses the audio format the export is silent (Render may not
+  import `os`, so this isn't logged).
+- **Memory (AC15) is measured as a peak bound**, not a plateau: render-only loops already rise and fall by
+  ~200–450 MB through CoreGraphics / CoreImage caches (the tilt offscreen in particular), so "growth over the
+  second half" was noise-dominated. Measured (release, other agents building in parallel): 6 s 1080p60 tilt export
+  360 frames in 13–14 s, peak +404–458 MB (budget 768; keeping all frames would be ~2.7 GB). Debug builds render
+  tilted 1080p frames ~25× slower; the perf stage runs in release.
+- **Preview playback:** a main-actor task paced by `ContinuousClock` (real time; slow frames are skipped, not
+  slowed) renders each frame at preview scale through `AnimationRenderer` off the main actor, ~60 fps cap
+  (`frameInterval` 16 ms). The canvas shows `EditorModel.displayedPreview` (the frame at the playhead in Animate
+  mode); the view keys a task on `animationFrameRequest` (document + playhead + appearance) so edits and undo
+  re-render the frame. Seeking never touches the document or undo history.
+- **Persistence (S7):** `DocumentManifest.video: VideoEntry?` (media id, size, duration, has-audio — so opening
+  needs no AVFoundation); the movie's original bytes go to `media/<id>.<ext>` (memory-mapped when saving). Image
+  loading skips the video entry. A missing movie throws `missingMedia`, or with placeholders opens with the still
+  frame as image content.
+- **UI:** Animate (⇧⌘M, toolbar film button) swaps the bottom toolbar for a glass timeline strip; Import Video…
+  (⌥⌘I, also drag & drop of a movie), Export Video… (⌃⌘E, also in the strip) opens a sheet with progress and
+  Cancel Render. Space / Home / End / ⌫ are handled by the focused strip (`onKeyPress`), not menu key equivalents,
+  so they never steal typing. The Transition popover edits the clip's target with sliders and "Use Canvas Layout"
+  (copies the S6 transform); S6's Position popover keeps editing the start state.
+- **Deferred:** video trimming / splitting (spec's media-track jump cut), dynamic backgrounds that follow the
+  video's colours, timeline zoom and drag-to-resize clips on the ruler, ProRes 4444. The S10 crop does not apply to
+  video frames yet.
+
+## Wave 2 integration notes (2026-11-17)
+- S10 crop, S12 devices and S13 video merged on main. `EditorDocument` now carries `snippet` (S11), `crop` (S10) and
+  `video` (S13); `DocumentManifest` saves all three with tolerant decoding.
+- S10's crop is applied in `Renderer.render(document:)`, so S13's per-frame document renders crop video frames too
+  (the crop is in first-frame pixels, which equal video-frame pixels).
+- Menu shortcuts added in wave 2 (all in `MenuCatalog`, unique-checked): Capture Area ⌥⇧⌘4, Capture Window ⌥⇧⌘5,
+  Capture Website ⌥⇧⌘L, Crop ⌥⌘C, Templates ⇧⌘T, Animate ⇧⌘M, Import Video ⌥⌘I, Export Video ⌃⌘E.
+- Annotate mode stays disabled for transformed content, snippets and device mockups (pointer mapping follow-up).

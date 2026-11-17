@@ -66,5 +66,6 @@ extension EditorModel {
     /// Whether the canvas accepts this drop: a supported image, or a folder.
     public func canAcceptDrop(_ urls: [URL]) -> Bool {
         urls.contains(where: isSupportedImageFile) || BulkImportCollector.containsDirectory(urls)
+            || urls.contains(where: VideoLoader.isVideoFile)
     }
 }

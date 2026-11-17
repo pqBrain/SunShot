@@ -165,6 +165,8 @@ extension DocumentController {
     public func isEnabled(_ command: MenuCommand) -> Bool {
         switch command {
         case .exportImage: model.canExport
+        case .exportVideo: model.canExportVideo
+        case .animate: model.canAnimate
         case .copy, .clearContent, .save: model.hasContent
         case .crop: model.canCrop
         case .captureArea, .captureWindow: !model.capture.isCapturingScreen
@@ -182,6 +184,7 @@ extension DocumentController {
         case .undo: model.undoTitle
         case .redo: model.redoTitle
         case .toggleInspector: model.showsInspector ? UIStrings.hideInspector : UIStrings.showInspector
+        case .animate: model.animate.isActive ? UIStrings.exitAnimate : UIStrings.animate
         default: MenuCatalog.title(command)
         }
     }

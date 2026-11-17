@@ -32,10 +32,12 @@ public struct EditorDocument: Equatable, Sendable {
     public var snippet: CodeSnippet?
     /// Non-destructive crop of the content image (S10), in its pixels; nil shows the whole image.
     public var crop: CropRect?
+    /// Video content (S13); it is the content while `content` is its first frame (see `activeVideo`).
+    public var video: VideoContent?
 
     public init(
         project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:],
-        theme: Theme? = nil, snippet: CodeSnippet? = nil, crop: CropRect? = nil
+        theme: Theme? = nil, snippet: CodeSnippet? = nil, crop: CropRect? = nil, video: VideoContent? = nil
     ) {
         self.project = project
         self.content = content
@@ -43,6 +45,7 @@ public struct EditorDocument: Equatable, Sendable {
         self.theme = theme
         self.snippet = snippet
         self.crop = crop
+        self.video = video
     }
 }
 

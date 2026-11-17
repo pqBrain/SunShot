@@ -6,6 +6,7 @@ public enum MenuCommand: String, CaseIterable, Sendable {
     case captureArea, captureWindow, captureWebsite, templateGallery
     case undo, redo, cut, copy, paste, selectAll, clearContent, crop
     case toggleInspector, enterFullScreen
+    case importVideo, exportVideo, animate
     case minimize, zoom
     case help
 }
@@ -86,6 +87,8 @@ public enum MenuCatalog {
                 MenuItemSpec(.saveAs, "Save As…", KeyShortcut("s", [.command, .shift])),
                 MenuItemSpec(.exportImage, "Export Image…", KeyShortcut("e", [.command, .shift])),
                 MenuItemSpec(.exportAll, "Export All…", KeyShortcut("e", [.command, .option, .shift])),
+                MenuItemSpec(.importVideo, "Import Video…", KeyShortcut("i", [.command, .option])),
+                MenuItemSpec(.exportVideo, "Export Video…", KeyShortcut("e", [.command, .control])),
                 MenuItemSpec(.startOver, "Start Over"),
                 // S10: ⌥⇧⌘4 is also the optional global capture shortcut (Settings), off by default.
                 MenuItemSpec(.captureArea, "Capture Area…", KeyShortcut("4", [.command, .option, .shift])),
@@ -108,6 +111,7 @@ public enum MenuCatalog {
             title: "View",
             items: [
                 MenuItemSpec(.toggleInspector, "Show/Hide Inspector", KeyShortcut("e", [.command, .option])),
+                MenuItemSpec(.animate, "Animate", KeyShortcut("m", [.command, .shift])),
                 MenuItemSpec(
                     .enterFullScreen, "Enter Full Screen", KeyShortcut("f", [.command, .control]), system: true),
             ]),

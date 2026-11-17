@@ -23,14 +23,17 @@ public struct DocumentManifest: Codable, Hashable, Sendable {
     public var snippet: CodeSnippet?
     /// Non-destructive crop of the content image (S10), in its pixels; nil (or missing) = the whole image.
     public var crop: CropRect?
+    /// Video content (S13): which media file is the movie. Nil for image, snippet or empty documents.
+    public var video: VideoEntry?
 
     public init(
         schemaVersion: Int = DocumentManifest.currentSchemaVersion, project: Project = Project(),
         content: ContentEntry? = nil, media: [MediaEntry] = [], theme: Theme? = nil, snippet: CodeSnippet? = nil,
-        crop: CropRect? = nil
+        crop: CropRect? = nil, video: VideoEntry? = nil
     ) {
         self.snippet = snippet
         self.crop = crop
+        self.video = video
         self.schemaVersion = schemaVersion
         self.project = project
         self.content = content
