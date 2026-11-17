@@ -8,11 +8,16 @@ struct InspectorView: View {
     @Bindable var model: EditorModel
     @State private var borderExpanded = true
     @State private var shadowExpanded = true
+    @State private var backdropExpanded = true
 
     var body: some View {
         ScrollView {
             VStack(spacing: 10) {
                 if model.isInspectorEnabled {
+                    InspectorSection(
+                        title: UIStrings.backdropSection, isExpanded: $backdropExpanded,
+                        reset: { model.perform { $0.resetBackdrop() } }
+                    ) { BackdropControls(model: model) }
                     InspectorSection(
                         title: UIStrings.borderSection, isExpanded: $borderExpanded,
                         reset: { model.perform { $0.resetBorder() } }

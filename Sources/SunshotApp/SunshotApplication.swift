@@ -69,6 +69,15 @@ enum Panels {
         await model.importFile(at: url)
     }
 
+    static func chooseBackdropImage(for model: EditorModel) async {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = ImageTypes.supported
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        await model.importBackdropFile(at: url)
+    }
+
     static func exportPNG(from model: EditorModel) async {
         guard model.hasContent else { return }
         let panel = NSSavePanel()

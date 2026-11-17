@@ -25,7 +25,7 @@ public final class EditorModel {
     /// Imports slower than this show a progress indicator.
     public static let defaultProgressDelay: Duration = .milliseconds(250)
 
-    public private(set) var session = EditorSession()
+    public internal(set) var session = EditorSession()
     public private(set) var preview: CGImage?
     public private(set) var isImporting = false
     public private(set) var showsProgress = false
@@ -33,8 +33,12 @@ public final class EditorModel {
     /// Whether the style inspector panel is visible.
     public var showsInspector = true
     public var notice: String?
+    /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
+    public private(set) var isDarkAppearance = false
     private var renderGeneration = 0
     private let progressDelay: Duration
+    /// An open colour-panel edit: merged into one undo step once the colour stops changing.
+    var pendingContinuousEdit: (name: String, task: Task<Void, Never>)?
 
     public init(progressDelay: Duration = EditorModel.defaultProgressDelay) {
         self.progressDelay = progressDelay
@@ -114,12 +118,14 @@ public final class EditorModel {
     }
 
     public func undo() async {
+        finishContinuousEdit()
         guard canUndo else { return }
         session.undo()
         await refreshPreview()
     }
 
     public func redo() async {
+        finishContinuousEdit()
         guard canRedo else { return }
         session.redo()
         await refreshPreview()
@@ -136,12 +142,22 @@ public final class EditorModel {
     /// Await the returned task to wait for the new preview.
     @discardableResult
     public func perform(_ change: (inout EditorSession) -> Void) -> Task<Void, Never> {
+        finishContinuousEdit()
+        return apply(change)
+    }
+
+    /// Applies without closing an open colour-panel edit.
+    @discardableResult
+    func apply(_ change: (inout EditorSession) -> Void) -> Task<Void, Never> {
         change(&session)
         return Task { await refreshPreview() }
     }
 
     /// Starts a continuous change (slider or handle drag); `endGesture` records it as a single undo step.
-    public func beginGesture() { session.beginGesture() }
+    public func beginGesture() {
+        finishContinuousEdit()
+        session.beginGesture()
+    }
 
     public func endGesture(_ actionName: String) { session.endGesture(actionName) }
 
@@ -158,6 +174,14 @@ public final class EditorModel {
         let step = large ? UnitOffset.largeKeyboardStep : UnitOffset.keyboardStep
         let position = project.shadow.lightPosition.nudged(dx: dx * step, dy: dy * step)
         perform { $0.setLightPosition(position) }
+    }
+
+    /// Called by the window when Light/Dark changes; re-renders so the checkerboard matches.
+    @discardableResult
+    public func setDarkAppearance(_ isDark: Bool) -> Task<Void, Never>? {
+        guard isDark != isDarkAppearance else { return nil }
+        isDarkAppearance = isDark
+        return Task { await refreshPreview() }
     }
 
     // MARK: Export
@@ -196,8 +220,9 @@ public final class EditorModel {
         renderGeneration += 1
         let generation = renderGeneration
         let document = session.document
+        let grid = SunshotPalette.transparencyGrid(dark: isDarkAppearance)
         let image = try? await Task.detached(priority: .userInitiated) {
-            try Renderer.render(document: document, scale: 1)
+            try Renderer.render(document: document, scale: 1, showsTransparencyGrid: true, grid: grid)
         }.value
         if generation == renderGeneration { preview = image ?? nil }
     }

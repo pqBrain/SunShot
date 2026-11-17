@@ -1,4 +1,6 @@
 public import AppKit
+import SunshotCore
+public import SunshotRender
 
 /// UI colours. Semantic system colours so Light/Dark work automatically; contrast is unit-tested.
 public enum SunshotPalette {
@@ -28,6 +30,16 @@ public enum SunshotPalette {
             ? NSColor(srgbRed: 0.20, green: 0.20, blue: 0.22, alpha: 1)
             : NSColor(srgbRed: 0.93, green: 0.93, blue: 0.95, alpha: 1)
     }
+
+    /// Checkerboard behind transparent backdrops in the preview: two neutral greys per appearance.
+    public static func transparencyGrid(dark: Bool) -> TransparencyGrid {
+        dark
+            ? TransparencyGrid(light: RGBAColor(rgb: 0x3A3A3F), dark: RGBAColor(rgb: 0x2A2A2E))
+            : TransparencyGrid(light: RGBAColor(rgb: 0xFFFFFF), dark: RGBAColor(rgb: 0xDCDCE1))
+    }
+
+    /// Ring around the selected swatch / preset (system accent, so it follows the user's choice).
+    public static let selectionRing = NSColor.controlAccentColor
 
     private static func isDark(_ appearance: NSAppearance) -> Bool {
         appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua

@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 struct EditorView: View {
     @Bindable var model: EditorModel
     @State private var isDropTargeted = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 0) {
@@ -20,6 +21,7 @@ struct EditorView: View {
             }
         }
         .animation(.smooth(duration: 0.3), value: model.showsInspector)
+        .task(id: colorScheme) { await model.setDarkAppearance(colorScheme == .dark)?.value }
         .containerBackground(.ultraThinMaterial, for: .window)
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .toolbar(removing: .title)
