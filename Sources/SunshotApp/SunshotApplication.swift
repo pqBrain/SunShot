@@ -24,6 +24,8 @@ struct SunshotCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button(UIStrings.openImage) { Task { await Panels.openImage(into: model) } }
                 .keyboardShortcut("o")
+            Button(UIStrings.newCodeSnippet) { model.newCodeSnippet() }
+                .keyboardShortcut("n", modifiers: [.command, .option])
         }
         CommandGroup(replacing: .importExport) {
             Button(UIStrings.exportImage) { Task { await Panels.export(from: model) } }

@@ -117,3 +117,47 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 - **Known limitation:** a small image exported at 4K/6K with a strong shadow is slow (200×120 content at 6K with
   spread/high: ~4.7 s), because the shadow blur grows with the scale (~750 px). It runs off the main thread;
   rendering the shadow at reduced resolution is the fix if it matters in practice.
+
+## S11 implementation notes (2026-11-17)
+- **Content is an image or a snippet, never both.** `EditorDocument.snippet: CodeSnippet?` sits next to `content`;
+  New Code Snippet clears the image and importing/pasting an image clears the snippet ("Replace Image"); Clear
+  Content clears both. The style (backdrop, border, shadow, canvas, export) is kept across the switch.
+  `EditorDocument.contentPixelSize` is the one place that answers "how big is the content" for both kinds.
+- **One render path, one hook.** `Renderer.render(document:)` sends snippet documents to
+  `Renderer.render(project:snippet:)`, which lays the snippet out at 1× (that size drives the canvas layout) and
+  draws it at `scale × styleScale`, then calls the normal `render(project:content:contentSize:)`. The only change
+  to the image path is the optional `contentSize` (defaults to the image's pixel size), so existing output is
+  byte-identical. The code is therefore always drawn at output density: 2×, 4K and an exact canvas that scales
+  the content up all get sharp text.
+- **Model is Codable with tolerant decoding** (for S7): every key optional, unknown language = auto-detect,
+  unknown theme id renders with the default theme, unknown keys ignored; font size 8…48 and padding 0…120 are
+  clamped on every write. `fontName` is a PostScript name (nil = Menlo) so S5's code-font token can drive it.
+- **Font: Menlo**, not the system monospaced font: it is always installed, has stable metrics (snapshots), and
+  `CTFontCreateWithName` silently substitutes Helvetica for missing names — so a missing `fontName` is detected by
+  comparing PostScript names and falls back to Menlo. The title row uses the system UI font.
+- **Highlighter:** a single-pass scanner over UTF-16 code units driven by per-language grammar data
+  (`CodeGrammar`), plus a small HTML/XML scanner. Tokens are UTF-16 ranges (what CoreText/AppKit index by) and only
+  ever split at ASCII characters, so surrogate pairs are never cut (fuzz-tested). Unterminated strings stop at the
+  end of the line; unterminated block comments and multi-line strings run to the end. No regexes, no dependencies.
+  Known simplifications: no nested string interpolation colouring, no embedded CSS/JS inside HTML, no heredocs.
+- **Auto-detect** is a weighted substring-signal table (first 4,000 characters) plus a real `JSONSerialization`
+  parse for JSON and a prefix check for markup; ties or scores under 3 give Plain text. TypeScript borrows
+  JavaScript's signals once it has its own, so typed JS is TypeScript and plain JS stays JavaScript.
+- **Themes are data**, four Sunshot-own themes: Daybreak (default, light, warm), Porcelain (light, cool),
+  Midnight (dark navy), Ember (dark warm). Tests enforce WCAG contrast: text ≥ 4.5:1 (also on the highlight band),
+  every token colour ≥ 3:1, line numbers ≥ 2.5:1.
+- **Layout:** line height = round(1.5 × font size), title row = round(2.4 × font size), gutter = digits (≥ 2) ×
+  column advance + one line height, minimum text width 24 columns, tabs = 4 spaces, CRLF/CR = LF.
+- **Undo:** each inspector change is one named step; typing and the title field go through
+  `performContinuous` so a run of keystrokes is one "Typing" step, closed after 1 s idle or by any other edit,
+  undo or redo. The editor's `NSTextView` has its own undo off so ⌘Z always reaches the document's stack.
+- **Editor panel** is an `NSTextView` (not `TextEditor`) so smart quotes/dashes, text replacement, spelling and
+  link detection can all be switched off — code must stay exactly as typed. It shows plain monospaced text;
+  colours are in the preview.
+- **New Code Snippet is ⌥⌘N** (⌘N is reserved for S7's File ▸ New). Export file names use `{TEMPLATE}` = `code`.
+- **Not in S11** (recorded in the acceptance open questions): ⌥-click a preview line to highlight it, diff
+  highlighting, Format Code. Lines are highlighted from the inspector field ("2, 4-6").
+- **Measured (release, M-series, machine load ~27 from parallel agents):** 500-line snippet highlight + 1× render
+  104 ms (budget 150); 300-line snippet at 2× 279 ms (budget 400). A 500-line snippet at 2× is ~23,000 px tall,
+  over the 16384 px export limit, so the 2× budget uses 300 lines. Earlier runs under heavier load reached 172 /
+  471 ms; budgets were not loosened.
