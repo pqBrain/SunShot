@@ -48,4 +48,16 @@ public enum SunshotDefaults {
             RGBAColor(rgb: 0x2EC4B6), RGBAColor(rgb: 0x6DD3F7), RGBAColor(rgb: 0x9B8CFF), RGBAColor(rgb: 0xFF9F6E),
         ],
         fieldCount: 6)
+    /// S5: new documents have no frame, chrome at 100 % and chrome following the Background token.
+    public static let frameKind = FrameKind.none
+    public static let frameUIScale: Double = 100
+    public static let chromeAppearance = ChromeAppearance.auto
+    /// Colour tokens of new documents.
+    public static let foregroundColor = RGBAColor(rgb: 0x1D1D1F)
+    public static let backgroundColor = RGBAColor(rgb: 0xFFFFFF)
+    public static let secondaryColor = RGBAColor(rgb: 0x6E6E73)
+    public static let primaryColor = RGBAColor(rgb: 0x0A84FF)
+    /// Fonts by PostScript name; empty = the system font (text) and the system monospaced font (code).
+    public static let textFont = ""
+    public static let codeFont = ""
 }

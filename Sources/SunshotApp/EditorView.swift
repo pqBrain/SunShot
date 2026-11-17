@@ -34,7 +34,7 @@ struct EditorView: View {
     private var canvasArea: some View {
         ZStack {
             if let preview = model.preview, model.hasContent {
-                CanvasPreview(image: preview, accessibilityLabel: model.previewAccessibilityLabel)
+                CanvasPreview(image: preview, accessibilityLabel: model.previewAccessibilityLabel, model: model)
             } else {
                 EmptyStateView(isTargeted: isDropTargeted) { Task { await Panels.openImage(into: model) } }
             }
@@ -64,6 +64,8 @@ struct EditorView: View {
 struct CanvasPreview: View {
     let image: CGImage
     let accessibilityLabel: String
+    /// S5: inline title editing over the frame's title bar; the title is the preview's accessibility value.
+    let model: EditorModel
     @Environment(\.displayScale) private var displayScale
 
     var body: some View {
@@ -71,12 +73,14 @@ struct CanvasPreview: View {
             .resizable()
             .interpolation(.high)
             .aspectRatio(contentMode: .fit)
+            .overlay { FrameTitleOverlay(model: model) }
             .frame(maxWidth: CGFloat(image.width) / displayScale, maxHeight: CGFloat(image.height) / displayScale)
             .clipShape(.rect(cornerRadius: 10, style: .continuous))
             .shadow(color: .black.opacity(0.22), radius: 24, y: 10)
             .padding(36)
             .accessibilityElement()
             .accessibilityLabel(accessibilityLabel)
+            .accessibilityValue(model.previewAccessibilityValue)
             .accessibilityAddTraits(.isImage)
     }
 }

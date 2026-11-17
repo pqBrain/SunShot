@@ -1,0 +1,104 @@
+public import CoreGraphics
+public import SunshotCore
+
+/// Draws the "window silhouette" — frame chrome plus content — into a frame box. Called by `Renderer.render`
+/// inside the content's shadow layer, so preview and export share it, and so later transforms (position, tilt)
+/// can wrap the whole silhouette. With frame `none` it draws exactly what S2 drew: the clipped content.
+public enum FrameRenderer {
+    /// `box` is the frame box in the current (top-left origin) user space, in unscaled content pixels.
+    public static func draw(_ image: CGImage, project: Project, in box: CGRect, context: CGContext) {
+        let geometry = FrameGeometry(frame: project.frame, boxWidth: box.width, boxHeight: box.height)
+        context.saveGState()
+        context.translateBy(x: box.minX, y: box.minY)
+        defer { context.restoreGState() }
+
+        switch project.frame.kind {
+        case .none:
+            drawClippedContent(image, border: project.border, geometry: geometry, context: context)
+        case .macWindow, .browserWindow, .winWindow:
+            drawWindow(image, geometry: geometry, project: project, context: context)
+        case .card, .stack, .stack2:
+            drawCards(image, geometry: geometry, project: project, fill: project.tokens.colors.background, context)
+        case .thickBorder:
+            drawCards(image, geometry: geometry, project: project, fill: project.tokens.colors.secondary, context)
+        }
+    }
+
+    /// The S2 look: content clipped to its corner shape.
+    private static func drawClippedContent(
+        _ image: CGImage, border: Border, geometry: FrameGeometry, context: CGContext
+    ) {
+        context.saveGState()
+        context.addPath(ContentShape.path(for: border, in: geometry.window.cg))
+        context.clip()
+        drawImage(image, in: geometry.content.cg, context: context)
+        context.restoreGState()
+    }
+
+    /// Images draw bottom-up; undo the flip locally so content is not mirrored.
+    static func drawImage(_ image: CGImage, in rect: CGRect, context: CGContext) {
+        context.saveGState()
+        context.translateBy(x: 0, y: rect.minY + rect.maxY)
+        context.scaleBy(x: 1, y: -1)
+        context.draw(image, in: rect)
+        context.restoreGState()
+    }
+
+    // MARK: Windows
+
+    private static func drawWindow(_ image: CGImage, geometry: FrameGeometry, project: Project, context: CGContext) {
+        let palette = ChromePalette.resolve(project.tokens)
+        let window = geometry.window.cg
+        context.saveGState()
+        context.addPath(ContentShape.path(for: project.border, in: window))
+        context.clip()
+        context.setFillColor(palette.body.cgColor)
+        context.fill(window)
+        if let bar = geometry.bar?.cg {
+            context.setFillColor(palette.bar.cgColor)
+            context.fill(bar)
+            context.setFillColor(palette.separator.cgColor)
+            context.fill(CGRect(x: bar.minX, y: bar.maxY - geometry.scale, width: bar.width, height: geometry.scale))
+            FrameChrome.drawBar(
+                geometry: geometry, palette: palette, fonts: project.tokens.fonts, title: project.frame.displayTitle,
+                context: context)
+        }
+        drawImage(image, in: geometry.content.cg, context: context)
+        context.restoreGState()
+    }
+
+    // MARK: Cards and thick border
+
+    /// Card / stack: the content on a card of `fill`; thick border: the content in a ring of `fill`. Both are
+    /// concentric — the outer radius is the S2 radius plus the padding — and the inner area behind transparent
+    /// content shows the Background token, never the backdrop.
+    private static func drawCards(
+        _ image: CGImage, geometry: FrameGeometry, project: Project, fill: RGBAColor, _ context: CGContext
+    ) {
+        var outer = project.border
+        outer.radius = project.border.radius + geometry.outerRadiusExtra
+        for card in geometry.backCards {
+            context.addPath(ContentShape.path(for: outer, in: card.rect.cg))
+            context.setFillColor(fill.withAlpha(fill.alpha * card.opacity).cgColor)
+            context.fillPath()
+        }
+        context.addPath(ContentShape.path(for: outer, in: geometry.window.cg))
+        context.setFillColor(fill.cgColor)
+        context.fillPath()
+
+        let inner = ContentShape.path(for: project.border, in: geometry.content.cg)
+        context.saveGState()
+        context.addPath(inner)
+        context.clip()
+        if geometry.kind == .thickBorder {
+            context.setFillColor(project.tokens.colors.background.cgColor)
+            context.fill(geometry.content.cg)
+        }
+        drawImage(image, in: geometry.content.cg, context: context)
+        context.restoreGState()
+    }
+}
+
+extension LayoutRect {
+    var cg: CGRect { CGRect(x: x, y: y, width: width, height: height) }
+}

@@ -10,6 +10,8 @@ struct InspectorView: View {
     @State private var shadowExpanded = true
     @State private var backdropExpanded = true
     @State private var canvasExpanded = true
+    @State private var frameExpanded = true
+    @State private var colorsExpanded = false
 
     var body: some View {
         ScrollView {
@@ -31,6 +33,14 @@ struct InspectorView: View {
                         title: UIStrings.shadowSection, isExpanded: $shadowExpanded,
                         reset: { model.perform { $0.resetShadow() } }
                     ) { ShadowControls(model: model) }
+                    InspectorSection(
+                        title: UIStrings.frameSection, isExpanded: $frameExpanded,
+                        reset: { model.perform { $0.resetFrame() } }
+                    ) { FrameControls(model: model) }
+                    InspectorSection(
+                        title: UIStrings.colorsSection, isExpanded: $colorsExpanded,
+                        reset: { model.perform { $0.resetColors() } }
+                    ) { ColorTokenControls(model: model) }
                 } else {
                     Text(UIStrings.inspectorEmpty)
                         .font(.callout)

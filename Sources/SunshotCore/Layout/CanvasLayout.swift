@@ -3,14 +3,19 @@ public struct CanvasLayout: Hashable, Sendable {
     public let canvasSize: PixelSize
     /// Where the content lands, after any `styleScale`.
     public let contentRect: LayoutRect
+    /// Where the frame box (content + frame chrome, see `FrameGeometry`) lands. Equals `contentRect` for frame none.
+    public let frameRect: LayoutRect
     /// How much the padded content (and with it corner radius and shadow) is scaled to fit an exact canvas.
     /// 1 for Auto and ratio canvases, which never scale the content.
     public let styleScale: Double
 
-    public init(canvasSize: PixelSize, contentRect: LayoutRect, styleScale: Double = 1) {
+    public init(
+        canvasSize: PixelSize, contentRect: LayoutRect, styleScale: Double = 1, frameRect: LayoutRect? = nil
+    ) {
         self.canvasSize = canvasSize
         self.contentRect = contentRect
         self.styleScale = styleScale
+        self.frameRect = frameRect ?? contentRect
     }
 
     /// Lays out content of `contentSize` according to `project`.
@@ -19,8 +24,24 @@ public struct CanvasLayout: Hashable, Sendable {
     /// - `ratio`: the smallest canvas of that ratio that fits content + padding; content is never scaled.
     /// - `exact` (and store presets): the given canvas; content + padding is scaled uniformly to fit, centred.
     /// - `custom`: like `exact`; a missing side follows the Auto canvas's ratio.
+    ///
+    /// Frame chrome (S5) is laid out as part of the content: the frame box (content + chrome) is what gets padded,
+    /// so chrome grows an Auto canvas and never covers or scales the content.
     public static func compute(contentSize: PixelSize, project: Project) -> CanvasLayout {
-        let content = (width: Double(contentSize.width), height: Double(contentSize.height))
+        let insets = FrameGeometry.insets(for: project.frame)
+        let box = boxLayout(
+            (Double(contentSize.width) + insets.horizontal, Double(contentSize.height) + insets.vertical),
+            project: project)
+        let style = box.styleScale
+        let frame = box.contentRect
+        let content = LayoutRect(
+            x: frame.x + insets.left * style, y: frame.y + insets.top * style,
+            width: frame.width - insets.horizontal * style, height: frame.height - insets.vertical * style)
+        return CanvasLayout(canvasSize: box.canvasSize, contentRect: content, styleScale: style, frameRect: frame)
+    }
+
+    /// Lays out a box of `content` size (the frame box) as if it were the content.
+    private static func boxLayout(_ content: (width: Double, height: Double), project: Project) -> CanvasLayout {
         let inset = project.padding
         let padded = (width: content.width + inset * 2, height: content.height + inset * 2)
 

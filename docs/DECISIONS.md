@@ -117,3 +117,37 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 - **Known limitation:** a small image exported at 4K/6K with a strong shadow is slow (200×120 content at 6K with
   spread/high: ~4.7 s), because the shadow blur grows with the scale (~750 px). It runs off the main thread;
   rendering the shadow at reduced resolution is the fix if it matters in practice.
+
+## S5 implementation notes (2026-11-17)
+- **Model:** `Project.frame` (`Frame`: kind, title, uiScale %) and `Project.tokens` (`DesignTokens`: four colour
+  tokens, Text / Code fonts by PostScript name, chrome appearance light / dark / auto). Defaults live in
+  `SunshotDefaults` (frame none, 100 %, auto chrome, #1D1D1F / #FFFFFF / #6E6E73 / #0A84FF, system fonts).
+- **Tolerant decoding:** `Project` now has an explicit `init(from:)` (`Project+Coding.swift`) in which every key is
+  optional and falls back to its default, and the new nested types do the same; unknown frame kinds / appearances
+  decode as `none` / `auto`. Old documents (no `frame` / `tokens` keys) open unchanged. S7 can reuse this rather
+  than add a second decoder.
+- **Layout:** frame chrome is laid out as part of the content. `CanvasLayout.compute` pads the *frame box*
+  (content + `FrameGeometry.insets`) instead of the bare content, so chrome grows an Auto canvas (1000×600 + mac
+  bar → 1128×756) and is scaled with the content on exact canvases. `CanvasLayout.frameRect` is new; `contentRect`
+  keeps its meaning. With frame none the insets are zero and every value is computed exactly as before, so all
+  S1–S4 snapshots pass unchanged (S5-AC2 compares against `s2-border-default` with zero tolerance).
+- **One drawing path:** `Renderer.drawContent` now calls `FrameRenderer.draw(image, project:, in: box, context:)`
+  inside the existing shadow layer; it draws the whole window silhouette (back cards, chrome, content) into a box
+  rect, so the shadow follows the silhouette and a later transform (S6 position / tilt) can wrap the call. Frame
+  none takes the old clip-and-draw path. The frame picker's thumbnails go through `Renderer.render` too
+  (`Renderer.renderFrameThumbnail`), cached per kind / tokens / corners / UI scale in the Platform layer.
+- **All chrome is vector:** traffic lights, chevrons, padlock, caption glyphs and the address field are Core
+  Graphics paths; titles are Core Text lines truncated with "…" (`CTLineCreateTruncatedLine`), so RTL text and
+  emoji shape correctly. At 4K the bar edge is a 1-pixel transition (S5-AC19).
+- **Fonts are not bundled** (see the decisions in `docs/acceptance/S5.md`): system font by default, recommended
+  installed families first in the pickers, a missing font falls back to the system font and shows "Font
+  unavailable". The repository test for `LICENSES/` guards against adding font files without a licence.
+- **Auto chrome contrast rule:** tokens are used as given unless below 2:1 against the bar; see S5.md decisions.
+- **Undo names:** "Change Frame", "Edit Frame Title", "Change UI Scale", "Reset Frame", "Change Chrome
+  Appearance", "Change Foreground / Background / Secondary / Primary Color", "Reset Colors", "Change Text Font",
+  "Change Code Font", "Reset Fonts". Inline title editing is a gesture: live updates, Return = one entry, Esc
+  restores with no entry. The section header Reset of Colors & Fonts resets the colours; fonts have their own
+  Reset Fonts button.
+- **Inline title editing** works in the inspector's Title field and directly on the canvas (double-click the
+  title bar; the bar's position comes from `EditorModel.titleBarUnitRect`, computed from the same layout).
+- **Inspector:** Frame and Colors & Fonts sections are appended after Shadow (Colors & Fonts starts collapsed).

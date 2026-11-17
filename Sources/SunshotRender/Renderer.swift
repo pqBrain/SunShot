@@ -80,15 +80,15 @@ public enum Renderer {
     /// Draws the content clipped to its corner shape, with a shadow derived from the clipped content's alpha
     /// (so transparent cut-outs cast no shadow). On exact canvases the content, its corners and its shadow are
     /// scaled together by `layout.styleScale`, so the look is the same as on an Auto canvas, just resized.
+    /// The frame (S5) is drawn with the content by `FrameRenderer`, inside the same shadow layer.
     private static func drawContent(
         _ image: CGImage, layout: CanvasLayout, project: Project, scale: Double, context: CGContext
     ) {
-        let rect = layout.contentRect
+        let rect = layout.frameRect
         let style = layout.styleScale.isFinite && layout.styleScale > 0 ? layout.styleScale : 1
         guard rect.width > 0, rect.height > 0 else { return }
         // Work in unscaled content units: the radius and shadow keep their 1× meaning.
         let target = CGRect(x: 0, y: 0, width: rect.width / style, height: rect.height / style)
-        let shape = ContentShape.path(for: project.border, in: target)
         let metrics = ShadowMetrics.of(project.shadow).scaled(by: scale * style)
 
         context.saveGState()
@@ -101,14 +101,7 @@ public enum Renderer {
                 color: CGColor(gray: 0, alpha: metrics.opacity))
             context.beginTransparencyLayer(auxiliaryInfo: nil)
         }
-        context.saveGState()
-        context.addPath(shape)
-        context.clip()
-        // Images draw bottom-up; undo the flip locally so content is not mirrored.
-        context.translateBy(x: 0, y: target.minY + target.maxY)
-        context.scaleBy(x: 1, y: -1)
-        context.draw(image, in: target)
-        context.restoreGState()
+        FrameRenderer.draw(image, project: project, in: target, context: context)
         if metrics.opacity > 0 { context.endTransparencyLayer() }
         context.restoreGState()
     }

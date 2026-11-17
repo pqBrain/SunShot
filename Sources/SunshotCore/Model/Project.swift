@@ -51,6 +51,9 @@ public struct Project: Codable, Hashable, Sendable {
     public var shadow: Shadow
     /// Format and scale chosen in the export options.
     public var export: ExportOptions
+    /// S5: window / card frame around the content, and the colour tokens, fonts and chrome appearance.
+    public var frame = Frame()
+    public var tokens = DesignTokens()
 
     public init(
         canvas: CanvasSpec = .auto,
