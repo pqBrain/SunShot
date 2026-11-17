@@ -10,13 +10,24 @@ public enum RenderError: Error, Equatable {
 /// The single render path shared by on-screen preview and export (guarantees preview/export parity).
 public enum Renderer {
     /// Preview and export both call this. Returns nil for an empty document.
-    public static func render(document: EditorDocument, scale: Double = 1) throws -> CGImage? {
+    ///
+    /// `showsTransparencyGrid` is set by the preview only: it draws `grid` behind a backdrop that isn't fully
+    /// opaque. Everything else in the pipeline is identical, so exports and copies never contain the grid.
+    public static func render(
+        document: EditorDocument, scale: Double = 1, showsTransparencyGrid: Bool = false,
+        grid: TransparencyGrid = .standard
+    ) throws -> CGImage? {
         guard let content = document.content else { return nil }
-        return try render(project: document.project, content: content.image, scale: scale)
+        return try render(
+            project: document.project, content: content.image, media: document.media, scale: scale,
+            grid: showsTransparencyGrid ? grid : nil)
     }
 
     /// Renders `project` with `content` at `scale` (1 = canvas points map to pixels).
-    public static func render(project: Project, content: CGImage, scale: Double = 1) throws -> CGImage {
+    public static func render(
+        project: Project, content: CGImage, media: [String: MediaAsset] = [:], scale: Double = 1,
+        grid: TransparencyGrid? = nil
+    ) throws -> CGImage {
         let contentSize = PixelSize(width: content.width, height: content.height)
         let layout = CanvasLayout.compute(contentSize: contentSize, project: project)
         let safeScale = scale.isFinite && scale > 0 ? scale : 1
@@ -31,7 +42,7 @@ public enum Renderer {
         context.scaleBy(x: CGFloat(safeScale), y: -CGFloat(safeScale))
         context.interpolationQuality = .high
 
-        drawBackdrop(project.backdrop, size: layout.canvasSize, in: context)
+        BackdropRenderer.draw(project.backdrop, size: layout.canvasSize, media: media, grid: grid, in: context)
         drawContent(content, in: layout.contentRect, project: project, scale: safeScale, context: context)
 
         guard let image = context.makeImage() else { throw RenderError.imageCreationFailed }
@@ -51,15 +62,19 @@ public enum Renderer {
         )
     }
 
-    private static func drawBackdrop(_ backdrop: Backdrop, size: PixelSize, in context: CGContext) {
-        let bounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-        switch backdrop {
-        case .none:
-            context.clear(bounds)
-        case .solid(let color):
-            context.setFillColor(color.cgColor)
-            context.fill(bounds)
+    /// The backdrop alone at `size` pixels (inspector thumbnails), through the same backdrop drawing as `render`.
+    public static func renderBackdrop(
+        _ backdrop: Backdrop, size: PixelSize, media: [String: MediaAsset] = [:]
+    ) throws -> CGImage {
+        guard let context = makeContext(width: size.width, height: size.height) else {
+            throw RenderError.contextCreationFailed
         }
+        context.translateBy(x: 0, y: CGFloat(size.height))
+        context.scaleBy(x: 1, y: -1)
+        context.interpolationQuality = .high
+        BackdropRenderer.draw(backdrop, size: size, media: media, grid: nil, in: context)
+        guard let image = context.makeImage() else { throw RenderError.imageCreationFailed }
+        return image
     }
 
     /// Draws the content clipped to its corner shape, with a shadow derived from the clipped content's alpha

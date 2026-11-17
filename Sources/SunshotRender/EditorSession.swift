@@ -17,14 +17,16 @@ public struct ContentImage: Equatable, Sendable {
     public static func == (lhs: ContentImage, rhs: ContentImage) -> Bool { lhs.id == rhs.id }
 }
 
-/// Everything the user edits: style + content.
+/// Everything the user edits: style + content + media (user backdrop images, keyed by `MediaReference.id`).
 public struct EditorDocument: Equatable, Sendable {
     public var project: Project
     public var content: ContentImage?
+    public var media: [String: MediaAsset]
 
-    public init(project: Project = Project(), content: ContentImage? = nil) {
+    public init(project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:]) {
         self.project = project
         self.content = content
+        self.media = media
     }
 }
 

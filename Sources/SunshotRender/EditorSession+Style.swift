@@ -56,7 +56,7 @@ extension EditorSession {
 
     public mutating func endGesture(_ name: String) { history.endGestureIfChanged(name) }
 
-    private mutating func editProject(_ name: String, _ change: (inout Project) -> Void) {
+    mutating func editProject(_ name: String, _ change: (inout Project) -> Void) {
         if history.isInGesture {
             history.updateGesture(name) { change(&$0.project) }
         } else {
