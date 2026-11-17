@@ -1,0 +1,322 @@
+[
+ {
+  "id": "sunrise-drift",
+  "name": "Sunrise Drift",
+  "kind": "linear",
+  "angle": 135,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#FFB36B"
+   },
+   {
+    "position": 0.5,
+    "hex": "#FF6F91"
+   },
+   {
+    "position": 1,
+    "hex": "#7B6CF6"
+   }
+  ]
+ },
+ {
+  "id": "shallows",
+  "name": "Shallows",
+  "kind": "linear",
+  "angle": 160,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#9BE7F0"
+   },
+   {
+    "position": 1,
+    "hex": "#4C7BF4"
+   }
+  ]
+ },
+ {
+  "id": "peach-soda",
+  "name": "Peach Soda",
+  "kind": "linear",
+  "angle": 90,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#FFD3A5"
+   },
+   {
+    "position": 1,
+    "hex": "#FD6585"
+   }
+  ]
+ },
+ {
+  "id": "mint-tea",
+  "name": "Mint Tea",
+  "kind": "linear",
+  "angle": 180,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#D4FC79"
+   },
+   {
+    "position": 1,
+    "hex": "#96E6A1"
+   }
+  ]
+ },
+ {
+  "id": "night-ride",
+  "name": "Night Ride",
+  "kind": "linear",
+  "angle": 200,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#0F0C29"
+   },
+   {
+    "position": 0.5,
+    "hex": "#302B63"
+   },
+   {
+    "position": 1,
+    "hex": "#24243E"
+   }
+  ]
+ },
+ {
+  "id": "ember-glow",
+  "name": "Ember Glow",
+  "kind": "radial",
+  "angle": 0,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#FFD452"
+   },
+   {
+    "position": 0.55,
+    "hex": "#FF7A45"
+   },
+   {
+    "position": 1,
+    "hex": "#B5213A"
+   }
+  ]
+ },
+ {
+  "id": "moonlit",
+  "name": "Moonlit",
+  "kind": "radial",
+  "angle": 0,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#3D4A7A"
+   },
+   {
+    "position": 1,
+    "hex": "#101426"
+   }
+  ]
+ },
+ {
+  "id": "paper-lantern",
+  "name": "Paper Lantern",
+  "kind": "radial",
+  "angle": 0,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#FFF4D6"
+   },
+   {
+    "position": 1,
+    "hex": "#F7B267"
+   }
+  ]
+ },
+ {
+  "id": "aurora-veil",
+  "name": "Aurora Veil",
+  "kind": "linear",
+  "angle": 120,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#00C9A7"
+   },
+   {
+    "position": 0.5,
+    "hex": "#4D8BF5"
+   },
+   {
+    "position": 1,
+    "hex": "#9D50F0"
+   }
+  ]
+ },
+ {
+  "id": "cotton-candy",
+  "name": "Cotton Candy",
+  "kind": "linear",
+  "angle": 45,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#FBC2EB"
+   },
+   {
+    "position": 1,
+    "hex": "#A6C1EE"
+   }
+  ]
+ },
+ {
+  "id": "citrus-pop",
+  "name": "Citrus Pop",
+  "kind": "linear",
+  "angle": 30,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#F9F871"
+   },
+   {
+    "position": 1,
+    "hex": "#FF8C42"
+   }
+  ]
+ },
+ {
+  "id": "deep-sea",
+  "name": "Deep Sea",
+  "kind": "radial",
+  "angle": 0,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#1CB5E0"
+   },
+   {
+    "position": 1,
+    "hex": "#000851"
+   }
+  ]
+ },
+ {
+  "id": "lavender-haze",
+  "name": "Lavender Haze",
+  "kind": "linear",
+  "angle": 0,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#E0C3FC"
+   },
+   {
+    "position": 1,
+    "hex": "#8EC5FC"
+   }
+  ]
+ },
+ {
+  "id": "smoke",
+  "name": "Smoke",
+  "kind": "linear",
+  "angle": 180,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#434343"
+   },
+   {
+    "position": 1,
+    "hex": "#1A1A1A"
+   }
+  ]
+ },
+ {
+  "id": "rose-quartz",
+  "name": "Rose Quartz",
+  "kind": "radial",
+  "angle": 0,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#FFE3EC"
+   },
+   {
+    "position": 1,
+    "hex": "#E8A0BF"
+   }
+  ]
+ },
+ {
+  "id": "forest-floor",
+  "name": "Forest Floor",
+  "kind": "linear",
+  "angle": 150,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#5A8F5C"
+   },
+   {
+    "position": 0.6,
+    "hex": "#2E5E4E"
+   },
+   {
+    "position": 1,
+    "hex": "#1B3A33"
+   }
+  ]
+ },
+ {
+  "id": "solar-flare",
+  "name": "Solar Flare",
+  "kind": "radial",
+  "angle": 0,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#FFF1A8"
+   },
+   {
+    "position": 0.4,
+    "hex": "#FFB347"
+   },
+   {
+    "position": 0.8,
+    "hex": "#E8505B"
+   },
+   {
+    "position": 1,
+    "hex": "#6A1B4D"
+   }
+  ]
+ },
+ {
+  "id": "glacier",
+  "name": "Glacier",
+  "kind": "linear",
+  "angle": 210,
+  "stops": [
+   {
+    "position": 0,
+    "hex": "#E6F4FF"
+   },
+   {
+    "position": 0.5,
+    "hex": "#9CC9F2"
+   },
+   {
+    "position": 1,
+    "hex": "#5A8FD8"
+   }
+  ]
+ }
+]

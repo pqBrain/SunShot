@@ -14,6 +14,13 @@ public struct RGBAColor: Codable, Hashable, Sendable {
         self.alpha = Self.clamp(alpha)
     }
 
+    /// `0xRRGGBB` literal.
+    public init(rgb: UInt32, alpha: Double = 1) {
+        self.init(
+            red: Double((rgb >> 16) & 0xFF) / 255, green: Double((rgb >> 8) & 0xFF) / 255,
+            blue: Double(rgb & 0xFF) / 255, alpha: alpha)
+    }
+
     /// Parses `#RGB`, `#RRGGBB` or `#RRGGBBAA` (the leading `#` is optional). Returns `nil` for anything else.
     public init?(hex: String) {
         var digits = hex.trimmingCharacters(in: .whitespaces)

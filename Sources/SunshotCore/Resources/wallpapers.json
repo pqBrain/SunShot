@@ -1,0 +1,282 @@
+[
+ {
+  "id": "lagoon",
+  "name": "Lagoon",
+  "seed": 2611,
+  "base": {
+   "id": "lagoon-base",
+   "name": "Lagoon",
+   "kind": "linear",
+   "angle": 160,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#0F2A4A"
+    },
+    {
+     "position": 1,
+     "hex": "#1B5E7A"
+    }
+   ]
+  },
+  "palette": [
+   "#2EC4B6",
+   "#6DD3F7",
+   "#9B8CFF",
+   "#FF9F6E"
+  ],
+  "fields": 6
+ },
+ {
+  "id": "ember",
+  "name": "Ember",
+  "seed": 4177,
+  "base": {
+   "id": "ember-base",
+   "name": "Ember",
+   "kind": "linear",
+   "angle": 200,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#2A0E12"
+    },
+    {
+     "position": 1,
+     "hex": "#5C1A1B"
+    }
+   ]
+  },
+  "palette": [
+   "#FF7A45",
+   "#FFC15E",
+   "#E8505B",
+   "#9D2B4E"
+  ],
+  "fields": 6
+ },
+ {
+  "id": "orchard",
+  "name": "Orchard",
+  "seed": 7301,
+  "base": {
+   "id": "orchard-base",
+   "name": "Orchard",
+   "kind": "linear",
+   "angle": 140,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#F6F1E3"
+    },
+    {
+     "position": 1,
+     "hex": "#E5EBD0"
+    }
+   ]
+  },
+  "palette": [
+   "#A8D672",
+   "#F7C873",
+   "#F49B8B",
+   "#7FC8A9"
+  ],
+  "fields": 7
+ },
+ {
+  "id": "nightfall",
+  "name": "Nightfall",
+  "seed": 9021,
+  "base": {
+   "id": "nightfall-base",
+   "name": "Nightfall",
+   "kind": "linear",
+   "angle": 180,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#0B0D1F"
+    },
+    {
+     "position": 1,
+     "hex": "#1B1F3B"
+    }
+   ]
+  },
+  "palette": [
+   "#5B5BD6",
+   "#9B5DE5",
+   "#2F80ED",
+   "#F15BB5"
+  ],
+  "fields": 6
+ },
+ {
+  "id": "peach-fizz",
+  "name": "Peach Fizz",
+  "seed": 1187,
+  "base": {
+   "id": "peach-fizz-base",
+   "name": "Peach Fizz",
+   "kind": "linear",
+   "angle": 120,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#FFE5D4"
+    },
+    {
+     "position": 1,
+     "hex": "#FFC8B4"
+    }
+   ]
+  },
+  "palette": [
+   "#FF9E9E",
+   "#FFD6A5",
+   "#FFB3C6",
+   "#FDFFB6"
+  ],
+  "fields": 7
+ },
+ {
+  "id": "glacier-mist",
+  "name": "Glacier Mist",
+  "seed": 5519,
+  "base": {
+   "id": "glacier-mist-base",
+   "name": "Glacier Mist",
+   "kind": "linear",
+   "angle": 190,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#E8F1FA"
+    },
+    {
+     "position": 1,
+     "hex": "#C7DCF0"
+    }
+   ]
+  },
+  "palette": [
+   "#9BC1E8",
+   "#D6E6F5",
+   "#B8B5F0",
+   "#A0E3E2"
+  ],
+  "fields": 6
+ },
+ {
+  "id": "dune",
+  "name": "Dune",
+  "seed": 6643,
+  "base": {
+   "id": "dune-base",
+   "name": "Dune",
+   "kind": "linear",
+   "angle": 170,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#F1DDBF"
+    },
+    {
+     "position": 1,
+     "hex": "#D9A86C"
+    }
+   ]
+  },
+  "palette": [
+   "#E9B872",
+   "#C97C5D",
+   "#F6E3B4",
+   "#A65E46"
+  ],
+  "fields": 6
+ },
+ {
+  "id": "ultraviolet",
+  "name": "Ultraviolet",
+  "seed": 3359,
+  "base": {
+   "id": "ultraviolet-base",
+   "name": "Ultraviolet",
+   "kind": "linear",
+   "angle": 150,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#1A0B3D"
+    },
+    {
+     "position": 1,
+     "hex": "#3A0F6B"
+    }
+   ]
+  },
+  "palette": [
+   "#8E2DE2",
+   "#FF4ECD",
+   "#4A00E0",
+   "#00D4FF"
+  ],
+  "fields": 7
+ },
+ {
+  "id": "moss",
+  "name": "Moss",
+  "seed": 8848,
+  "base": {
+   "id": "moss-base",
+   "name": "Moss",
+   "kind": "linear",
+   "angle": 165,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#14261C"
+    },
+    {
+     "position": 1,
+     "hex": "#2C4A30"
+    }
+   ]
+  },
+  "palette": [
+   "#5E8C61",
+   "#A3C47A",
+   "#2F6E5B",
+   "#D8E3A6"
+  ],
+  "fields": 6
+ },
+ {
+  "id": "rosewater",
+  "name": "Rosewater",
+  "seed": 2042,
+  "base": {
+   "id": "rosewater-base",
+   "name": "Rosewater",
+   "kind": "linear",
+   "angle": 130,
+   "stops": [
+    {
+     "position": 0,
+     "hex": "#FBEFF3"
+    },
+    {
+     "position": 1,
+     "hex": "#F4D6E1"
+    }
+   ]
+  },
+  "palette": [
+   "#F7A8C4",
+   "#FFD1DC",
+   "#D4B5F5",
+   "#FFE3C2"
+  ],
+  "fields": 7
+ }
+]

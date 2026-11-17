@@ -15,4 +15,25 @@ public enum SunshotDefaults {
     public static let shadowOffset = UnitOffset(x: 0, y: 0.35)
     /// How many undo steps are kept.
     public static let undoLimit = 100
+    /// Gradient offered when the backdrop type is first switched to Gradient ("Sunrise Drift" in the presets).
+    public static let gradient = GradientSpec(
+        kind: .linear, angle: 135,
+        stops: [
+            GradientStop(position: 0, color: RGBAColor(rgb: 0xFFB36B)),
+            GradientStop(position: 0.5, color: RGBAColor(rgb: 0xFF6F91)),
+            GradientStop(position: 1, color: RGBAColor(rgb: 0x7B6CF6)),
+        ])
+    /// Wallpaper offered when the backdrop type is first switched to Image ("Lagoon" in the wallpaper set).
+    public static let wallpaper = Wallpaper(
+        id: "lagoon", name: "Lagoon", seed: 2611,
+        base: GradientSpec(
+            kind: .linear, angle: 160,
+            stops: [
+                GradientStop(position: 0, color: RGBAColor(rgb: 0x0F2A4A)),
+                GradientStop(position: 1, color: RGBAColor(rgb: 0x1B5E7A)),
+            ]),
+        palette: [
+            RGBAColor(rgb: 0x2EC4B6), RGBAColor(rgb: 0x6DD3F7), RGBAColor(rgb: 0x9B8CFF), RGBAColor(rgb: 0xFF9F6E),
+        ],
+        fieldCount: 6)
 }

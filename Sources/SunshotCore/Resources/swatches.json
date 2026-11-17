@@ -1,0 +1,142 @@
+[
+ {
+  "id": "neutrals",
+  "name": "Neutrals",
+  "swatches": [
+   {
+    "name": "White",
+    "hex": "#FFFFFF"
+   },
+   {
+    "name": "Mist",
+    "hex": "#EDEDF2"
+   },
+   {
+    "name": "Fog",
+    "hex": "#D9DAE0"
+   },
+   {
+    "name": "Pebble",
+    "hex": "#B4B6BF"
+   },
+   {
+    "name": "Slate",
+    "hex": "#7C7F8A"
+   },
+   {
+    "name": "Graphite",
+    "hex": "#4A4C55"
+   },
+   {
+    "name": "Ink",
+    "hex": "#1E1F25"
+   },
+   {
+    "name": "Black",
+    "hex": "#000000"
+   }
+  ]
+ },
+ {
+  "id": "hues",
+  "name": "Colours",
+  "swatches": [
+   {
+    "name": "Blush",
+    "hex": "#FAD4D8"
+   },
+   {
+    "name": "Apricot",
+    "hex": "#FDE0C5"
+   },
+   {
+    "name": "Butter",
+    "hex": "#FCF1B8"
+   },
+   {
+    "name": "Mint",
+    "hex": "#CFF1DE"
+   },
+   {
+    "name": "Sky",
+    "hex": "#CDE7FA"
+   },
+   {
+    "name": "Lilac",
+    "hex": "#E0D7FA"
+   },
+   {
+    "name": "Peony",
+    "hex": "#F6D3EE"
+   },
+   {
+    "name": "Sage",
+    "hex": "#DCE6D2"
+   },
+   {
+    "name": "Coral",
+    "hex": "#FF6B5E"
+   },
+   {
+    "name": "Tangerine",
+    "hex": "#FF9F43"
+   },
+   {
+    "name": "Sunflower",
+    "hex": "#FFD43B"
+   },
+   {
+    "name": "Lime",
+    "hex": "#9BE15D"
+   },
+   {
+    "name": "Teal",
+    "hex": "#20C3AF"
+   },
+   {
+    "name": "Azure",
+    "hex": "#3A8DFF"
+   },
+   {
+    "name": "Iris",
+    "hex": "#7B61FF"
+   },
+   {
+    "name": "Magenta",
+    "hex": "#E550B5"
+   },
+   {
+    "name": "Garnet",
+    "hex": "#8E1F3A"
+   },
+   {
+    "name": "Rust",
+    "hex": "#A3471B"
+   },
+   {
+    "name": "Olive",
+    "hex": "#6B6A1E"
+   },
+   {
+    "name": "Forest",
+    "hex": "#1F5C3F"
+   },
+   {
+    "name": "Ocean",
+    "hex": "#12466B"
+   },
+   {
+    "name": "Navy",
+    "hex": "#1B2A5C"
+   },
+   {
+    "name": "Plum",
+    "hex": "#4B1F5E"
+   },
+   {
+    "name": "Espresso",
+    "hex": "#3B2A22"
+   }
+  ]
+ }
+]

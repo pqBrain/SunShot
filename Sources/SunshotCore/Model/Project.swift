@@ -8,15 +8,11 @@ public enum CanvasSpec: Codable, Hashable, Sendable {
     case exact(PixelSize)
 }
 
-public enum Backdrop: Codable, Hashable, Sendable {
-    case none
-    case solid(RGBAColor)
-}
-
 /// The style of a document (everything except the content image). Value type, so undo is trivial.
 public struct Project: Codable, Hashable, Sendable {
     public var canvas: CanvasSpec
-    public var backdrop: Backdrop
+    /// Active backdrop type plus the last-used value of each type.
+    public var backdropSettings: BackdropSettings
     /// Padding around the content on every side, in canvas pixels (0...`SunshotDefaults.maxPadding`).
     public var padding: Double
     public var border: Border
@@ -30,7 +26,9 @@ public struct Project: Codable, Hashable, Sendable {
         shadow: Shadow = Shadow()
     ) {
         self.canvas = canvas
-        self.backdrop = backdrop
+        var settings = BackdropSettings()
+        settings.backdrop = backdrop
+        self.backdropSettings = settings
         self.border = border
         self.shadow = shadow
         self.padding = padding.isFinite ? min(max(padding, 0), SunshotDefaults.maxPadding) : SunshotDefaults.padding
@@ -38,6 +36,12 @@ public struct Project: Codable, Hashable, Sendable {
 }
 
 extension Project {
+    /// The backdrop being drawn. Setting it selects that type and remembers its value for later switches.
+    public var backdrop: Backdrop {
+        get { backdropSettings.backdrop }
+        set { backdropSettings.backdrop = newValue }
+    }
+
     /// No rounding and no shadow: the S1 look, used where tests need content pixels untouched.
     public static func plain(
         canvas: CanvasSpec = .auto, backdrop: Backdrop = .solid(SunshotDefaults.backdropColor),
