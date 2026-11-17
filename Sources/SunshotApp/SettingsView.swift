@@ -37,10 +37,12 @@ struct SettingsView: View {
 
             Toggle(UIStrings.confirmReset, isOn: $controller.settings.confirmReset)
 
-            Picker(UIStrings.defaultTemplate, selection: $controller.settings.defaultTemplate) {
-                Text(AppSettings.screenshotTemplate).tag(AppSettings.screenshotTemplate)
+            Picker(UIStrings.defaultTemplate, selection: $controller.defaultTemplateID) {
+                ForEach(controller.model.templates.templates) { Text($0.name).tag($0.id) }
             }
-            .disabled(true)
+            .disabled(controller.model.templates.templates.isEmpty)
+
+            Toggle(UIStrings.suggestDeviceSetting, isOn: $controller.settings.suggestDevice)
         }
         .formStyle(.grouped)
         .frame(width: 520)

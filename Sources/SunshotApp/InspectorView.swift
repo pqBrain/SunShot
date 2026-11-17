@@ -11,6 +11,7 @@ struct InspectorView: View {
     @State private var backdropExpanded = true
     @State private var canvasExpanded = true
     @State private var frameExpanded = true
+    @State private var deviceExpanded = true
     @State private var colorsExpanded = false
     @State private var codeExpanded = true
 
@@ -45,6 +46,10 @@ struct InspectorView: View {
                         title: UIStrings.frameSection, isExpanded: $frameExpanded,
                         reset: { model.perform { $0.resetFrame() } }
                     ) { FrameControls(model: model) }
+                    InspectorSection(
+                        title: UIStrings.deviceSection, isExpanded: $deviceExpanded,
+                        reset: { model.setDevice(nil) }
+                    ) { DeviceControls(model: model) }
                     InspectorSection(
                         title: UIStrings.colorsSection, isExpanded: $colorsExpanded,
                         reset: { model.perform { $0.resetColors() } }

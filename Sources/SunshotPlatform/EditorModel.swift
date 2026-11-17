@@ -39,6 +39,8 @@ public final class EditorModel {
     public let annotate = AnnotationEditor()
     /// S6: layout thumbnails, preset animation and position-drag guides.
     public let layout = LayoutState()
+    /// S12: template gallery state and previews.
+    public let templates = TemplateGalleryState()
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
     var renderGeneration = 0

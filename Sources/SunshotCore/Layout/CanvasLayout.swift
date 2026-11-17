@@ -28,10 +28,10 @@ public struct CanvasLayout: Hashable, Sendable {
     /// Frame chrome (S5) is laid out as part of the content: the frame box (content + chrome) is what gets padded,
     /// so chrome grows an Auto canvas and never covers or scales the content.
     public static func compute(contentSize: PixelSize, project: Project) -> CanvasLayout {
-        let insets = FrameGeometry.insets(for: project.frame)
-        let box = boxLayout(
-            (Double(contentSize.width) + insets.horizontal, Double(contentSize.height) + insets.vertical),
-            project: project)
+        // S12: with a device mockup the laid-out content is the device screen cut from the content.
+        let laid = FrameGeometry.layoutBox(for: project.frame, contentSize: contentSize)
+        let insets = laid.insets
+        let box = boxLayout((laid.width + insets.horizontal, laid.height + insets.vertical), project: project)
         let style = box.styleScale
         let frame = box.contentRect
         let content = LayoutRect(

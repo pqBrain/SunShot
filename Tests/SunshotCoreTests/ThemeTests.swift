@@ -18,7 +18,10 @@ struct ThemeTests {
     func extractFields() throws {
         let theme = try Theme.extract(from: styled, name: "Ocean")
         #expect(Set(theme.style.keys) == Set(Theme.fields.map(\.key)))
-        #expect(Set(theme.style.keys) == ["backdrop", "border", "shadow", "frameKind", "frameScale", "tokens"])
+        #expect(
+            Set(theme.style.keys) == [
+                "backdrop", "border", "shadow", "frameKind", "frameScale", "frameDevice", "tokens",
+            ])
         #expect(theme.style["border"] == (try JSONValue(encoding: Border(style: .round, radius: 50))))
         let encoded = try String(decoding: JSONEncoder().encode(theme), as: UTF8.self)
         #expect(!encoded.contains("canvas") && !encoded.contains("export") && !encoded.contains("padding"))

@@ -14,7 +14,10 @@ struct FrameControls: View {
         VStack(alignment: .leading, spacing: 12) {
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(FrameKind.allCases, id: \.self) { kind in
-                    FrameTile(kind: kind, image: model.frameThumbnail(kind), isSelected: frame.kind == kind) {
+                    FrameTile(
+                        kind: kind, image: model.frameThumbnail(kind),
+                        isSelected: frame.kind == kind && frame.device == nil
+                    ) {
                         model.perform { $0.setFrameKind(kind) }
                     }
                 }

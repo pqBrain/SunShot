@@ -464,3 +464,43 @@ S5, S6, S7, S8, S9, S11 and S14 were built in parallel and merged on main. What 
   `ContentProjection` in `ContentMapping` and map snippet density, then lift the guard.
 - **Bulk export (S14) file names** follow Settings ▸ Filename format (via `EditorModel.filenameTemplate`), plus `_{INDEX}`.
 - `RGBAColor.mixed` (S5, alpha-aware) and S8's opaque mix clashed; S8's is now `mixedOpaque`.
+
+## S12 implementation notes (2026-11-17)
+- **Device = `Frame.device`**, a `DeviceSelection {model, finish, landscape, arrangement}` (nil = none), decoded
+  tolerantly (a malformed value is dropped; an unknown id draws no device) and encoded only when set, so every
+  existing document and snapshot is byte-identical. `FrameKind` is unchanged (the S5 picker keeps eight frames);
+  picking a device sets the kind to none and picking a frame kind removes the device. Themes carry it as
+  `frameDevice` (`Theme.fields`), so S7-AC9's field list gained that key.
+- **Geometry is data** (`Resources/devices.json`): rounded-rectangle parts in device units with roles shell / edge /
+  bezel / detail / lens / screen, a recommended media size (screen aspect within 1 %), common capture sizes, four
+  finishes and six arrangements, validated on load (`DeviceCatalog`). Devices are Sunshot's own generic shapes:
+  Phone, Tablet, Laptop, Monitor; the lens is a plain dot in the bezel; no notch / island / logos.
+- **Layout:** `FrameGeometry.layoutBox(for:contentSize:)` (one call in `CanvasLayout.compute`) lays out the
+  primary screen — the largest rect of the screen's aspect inside the content, so content stays 1:1 and the rest
+  is centre-cropped — plus the device layout as frame insets. Chrome scales with the screen (e.g. 3 px per device
+  unit for a 1080×2340 phone capture), so the Auto canvas grows like S5 frames and exact canvases scale it.
+- **Render:** `FrameRenderer.draw` branches to `DeviceRenderer` (new file) inside the S6 transform and shadow
+  layer, so preview/export parity, tilt and shadow come for free. Every screen gets the content aspect-filled;
+  shells use a highlight→shell gradient and a hairline edge; screens a faint gloss.
+- **Multi-device scope:** one content shown on every device of an arrangement: Single, Pair, Trio (selected
+  model, turned with it) and Laptop & Phone, Monitor & Phone, Tablet & Phone (fixed models; companions stay
+  upright). Separate media per device ("replace all vs selected") is deferred: it needs multi-content documents.
+- **Annotate is disabled on devices** (`canAnnotate`), like transformed content: pointer mapping doesn't include
+  the screen crop. Existing annotations still draw on the primary screen, cropped with the content.
+- **Suggestion:** `DeviceSuggestion.suggest(for:)` — exact capture size first, else closest screen aspect within
+  3 % (ties: closest recommended size). Shown in the Device section when Settings ▸ "Suggest the device that
+  matches imported images" (`AppSettings.suggestDevice`, default on) is on, there is image content and no device.
+- **Templates** (`Resources/templates.json`, 15 entries, `TemplateCatalog`) use a small validated schema (canvas,
+  backdrop by gradient / wallpaper id, corners, shadow, frame or device, layout-preset id) instead of raw
+  `Project` JSON, so references are checked at load. The first is "Screenshot" = `Project()`. Applying keeps
+  content, annotations, frame title and export options, clears the applied theme, one undo step
+  "Apply Template <name>". Gallery cards render through `Renderer.render` off the main actor (sample content of
+  the template's recommended size when empty) and re-render only when content / annotations / title change.
+- **Default template:** Settings stores the template id; S7's stored "Screenshot" resolves by name; unknown values
+  fall back to Screenshot. New, Start Over (`startOver(to:)`, `canStartOver(to:)`) and the empty window at launch
+  use it. `DocumentController.savedDocument` setter is now internal (launch sets it).
+- **Menu:** File ▸ Templates… (⇧⌘T) in `MenuCatalog`; toolbar Templates button; the smoke test loads templates and
+  renders a device template.
+- **Not done / follow-ups:** `{TEMPLATE}` in file names still reads "screenshot"; video templates and the
+  All · Image · Video filter wait for S13; no device perf budget was added (device drawing is a handful of vector
+  fills on top of the S5 frame path).

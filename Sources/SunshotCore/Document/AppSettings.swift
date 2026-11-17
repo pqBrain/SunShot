@@ -13,21 +13,25 @@ public struct AppSettings: Equatable, Sendable {
     /// Folder exports are written to without a save panel; nil asks every time.
     public var exportFolder: URL?
     public var confirmReset: Bool
-    /// Template opened for new documents. Only "Screenshot" exists until the template gallery (S12).
+    /// Template opened for new documents and Start Over: a template id (S12), or the name saved by S7.
     public var defaultTemplate: String
+    /// S12: offer the device that matches imported media (Settings ▸ Device Mockups).
+    public var suggestDevice: Bool
 
     public static let screenshotTemplate = "Screenshot"
     public static let defaults = AppSettings()
 
     public init(
         appearance: AppearanceSetting = .system, filenameTemplate: String = SunshotDefaults.filenameTemplate,
-        exportFolder: URL? = nil, confirmReset: Bool = true, defaultTemplate: String = AppSettings.screenshotTemplate
+        exportFolder: URL? = nil, confirmReset: Bool = true, defaultTemplate: String = AppSettings.screenshotTemplate,
+        suggestDevice: Bool = true
     ) {
         self.appearance = appearance
         self.filenameTemplate = filenameTemplate
         self.exportFolder = exportFolder
         self.confirmReset = confirmReset
         self.defaultTemplate = defaultTemplate
+        self.suggestDevice = suggestDevice
     }
 
     /// The template exports use: the setting, or the default when it is blank.

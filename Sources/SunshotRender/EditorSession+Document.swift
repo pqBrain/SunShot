@@ -12,11 +12,15 @@ extension EditorSession {
     public static var defaultDocument: EditorDocument { EditorDocument() }
 
     /// Whether Start Over would change anything (the menu item is disabled otherwise).
-    public var canStartOver: Bool { document != Self.defaultDocument }
+    public var canStartOver: Bool { canStartOver(to: Self.defaultDocument) }
 
-    /// Resets content and all style to the defaults as one undo step. No-op on a default document.
-    public mutating func startOver() {
-        history.applyIfChanged(Self.startOverActionName) { $0 = Self.defaultDocument }
+    /// Whether Start Over to `start` (S12: the default template's document) would change anything.
+    public func canStartOver(to start: EditorDocument) -> Bool { document != start }
+
+    /// Resets content and all style to `start` (default: the plain new document) as one undo step. No-op when the
+    /// document already is `start`.
+    public mutating func startOver(to start: EditorDocument = Self.defaultDocument) {
+        history.applyIfChanged(Self.startOverActionName) { $0 = start }
     }
 
     /// Replaces the style with `theme`'s; content, canvas, transform and export options stay.

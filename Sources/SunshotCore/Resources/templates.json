@@ -1,0 +1,69 @@
+{
+  "about": "Sunshot's own document templates (S12): style + canvas + frame or device + placement, never content. Omitted keys take the new-document defaults. canvas: {ratio} or {width, height} (omitted = Auto); backdrop: exactly one of solid (hex), gradient (gradient-presets id), wallpaper (wallpapers id) or none: true; corners: {style, radius}; shadow: {style, intensity}; frame: a frame kind; device: {model, finish, landscape, arrangement} from devices.json; layout: a layout-presets id. The first template must be the plain new document.",
+  "templates": [
+    { "id": "screenshot", "name": "Screenshot", "summary": "The plain new document." },
+    {
+      "id": "soft-window", "name": "Soft Window", "summary": "A desktop window on a cool gradient.",
+      "frame": "macWindow", "backdrop": { "gradient": "shallows" }, "padding": 96
+    },
+    {
+      "id": "slanted-browser", "name": "Slanted Browser", "summary": "A browser window swung to one side.",
+      "frame": "browserWindow", "backdrop": { "gradient": "deep-sea" }, "padding": 120, "layout": "swing-right"
+    },
+    {
+      "id": "paper-card", "name": "Paper Card", "summary": "Content on a card, on warm paper.",
+      "frame": "card", "backdrop": { "solid": "#F4EFE6" }, "padding": 80, "shadow": { "style": "hug", "intensity": "low" }
+    },
+    {
+      "id": "pocket-spotlight", "name": "Pocket Spotlight", "summary": "A phone on a sunrise gradient.",
+      "device": { "model": "phone", "finish": "graphite" }, "backdrop": { "gradient": "sunrise-drift" }, "padding": 120
+    },
+    {
+      "id": "pocket-clear", "name": "Pocket Clear", "summary": "A phone on a transparent backdrop.",
+      "device": { "model": "phone", "finish": "silver" }, "backdrop": { "none": true }, "padding": 80
+    },
+    {
+      "id": "twin-pockets", "name": "Twin Pockets", "summary": "Two phones side by side.",
+      "device": { "model": "phone", "finish": "sand", "arrangement": "pair" }, "backdrop": { "gradient": "peach-soda" },
+      "canvas": { "ratio": 1.7777777777777777 }, "padding": 120
+    },
+    {
+      "id": "pocket-trio", "name": "Pocket Trio", "summary": "Three phones fanned out.",
+      "device": { "model": "phone", "finish": "graphite", "arrangement": "trio" }, "backdrop": { "wallpaper": "lagoon" },
+      "canvas": { "ratio": 1.7777777777777777 }, "padding": 140
+    },
+    {
+      "id": "tablet-tabletop", "name": "Tablet Tabletop", "summary": "A landscape tablet laid back.",
+      "device": { "model": "tablet", "finish": "silver", "landscape": true }, "backdrop": { "gradient": "lavender-haze" },
+      "padding": 120, "layout": "tabletop"
+    },
+    {
+      "id": "open-laptop", "name": "Open Laptop", "summary": "A laptop on a pale gradient.",
+      "device": { "model": "laptop", "finish": "silver" }, "backdrop": { "gradient": "glacier" }, "padding": 120
+    },
+    {
+      "id": "laptop-clear", "name": "Laptop Clear", "summary": "A laptop on a transparent backdrop.",
+      "device": { "model": "laptop", "finish": "graphite" }, "backdrop": { "none": true }, "padding": 80
+    },
+    {
+      "id": "desk-and-pocket", "name": "Desk & Pocket", "summary": "A laptop with a phone in front.",
+      "device": { "model": "laptop", "finish": "graphite", "arrangement": "laptop-phone" },
+      "backdrop": { "wallpaper": "nightfall" }, "canvas": { "ratio": 1.7777777777777777 }, "padding": 140
+    },
+    {
+      "id": "studio-desk", "name": "Studio Desk", "summary": "A monitor with a phone beside it.",
+      "device": { "model": "desktop", "finish": "silver", "arrangement": "monitor-phone" },
+      "backdrop": { "gradient": "smoke" }, "padding": 120
+    },
+    {
+      "id": "tablet-and-pocket", "name": "Tablet & Pocket", "summary": "A landscape tablet with a phone in front.",
+      "device": { "model": "tablet", "finish": "sand", "landscape": true, "arrangement": "tablet-phone" },
+      "backdrop": { "gradient": "rose-quartz" }, "padding": 120
+    },
+    {
+      "id": "monitor-showcase", "name": "Monitor Showcase", "summary": "A monitor turned towards you.",
+      "device": { "model": "desktop", "finish": "sage" }, "backdrop": { "gradient": "mint-tea" }, "padding": 120,
+      "layout": "showcase"
+    }
+  ]
+}

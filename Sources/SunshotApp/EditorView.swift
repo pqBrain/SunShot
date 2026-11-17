@@ -28,6 +28,7 @@ struct EditorView: View {
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .toolbar(removing: .title)
         .toolbar { EditorToolbar(model: model, controller: controller) }
+        .templateGallery(model)
         .alert(
             model.alert?.title ?? "", isPresented: alertBinding, presenting: model.alert,
             actions: { _ in Button("OK") {} }, message: { Text($0.message) })
@@ -157,6 +158,7 @@ struct EditorToolbar: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarSpacer(.flexible, placement: .primaryAction)
         ToolbarItemGroup(placement: .primaryAction) {
+            TemplatesButton(model: model)
             Button {
                 Task { await Panels.openImage(into: model) }
             } label: {
