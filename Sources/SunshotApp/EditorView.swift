@@ -12,7 +12,9 @@ struct EditorView: View {
             canvasArea
             if model.showsInspector {
                 InspectorView(model: model)
+                    .fixedSize(horizontal: false, vertical: !model.isInspectorEnabled)
                     .frame(width: 292)
+                    .frame(maxHeight: .infinity, alignment: .top)
                     .padding([.top, .bottom, .trailing], 12)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             }
@@ -119,6 +121,7 @@ struct EditorToolbar: ToolbarContent {
     let model: EditorModel
 
     var body: some ToolbarContent {
+        ToolbarSpacer(.flexible, placement: .primaryAction)
         ToolbarItemGroup(placement: .primaryAction) {
             Button {
                 Task { await Panels.openImage(into: model) }
