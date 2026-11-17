@@ -11,7 +11,6 @@ struct SunshotApplication: App {
             EditorView(model: model)
                 .frame(minWidth: 820, minHeight: 540)
         }
-        .windowBackgroundDragBehavior(.enabled)
         .defaultSize(width: 1180, height: 760)
         .commands { SunshotCommands(model: model) }
     }

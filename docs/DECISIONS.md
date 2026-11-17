@@ -68,3 +68,6 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 - **`os` is allowed in SunshotPlatform** (for `os.Logger`, which the hygiene rules require instead of `print`):
   a catalog that fails to load is logged and shows an empty grid, never a crash. The smoke test fails if any
   catalog is empty, so this can't ship silently.
+- **The window is not movable by its background** (was `windowBackgroundDragBehavior(.enabled)` since S2): with
+  it on, clicks on SwiftUI-drawn buttons in the glass inspector (swatches, presets, wallpapers, section headers,
+  Reset) were taken as window drags and did nothing. The window still moves by its top (toolbar) area.
