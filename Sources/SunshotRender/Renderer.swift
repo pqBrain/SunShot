@@ -4,10 +4,17 @@ public import SunshotCore
 public enum RenderError: Error, Equatable {
     case contextCreationFailed
     case imageCreationFailed
+    case noContent
 }
 
 /// The single render path shared by on-screen preview and export (guarantees preview/export parity).
 public enum Renderer {
+    /// Preview and export both call this. Returns nil for an empty document.
+    public static func render(document: EditorDocument, scale: Double = 1) throws -> CGImage? {
+        guard let content = document.content else { return nil }
+        return try render(project: document.project, content: content.image, scale: scale)
+    }
+
     /// Renders `project` with `content` at `scale` (1 = canvas points map to pixels).
     public static func render(project: Project, content: CGImage, scale: Double = 1) throws -> CGImage {
         let contentSize = PixelSize(width: content.width, height: content.height)

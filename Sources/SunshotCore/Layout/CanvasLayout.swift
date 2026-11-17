@@ -1,4 +1,4 @@
-/// Result of laying out content on the canvas, in canvas points (1 pt = 1 px at 1× export).
+/// Result of laying out content on the canvas, in canvas pixels (1 canvas px = 1 output px at 1× export).
 public struct CanvasLayout: Hashable, Sendable {
     public let canvasSize: PixelSize
     public let contentRect: LayoutRect
@@ -6,12 +6,12 @@ public struct CanvasLayout: Hashable, Sendable {
     /// Lays out content of `contentSize` according to `project`.
     ///
     /// - `auto`: canvas = content + padding on every side.
-    /// - `ratio`: the smallest canvas of that ratio that fits content + padding.
+    /// - `ratio`: the smallest canvas of that ratio that fits content + padding; content is never scaled.
     /// - `exact`: the given canvas; content is scaled to fit inside the padded area.
     public static func compute(contentSize: PixelSize, project: Project) -> CanvasLayout {
         let contentWidth = Double(contentSize.width)
         let contentHeight = Double(contentSize.height)
-        let inset = max(contentWidth, contentHeight) * project.padding
+        let inset = project.padding
         let paddedWidth = contentWidth + inset * 2
         let paddedHeight = contentHeight + inset * 2
 
@@ -32,10 +32,12 @@ public struct CanvasLayout: Hashable, Sendable {
             return centered(contentWidth, contentHeight, in: canvas)
 
         case .exact(let canvas):
-            let scale = min(
-                Double(canvas.width) / paddedWidth,
-                Double(canvas.height) / paddedHeight
-            )
+            let availableWidth = Double(canvas.width) - inset * 2
+            let availableHeight = Double(canvas.height) - inset * 2
+            guard availableWidth > 0, availableHeight > 0 else {
+                return centered(0, 0, in: canvas)
+            }
+            let scale = min(availableWidth / contentWidth, availableHeight / contentHeight)
             return centered(contentWidth * scale, contentHeight * scale, in: canvas)
         }
     }

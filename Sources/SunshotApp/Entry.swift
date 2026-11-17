@@ -1,5 +1,4 @@
 import Foundation
-import SunshotCore
 import SunshotRender
 import SwiftUI
 
@@ -20,7 +19,9 @@ enum SmokeTest {
     /// Returns a process exit code: 0 on success.
     static func run(directory: URL) -> Int32 {
         do {
-            let image = try Renderer.render(project: Project(), content: SampleContent.image(), scale: 2)
+            var session = EditorSession()
+            session.setContent(try SampleContent.image())
+            guard let image = try session.render(scale: 2) else { throw RenderError.noContent }
             let output = directory.appendingPathComponent("sunshot-smoke.png")
             try ImageCodec.pngData(image).write(to: output)
             FileHandle.standardOutput.write(Data("smoke-test ok \(image.width)x\(image.height) \(output.path)\n".utf8))

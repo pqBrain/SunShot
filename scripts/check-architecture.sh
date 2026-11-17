@@ -18,7 +18,24 @@ done
 
 # Tests must not reach into the app target (keep logic in Core/Render where it is testable).
 if grep -rnE --include='*.swift' 'import[[:space:]]+SunshotApp' Tests; then
-  echo "Tests must not import SunshotApp — move logic into SunshotCore/SunshotRender"
+  echo "Tests must not import SunshotApp — move logic into SunshotCore/SunshotRender/SunshotPlatform"
+  violations=$((violations + 1))
+fi
+
+# Single drawing path (S1-AC13): only SunshotRender draws pixels; preview and export share Renderer.render(document:).
+if grep -rnE --include='*.swift' 'CGContext|NSGraphicsContext|Canvas[[:space:]]*\{|\.makeImage\(|NSBitmapImageRep|ImageRenderer' \
+    Sources/SunshotApp Sources/SunshotPlatform; then
+  echo "Drawing APIs are only allowed in SunshotRender (single render path, S1-AC13)"
+  violations=$((violations + 1))
+fi
+if grep -rnE --include='*.swift' 'render\(project:' Sources | grep -v '^Sources/SunshotRender/'; then
+  echo "Call Renderer.render(document:scale:) — render(project:...) is internal to SunshotRender (S1-AC13)"
+  violations=$((violations + 1))
+fi
+
+# Single document store (S1-AC15): views never hold their own copy of the document or content.
+if grep -rnE --include='*.swift' '@State[^=]*(CGImage|ContentImage|EditorDocument|EditorSession|Project)\b' Sources/SunshotApp; then
+  echo "Views must read document state from EditorModel, not keep copies (S1-AC15)"
   violations=$((violations + 1))
 fi
 

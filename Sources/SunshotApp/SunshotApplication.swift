@@ -1,31 +1,75 @@
-import SunshotCore
-import SunshotRender
+import AppKit
+import SunshotPlatform
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SunshotApplication: App {
+    @State private var model = EditorModel()
+
     var body: some Scene {
-        WindowGroup("Sunshot") {
-            PlaceholderCanvasView()
+        Window("Sunshot", id: "main") {
+            EditorView(model: model)
                 .frame(minWidth: 720, minHeight: 480)
+        }
+        .commands { SunshotCommands(model: model) }
+    }
+}
+
+/// Menu bar. Every action here is also reachable from the toolbar.
+struct SunshotCommands: Commands {
+    let model: EditorModel
+
+    var body: some Commands {
+        CommandGroup(replacing: .newItem) {
+            Button(UIStrings.openImage) { Task { await Panels.openImage(into: model) } }
+                .keyboardShortcut("o")
+        }
+        CommandGroup(replacing: .importExport) {
+            Button(UIStrings.exportPNG) { Task { await Panels.exportPNG(from: model) } }
+                .keyboardShortcut("e", modifiers: [.command, .shift])
+                .disabled(!model.hasContent)
+        }
+        CommandGroup(replacing: .undoRedo) {
+            Button(model.undoTitle) { Task { await model.undo() } }
+                .keyboardShortcut("z")
+                .disabled(!model.canUndo)
+            Button(model.redoTitle) { Task { await model.redo() } }
+                .keyboardShortcut("z", modifiers: [.command, .shift])
+                .disabled(!model.canRedo)
+        }
+        CommandGroup(replacing: .pasteboard) {
+            Button(UIStrings.copyPNG) { Task { await model.copyPNG(to: .general) } }
+                .keyboardShortcut("c")
+                .disabled(!model.hasContent)
+            Button(UIStrings.paste) { Task { await model.paste(from: .general) } }
+                .keyboardShortcut("v")
+            Divider()
+            Button(UIStrings.clearContent) { Task { await model.clearContent() } }
+                .keyboardShortcut(.delete, modifiers: [.command])
+                .disabled(!model.hasContent)
         }
     }
 }
 
-/// S0 placeholder: shows the sample render through the shared renderer. Replaced in S1.
-struct PlaceholderCanvasView: View {
-    private let image: CGImage? = try? Renderer.render(project: Project(), content: SampleContent.image(), scale: 2)
+/// Open and save panels (AppKit, so the save panel can start in Pictures with the interim file name).
+@MainActor
+enum Panels {
+    static func openImage(into model: EditorModel) async {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = ImageTypes.supported
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        await model.importFile(at: url)
+    }
 
-    var body: some View {
-        Group {
-            if let image {
-                Image(decorative: image, scale: 2)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .padding(24)
-                    .accessibilityLabel("Canvas preview")
-            } else {
-                Text("Rendering failed")
-            }
-        }
+    static func exportPNG(from model: EditorModel) async {
+        guard model.hasContent else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.png]
+        panel.nameFieldStringValue = model.suggestedExportName()
+        panel.directoryURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        await model.exportPNG(to: url)
     }
 }

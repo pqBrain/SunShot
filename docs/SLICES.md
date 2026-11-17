@@ -17,7 +17,7 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 | Slice | Name | Status | Spec refs |
 |---|---|---|---|
 | S0 | Harness & quality gate | Done | — |
-| S1 | Walking skeleton: import → canvas → export | Planned | §2.3, §3.1, §10.1, §10.3, §16 |
+| S1 | Walking skeleton: import → canvas → export | In progress | §2.3, §3.1, §10.1, §10.3, §16 |
 | S2 | Border & shadow | Planned | §9.2, §9.3 |
 | S3 | Backdrop basics: none / solid / gradient / image | Planned | §9.1 (type selector), §9.1 gradient editor |
 | S4 | Canvas size & export options | Planned | §4, §10.1, §15 (filename) |
@@ -46,7 +46,7 @@ workflow. Seed code exists only to give each stage something real to check.
 ### S1 — Walking skeleton
 Open / drag-drop / paste (⌘V) an image (PNG, JPEG, HEIC, TIFF, WebP read).
 Canvas preview = backdrop (default solid) + content with default padding.
-Export PNG via save panel (⌘S) and Copy PNG (⌘C). Undo/redo (⌘Z / ⇧⌘Z) through
+Export PNG via save panel (⇧⌘E) and Copy PNG (⌘C). Undo/redo (⌘Z / ⇧⌘Z) through
 a single document store. Preview and export use the same render function
 (pixel parity test). Empty state with drop zone. Clear content.
 

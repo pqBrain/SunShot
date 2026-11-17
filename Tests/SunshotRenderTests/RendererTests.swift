@@ -10,7 +10,7 @@ struct RendererTests {
     @Test("[S0] output size equals layout canvas size times scale", arguments: [1.0, 2.0, 3.0])
     func outputSize(scale: Double) throws {
         let content = try SampleContent.image(width: 400, height: 300)
-        let project = Project(canvas: .auto, padding: 0.1)
+        let project = Project(canvas: .auto, padding: 40)
         let image = try Renderer.render(project: project, content: content, scale: scale)
         #expect(image.width == Int(480 * scale))
         #expect(image.height == Int(380 * scale))
@@ -25,7 +25,7 @@ struct RendererTests {
 
     @Test("[S0] backdrop colour fills the padding and content is not mirrored")
     func pixelsAreWhereExpected() throws {
-        let project = Project(backdrop: .solid(.black), padding: 0.1)
+        let project = Project(backdrop: .solid(.black), padding: 64)
         let pixels = try PixelBuffer(Renderer.render(project: project, content: SampleContent.image()))
         #expect(pixels.pixel(x: 2, y: 2) == [0, 0, 0, 255])
         // Sample content has its dark title strip at the TOP (top-left origin).

@@ -1,16 +1,43 @@
 {
   "coverage": {
     "SunshotCore": 90,
-    "SunshotRender": 85
+    "SunshotRender": 85,
+    "SunshotPlatform": 80
   },
   "appSizeBudgetKB": 10240,
   "maxSourceFileLines": 400,
   "smokeTimeoutSeconds": 60,
   "launchCheckSeconds": 4,
-  "bannedTerms": ["postspark", "post spark"],
+  "bannedTerms": [
+    "postspark",
+    "post spark"
+  ],
   "allowedImports": {
-    "SunshotCore": ["Foundation"],
-    "SunshotRender": ["Foundation", "CoreGraphics", "CoreImage", "CoreText", "ImageIO", "UniformTypeIdentifiers",
-                      "AVFoundation", "CoreMedia", "CoreVideo", "Metal", "Accelerate", "SunshotCore"]
+    "SunshotCore": [
+      "Foundation"
+    ],
+    "SunshotRender": [
+      "Foundation",
+      "CoreGraphics",
+      "CoreImage",
+      "CoreText",
+      "ImageIO",
+      "UniformTypeIdentifiers",
+      "AVFoundation",
+      "CoreMedia",
+      "CoreVideo",
+      "Metal",
+      "Accelerate",
+      "SunshotCore"
+    ],
+    "SunshotPlatform": [
+      "Foundation",
+      "AppKit",
+      "Observation",
+      "CoreGraphics",
+      "UniformTypeIdentifiers",
+      "SunshotCore",
+      "SunshotRender"
+    ]
   }
 }

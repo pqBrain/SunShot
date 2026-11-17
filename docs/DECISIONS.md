@@ -10,3 +10,15 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 | 2026-11-17 | S1 defaults: padding 64 px fixed (replaces the S0 seed's 8% fraction), backdrop #EDEDF2, all in `SunshotDefaults`. Preview never upscales past 1:1. | S1 open questions |
 | 2026-11-17 | Max canvas side 16384 px; JPEG quality 0.9; `{TEMPLATE}` = `screenshot` until S12. | S4 open questions |
 | 2026-11-17 | Theme files are not shareable/importable in the MVP. Drafts surface only through autosave recovery and Open Recent. | S7 open questions |
+
+## S1 implementation notes (2026-11-17)
+- **WebP is import-only.** ImageIO can't write WebP on macOS 15, so S4 export formats are PNG / JPEG / HEIC.
+- **Truncated files:** ImageIO reports half a PNG/JPEG as "complete" and fills the rest with grey. The
+  loader also requires the PNG `IEND` / JPEG end-of-image marker near the end of the file.
+- **Secondary text colour:** macOS `secondaryLabelColor` is ~4:1 on white (fails WCAG AA), so Sunshot uses
+  its own greys (light #66666E, dark #A8A8AD), checked by a unit test in both appearances.
+- **Module added:** `SunshotPlatform` (AppKit glue + observable editor state) so pasteboard, alerts,
+  undo titles and progress logic are unit-tested instead of living in views.
+- **Single render path / single store** are enforced by `check-architecture.sh` (no drawing APIs outside
+  SunshotRender; views may not hold `@State` copies of the document).
+- **Preview** is fitted to the window and never shown larger than 1 image pixel per screen pixel.
