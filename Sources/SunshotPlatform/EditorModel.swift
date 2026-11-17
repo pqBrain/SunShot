@@ -35,6 +35,8 @@ public final class EditorModel {
     public var notice: String?
     /// Export file-name template (Settings ▸ Filename format; S7).
     public var filenameTemplate = SunshotDefaults.filenameTemplate
+    /// Annotate mode state (S9).
+    public let annotate = AnnotationEditor()
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
     private var renderGeneration = 0

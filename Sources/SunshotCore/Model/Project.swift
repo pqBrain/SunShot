@@ -54,6 +54,9 @@ public struct Project: Codable, Hashable, Sendable {
     /// S5: window / card frame around the content, and the colour tokens, fonts and chrome appearance.
     public var frame = Frame()
     public var tokens = DesignTokens()
+    /// Annotations (S9). Optional so documents without the key decode and a document without annotations encodes
+    /// exactly as before; read and write it through `annotations`.
+    public var annotationLayer: AnnotationLayer?
 
     public init(
         canvas: CanvasSpec = .auto,

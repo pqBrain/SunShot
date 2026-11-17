@@ -17,6 +17,7 @@ struct SunshotApplication: App {
         .defaultSize(width: 1180, height: 760)
         .commands { SunshotCommands(controller: appDelegate.controller) }
         .commands { BulkCommands(bulk: appDelegate.bulk) }
+        .commands { AnnotateCommands(model: appDelegate.controller.model) }
         Settings {
             SettingsView(controller: appDelegate.controller)
         }

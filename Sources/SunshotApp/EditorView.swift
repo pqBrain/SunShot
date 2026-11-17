@@ -58,6 +58,9 @@ struct EditorView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
+        .overlay(alignment: .bottom) {
+            if model.annotate.isActive, model.hasContent { AnnotationPalette(model: model).padding(.bottom, 16) }
+        }
         .dropDestination(for: URL.self) { urls, _ in
             guard model.canAcceptDrop(urls) else { return false }
             Task { await model.importDroppedFiles(urls) }
@@ -89,11 +92,12 @@ struct CanvasPreview: View {
             .frame(maxWidth: CGFloat(image.width) / displayScale, maxHeight: CGFloat(image.height) / displayScale)
             .clipShape(.rect(cornerRadius: 10, style: .continuous))
             .shadow(color: .black.opacity(0.22), radius: 24, y: 10)
-            .padding(36)
             .accessibilityElement()
             .accessibilityLabel(accessibilityLabel)
             .accessibilityValue(model.previewAccessibilityValue)
             .accessibilityAddTraits(.isImage)
+            .overlay { if model.annotate.isActive { AnnotationOverlay(model: model) } }
+            .padding(36)
     }
 }
 
@@ -180,6 +184,17 @@ struct EditorToolbar: ToolbarContent {
             .help(UIStrings.copyAccessibility)
             .accessibilityLabel(UIStrings.copyAccessibility)
             .disabled(!model.hasContent)
+        }
+        ToolbarSpacer(.fixed, placement: .primaryAction)
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                model.toggleAnnotateMode()
+            } label: {
+                Label(UIStrings.annotate, systemImage: "pencil.tip.crop.circle")
+            }
+            .help(UIStrings.annotateAccessibility)
+            .accessibilityLabel(UIStrings.annotateAccessibility)
+            .disabled(!model.canAnnotate)
         }
         ToolbarSpacer(.fixed, placement: .primaryAction)
         ToolbarItemGroup(placement: .primaryAction) {

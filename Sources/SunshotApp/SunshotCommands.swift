@@ -51,7 +51,10 @@ struct SunshotCommands: Commands {
             }
             item(.selectAll) { sendToTextField(#selector(NSText.selectAll(_:))) }
             Divider()
-            item(.clearContent) { Task { await model.clearContent() } }
+            // ⌘⌫ clears annotations in Annotate mode (S9), the content otherwise.
+            Button(model.clearCommandTitle) { Task { await model.clearCommand() } }
+                .keyboardShortcut(MenuCatalog.shortcut(.clearContent).map(Self.keyboardShortcut))
+                .disabled(!model.canClear)
         }
     }
 

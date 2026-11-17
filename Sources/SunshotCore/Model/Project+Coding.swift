@@ -4,7 +4,7 @@ import Foundation
 /// never breaks opening existing documents. Encoding is synthesized from these keys.
 extension Project {
     enum CodingKeys: String, CodingKey {
-        case canvas, backdropSettings, padding, border, shadow, export, frame, tokens
+        case canvas, backdropSettings, padding, border, shadow, export, frame, tokens, annotationLayer
     }
 
     public init(from decoder: any Decoder) throws {
@@ -19,5 +19,6 @@ extension Project {
         export = try container.decodeIfPresent(ExportOptions.self, forKey: .export) ?? export
         frame = try container.decodeIfPresent(Frame.self, forKey: .frame) ?? frame
         tokens = try container.decodeIfPresent(DesignTokens.self, forKey: .tokens) ?? tokens
+        annotationLayer = try container.decodeIfPresent(AnnotationLayer.self, forKey: .annotationLayer)
     }
 }

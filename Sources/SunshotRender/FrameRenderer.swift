@@ -8,6 +8,9 @@ public enum FrameRenderer {
     /// `box` is the frame box in the current (top-left origin) user space, in unscaled content pixels.
     public static func draw(_ image: CGImage, project: Project, in box: CGRect, context: CGContext) {
         let geometry = FrameGeometry(frame: project.frame, boxWidth: box.width, boxHeight: box.height)
+        // S9: redaction replaces content pixels before anything is drawn, so originals never reach the output.
+        let image = RedactionRenderer.apply(project.annotations, to: image)
+        let annotations = project.annotations
         context.saveGState()
         context.translateBy(x: box.minX, y: box.minY)
         defer { context.restoreGState() }
@@ -15,12 +18,16 @@ public enum FrameRenderer {
         switch project.frame.kind {
         case .none:
             drawClippedContent(image, border: project.border, geometry: geometry, context: context)
+            drawAnnotations(annotations, in: geometry.content.cg, context: context)
         case .macWindow, .browserWindow, .winWindow:
             drawWindow(image, geometry: geometry, project: project, context: context)
+            drawAnnotations(annotations, in: geometry.content.cg, context: context)
         case .card, .stack, .stack2:
             drawCards(image, geometry: geometry, project: project, fill: project.tokens.colors.background, context)
+            drawAnnotations(annotations, in: geometry.content.cg, context: context)
         case .thickBorder:
             drawCards(image, geometry: geometry, project: project, fill: project.tokens.colors.secondary, context)
+            drawAnnotations(annotations, in: geometry.content.cg, context: context)
         }
     }
 
@@ -32,6 +39,16 @@ public enum FrameRenderer {
         context.addPath(ContentShape.path(for: border, in: geometry.window.cg))
         context.clip()
         drawImage(image, in: geometry.content.cg, context: context)
+        context.restoreGState()
+    }
+
+    /// S9 annotations, in content pixels with the content's top-left at the origin, clipped to the content.
+    private static func drawAnnotations(_ layer: AnnotationLayer, in content: CGRect, context: CGContext) {
+        guard !layer.isEmpty else { return }
+        context.saveGState()
+        context.clip(to: content)
+        context.translateBy(x: content.minX, y: content.minY)
+        AnnotationRenderer.draw(layer, in: context)
         context.restoreGState()
     }
 
