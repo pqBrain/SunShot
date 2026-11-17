@@ -47,6 +47,14 @@ while IFS= read -r term; do
   done < <(grep -rniIl -- "$term" Sources Tests Support 2>/dev/null || true)
 done < <(q '.bannedTerms[]')
 
+# Backdrop provenance: bundled resources are text recipes only. No photos or third-party images ship with
+# Sunshot (wallpapers are generated from JSON), so any binary image under a Resources folder is rejected.
+while IFS= read -r file; do
+  [[ -n "$file" ]] && report "$file" "binary image in bundled resources: wallpapers must be generated recipes (JSON), not shipped images"
+done < <(find Sources -path '*/Resources/*' -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \
+  -o -iname '*.heic' -o -iname '*.heif' -o -iname '*.gif' -o -iname '*.tif' -o -iname '*.tiff' -o -iname '*.webp' \
+  -o -iname '*.bmp' -o -iname '*.avif' -o -iname '*.psd' \) 2>/dev/null)
+
 if (( violations > 0 )); then
   fail "hygiene: $violations violation(s)"; exit 1
 fi

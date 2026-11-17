@@ -46,6 +46,7 @@ expect_fail "second drawing path in the app"  architecture "printf 'import CoreG
 expect_fail "view keeps its own content copy" architecture "printf 'import SwiftUI\nimport CoreGraphics\nstruct Sneaky: View { @State var shot: CGImage? = nil; var body: some View { EmptyView() } }\n' >> Sources/SunshotApp/EditorView.swift" "read document state from EditorModel"
 expect_fail "test cites unknown AC id"        traceability "printf '// covers S9-AC99\n' >> Tests/SunshotCoreTests/CanvasLayoutTests.swift" "unknown acceptance criterion S9-AC99"
 expect_fail "app over size budget"            bundle       "jq '.appSizeBudgetKB = 1' scripts/quality.json > q.tmp && mv q.tmp scripts/quality.json" "exceeds budget"
+expect_fail "shipped image in Resources"       hygiene      "printf '\\x89PNG\\r\\n\\x1a\\n' > Sources/SunshotCore/Resources/photo.png" "binary image in bundled resources"
 
 echo
 if (( failed > 0 )); then fail "gate self-test: $failed defect(s) slipped through, $passed caught"; exit 1; fi

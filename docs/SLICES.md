@@ -19,7 +19,7 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 | S0 | Harness & quality gate | Done | — |
 | S1 | Walking skeleton: import → canvas → export | In progress | §2.3, §3.1, §10.1, §10.3, §16 |
 | S2 | Border & shadow | In progress | §9.2, §9.3 |
-| S3 | Backdrop basics: none / solid / gradient / image | Planned | §9.1 (type selector), §9.1 gradient editor |
+| S3 | Backdrop basics: none / solid / gradient / image | In progress | §9.1 (type selector), §9.1 gradient editor |
 | S4 | Canvas size & export options | Planned | §4, §10.1, §15 (filename) |
 | S5 | Frames & colour tokens | Planned | §5, §9.4, §9.5 |
 | S6 | Position, tilt & layout presets | Planned | §6, §7.1 |

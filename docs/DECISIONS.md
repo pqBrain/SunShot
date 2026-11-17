@@ -39,3 +39,32 @@ Decisions made by the delivery lead within scope. Each one names what it settled
   `controlStroke` (≥ 3:1).
 - **S2-AC10 similarity** is measured on solid content: resampling detailed content at 2× is an S1 concern and
   on its own scores ~0.978 SSIM; border + shadow structure scores 0.99.
+
+## S3 implementation notes (2026-11-17)
+- **Section name is "Backdrop"** (not "Background"), first in the inspector, collapsible with its own Reset.
+- **Per-type memory lives in the document** (`BackdropSettings`: last solid colour, gradient and image per type),
+  so switching None → Gradient → Solid restores each type's last values, survives undo and will save with S7.
+  Reset Backdrop returns to solid #EDEDF2 and leaves the other types' memory alone.
+- **Gradient angle:** 0° = bottom → top, clockwise (90° = left → right), CSS-like. Radial is centred and reaches
+  the corners. Stops are interpolated in premultiplied sRGB; two stops at the same position make a hard edge.
+  Decoded stop positions are clamped to 0…1.
+- **Dithering:** every gradient/wallpaper pixel is `floor(value + noise)` with deterministic per-pixel hash noise, so
+  preview and export are byte-identical and slow gradients don't band. Values within 1e-4 of an 8-bit level snap
+  to it, so a flat gradient is exactly its colour.
+- **Wallpapers are generated recipes** (JSON: base gradient + soft colour fields), drawn by the same renderer at
+  any size. No photos or third-party images ship; the hygiene gate rejects binary images under `Resources`.
+- **Transparency checkerboard** is preview-only: 16 canvas px squares (8 pt at 1:1 on a 2× display), square (0,0)
+  is the darker grey; Light #FFFFFF/#DCDCE1, Dark #3A3A3F/#2A2A2E. S3-AC2 (fully transparent export) holds with
+  shadow None; a shadow is still drawn on a transparent backdrop by design.
+- **Colour-panel edits** stream values with no "ended" event: they merge into one undo step that closes after
+  600 ms idle, or as soon as any other edit, undo or redo happens.
+- **User backdrop images** keep the original bytes in the document (for S7 save) and the decoded pixels for
+  rendering; a missing image falls back to the default colour, never garbage. Unused bytes are dropped when
+  another backdrop is chosen; undo restores them.
+- **Gradient snapshot references** are stored downscaled (dither noise makes full-size PNGs large); SSIM for
+  S3-AC18 is measured on solid content, as in S2.
+- **Measured (release, M-series):** 4K image backdrop 69 ms, 4K gradient 72 ms (budget 500 ms); 8000² image
+  backdrop + 8000² content peaks at +1.23 GB (budget 2 GB).
+- **`os` is allowed in SunshotPlatform** (for `os.Logger`, which the hygiene rules require instead of `print`):
+  a catalog that fails to load is logged and shows an empty grid, never a crash. The smoke test fails if any
+  catalog is empty, so this can't ship silently.

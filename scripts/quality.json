@@ -36,6 +36,7 @@
       "Observation",
       "CoreGraphics",
       "UniformTypeIdentifiers",
+      "os",
       "SunshotCore",
       "SunshotRender"
     ]

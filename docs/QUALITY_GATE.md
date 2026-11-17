@@ -7,7 +7,7 @@ Logs per stage: `.build/gate/<stage>.log`; summary: `.build/gate/report.md` / `r
 |---|---|---|---|
 | 1 | toolchain | swift 6, swift-format, jq, python3, codesign, sips | a tool is missing |
 | 2 | format | `swift format lint --strict` with `.swift-format` | any formatting/lint rule (incl. force unwrap/try, IUO) |
-| 3 | hygiene | `scripts/check-hygiene.sh` | `try!`, `as!`, `print`, `NSLog`, `fatalError`, `main.sync`, slice-less TODO, unjustified `@unchecked Sendable`, file > 400 lines, banned brand terms |
+| 3 | hygiene | `scripts/check-hygiene.sh` | `try!`, `as!`, `print`, `NSLog`, `fatalError`, `main.sync`, slice-less TODO, unjustified `@unchecked Sendable`, file > 400 lines, banned brand terms, binary images under `Sources/**/Resources` (S3: wallpapers are generated recipes) |
 | 4 | architecture | `scripts/check-architecture.sh` | a module imports outside its allow-list; tests import the app target |
 | 5 | build | debug build + tests, warnings as errors, Swift 6 strict concurrency | any warning or error |
 | 6 | test | Swift Testing unit + snapshot tests | any failing test or snapshot pixel diff (> 0.1% of pixels beyond ±2/255) |
@@ -20,9 +20,10 @@ Logs per stage: `.build/gate/<stage>.log`; summary: `.build/gate/report.md` / `r
 `make gate-fast` (pre-commit) runs stages 1–6.
 
 ## The gate is tested too
-`make gate-selftest` copies the repo to a scratch dir, plants 13 known defects one at a time (bad format, `try!`,
+`make gate-selftest` copies the repo to a scratch dir, plants 16 known defects one at a time (bad format, `try!`,
 `print`, slice-less TODO, competitor brand, AppKit in Core, compiler warning, failing test, visual regression,
-coverage drop, untested `Done` AC, unknown AC id, oversized app) and asserts each is caught **for the right
+coverage drop, untested `Done` AC, second drawing path, view-held document copy, unknown AC id, oversized app,
+shipped image in Resources) and asserts each is caught **for the right
 reason**. CI runs it weekly. Add a case whenever you add a rule.
 
 ## Changing thresholds
