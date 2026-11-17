@@ -42,6 +42,7 @@ let package = Package(
         .testTarget(
             name: "SunshotCoreTests",
             dependencies: ["SunshotCore"],
+            resources: [.copy("fixtures")],
             swiftSettings: strictSettings
         ),
         .testTarget(

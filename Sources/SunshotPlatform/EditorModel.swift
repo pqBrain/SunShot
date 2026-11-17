@@ -33,6 +33,8 @@ public final class EditorModel {
     /// Whether the style inspector panel is visible.
     public var showsInspector = true
     public var notice: String?
+    /// Export file-name template (Settings ▸ Filename format; S7).
+    public var filenameTemplate = SunshotDefaults.filenameTemplate
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
     private var renderGeneration = 0
@@ -74,7 +76,7 @@ public final class EditorModel {
         }
         do {
             let image = try await Task.detached(priority: .userInitiated) { try ImageLoader.load(data) }.value
-            session.setContent(image)
+            session.setContent(image, data: data)
             await refreshPreview()
         } catch {
             let reason = (error as? ImageLoadError)?.reason ?? error.localizedDescription

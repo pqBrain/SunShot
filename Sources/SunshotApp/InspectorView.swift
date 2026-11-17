@@ -17,6 +17,7 @@ struct InspectorView: View {
         ScrollView {
             VStack(spacing: 10) {
                 if model.isInspectorEnabled {
+                    ThemeHeaderView()
                     InspectorSection(
                         title: UIStrings.canvasSection, isExpanded: $canvasExpanded,
                         reset: { model.perform { $0.resetCanvas() } }

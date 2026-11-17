@@ -151,3 +151,75 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 - **Inline title editing** works in the inspector's Title field and directly on the canvas (double-click the
   title bar; the bar's position comes from `EditorModel.titleBarUnitRect`, computed from the same layout).
 - **Inspector:** Frame and Colors & Fonts sections are appended after Shadow (Colors & Fonts starts collapsed).
+
+## S7 implementation notes (2026-11-17)
+- **`.sunshot` package:** `document.json` (pretty, key-sorted) + `media/<id>.<ext>` holding each image's original
+  bytes (content and user backdrop images; generated content without a source file is stored as PNG). No
+  `thumbnail.png` yet (optional in the ACs). UTI `app.sunshot.document` (conforms to `com.apple.package`) is
+  exported in `Support/Info.plist`; `.sunshot` files open from Finder.
+- **Tolerant, generic decoding:** the whole `Project` (and the manifest) is decoded by laying the stored JSON over
+  the JSON of a default value (`JSONValue.decodeTolerantly`): missing keys at any depth take their defaults,
+  unknown keys are ignored, a stored enum case replaces the default case. New `Project` fields from other slices
+  are therefore saved and loaded with no codec change. **Limitation:** an `Optional` field whose *default* is
+  non-nil can't round-trip `nil` (synthesised encoding omits nil keys, so the default comes back) — use a
+  non-optional value or an enum for such fields.
+- **Schema:** `schemaVersion` 1. A higher version opens **read-only** with "This document was made with a newer
+  version of Sunshot": autosave is off and ⌘S becomes Save As, so the newer file is never overwritten with fewer
+  fields. `DocumentManifestCodec.migrate` is the hook for v2+ (each step needs `fixtures/v<n>/document.json`
+  and a test). Golden fixture: `Tests/SunshotCoreTests/fixtures/v1/document.json`.
+- **Hostile documents:** media paths must be `media/<plain-name>` (no `..`, `/`, `\`, `:`, hidden or control
+  characters) and, after resolving symlinks, must still be inside `media/`, so neither `../../x` nor a symlink
+  can make Sunshot read outside the package. Missing, empty or undecodable media → "Can't open this document" with
+  the file names and an "Open with Placeholders" choice (grey content of the recorded size; a missing backdrop
+  image falls back to the default colour as in S3).
+- **Atomic writes:** the package is built in an `itemReplacementDirectory` and swapped in with
+  `FileManager.replaceItemAt` (the sanctioned way under the sandbox); an interrupted save leaves the previous
+  version untouched (tested by throwing just before the swap). Writes run on a `DocumentWriter` actor, never on
+  the main thread, one at a time.
+- **Autosave:** 5 s after the last change (debounced via Observation on the document store), on resign-active and
+  on quit. Saved documents save in place; untitled ones go to `Application Support/Sunshot/Drafts/<uuid>.sunshot`.
+  An untitled document without content keeps no draft. Autosaving a 20 MB-media document did not block the main
+  actor beyond the 250 ms test budget.
+- **Recovery:** on launch the newest draft is restored as "Untitled" (older drafts stay in the folder). Drafts are
+  not listed in Open Recent (they have no user-visible name), so "drafts surface via Open Recent" is narrowed to
+  recovery for now. Closing an untitled document with content asks "Save changes to Untitled?" (Save / Don't Save
+  / Cancel); Don't Save deletes the draft. Saved documents close and quit silently after a final save.
+- **Single window stays:** File ▸ New and Open replace the current document after the same close prompt (Sunshot
+  remains one window, as since S1). The window's red close button doesn't lose work: the document stays in memory
+  and is autosaved; ⌘W runs the prompt.
+- **Open… opens both** `.sunshot` documents (replacing the document) and images (becoming the content, as in S1).
+  ⌘S = Save, ⇧⌘S = Save As, ⇧⌘E = Export Image (per the decision table).
+- **Open Recent** is Sunshot's own list (10 items, most recent first, `UserDefaults`) with security-scoped
+  bookmarks (`com.apple.security.files.bookmarks.app-scope` entitlement added) so items reopen after relaunch in
+  the sandbox. A deleted file shows "File not found" and is removed from the list.
+- **Themes:** `Theme.fields` in `Sources/SunshotCore/Document/Theme.swift` is the one list of `Project` properties a
+  theme carries (today `backdropSettings`, `border`, `shadow`; padding, canvas, export options and content are
+  never included). Frame, colour tokens, fonts and backdrop effects are added there with one line each. Style is
+  stored as JSON per field, so themes saved before a field existed apply that field's default. User-image
+  backdrops are not carried (themes never hold media): the theme gets Sunshot's default wallpaper instead.
+  Files: `Application Support/Sunshot/Themes/<sanitised lower-case name>.json` (`/ \ : * ? " < > |`, control
+  characters and leading dots stripped from the file name only; `-2` on clashes). Corrupt files are skipped and
+  logged. Themes are not shareable (decision table).
+- **Theme header rule ("(modified)"):** the document remembers the applied theme (id + style), undoable with the
+  style. Header = "No Theme" when none is applied or it was deleted; the theme's current name when the document's
+  style equals the theme's; "<name> (modified)" otherwise (editing back to the theme's values reads unmodified
+  again). Save Theme marks the new theme as applied as an undo step "Save Theme" (every document change is
+  undoable; undo doesn't delete the theme file). Apply is "Apply Theme <name>".
+- **Settings** (`UserDefaults`, prefix `app.sunshot.`): appearance via `NSApp.appearance` (exports never depend on
+  it); filename template (plugs into the S4 `FilenameTemplate` via `EditorModel.filenameTemplate`; blank = default
+  with "Using the default format"); default export folder (bookmark; written directly with ` 2`, ` 3`… on name
+  clashes; a missing or unwritable folder opens the save panel at Pictures with a one-line notice); confirm reset;
+  default template (Screenshot only, picker disabled until S12).
+- **Menus as data:** `MenuCatalog` (SunshotPlatform) defines every menu item, title and key equivalent; the SwiftUI
+  `Commands` are built from it, and a unit test checks required items, S1–S4 shortcuts and that no two items share
+  a key equivalent (system items such as ⌘Q, ⌘M, ⌃⌘F are listed so the clash check covers them). Enablement and
+  dynamic titles (Undo/Redo names, Show/Hide Inspector) come from `DocumentController`. Cut / Copy / Paste / Select
+  All go to a focused text field when there is one; otherwise ⌘C copies the PNG and ⌘V pastes an image as before.
+  New: ⌘N New, ⌘W Close, ⌘S Save, ⇧⌘S Save As, File ▸ Start Over (no shortcut), ⌘X, ⌘A.
+- **Content keeps its original bytes** (`ContentImage.data`) so a saved document stores the imported file unchanged
+  (SHA-256 checked). `NSSupportsSuddenTermination` and automatic termination are off so quit always gets a final
+  save. The smoke test also saves and reopens a document inside the sandboxed app.
+- **Measured (release, M-series, machine shared with other builds):** reloaded document 4K render median 158 ms
+  (budget 500); 8000² content + 8000² backdrop save 2 ms (original bytes are copied, nothing re-encoded) and load
+  0.63 s (budget 3 s), peak growth 0.72 GB (budget 1.5). The perf fixtures are solid-colour PNGs, so the save time
+  reflects small files; real photos are dominated by disk speed.

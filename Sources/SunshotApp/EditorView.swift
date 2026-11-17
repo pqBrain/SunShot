@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 /// Main window: translucent (desktop shows through), canvas in the middle, floating glass inspector on the right.
 struct EditorView: View {
     @Bindable var model: EditorModel
+    @Environment(DocumentController.self) private var controller
     @State private var isDropTargeted = false
     @Environment(\.colorScheme) private var colorScheme
 
@@ -25,7 +26,7 @@ struct EditorView: View {
         .containerBackground(.ultraThinMaterial, for: .window)
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .toolbar(removing: .title)
-        .toolbar { EditorToolbar(model: model) }
+        .toolbar { EditorToolbar(model: model, controller: controller) }
         .alert(
             model.alert?.title ?? "", isPresented: alertBinding, presenting: model.alert,
             actions: { _ in Button("OK") {} }, message: { Text($0.message) })
@@ -125,6 +126,7 @@ struct EmptyStateView: View {
 
 struct EditorToolbar: ToolbarContent {
     let model: EditorModel
+    let controller: DocumentController
 
     var body: some ToolbarContent {
         ToolbarSpacer(.flexible, placement: .primaryAction)
@@ -147,6 +149,15 @@ struct EditorToolbar: ToolbarContent {
             .disabled(!model.hasContent)
 
             Button {
+                DocumentFlows.startOver(controller)
+            } label: {
+                Label(UIStrings.startOverButton, systemImage: "paintbrush")
+            }
+            .help(UIStrings.startOverButton)
+            .accessibilityLabel(UIStrings.startOverAccessibility)
+            .disabled(!controller.isEnabled(.startOver))
+
+            Button {
                 Task { await model.copyPNG(to: .general) }
             } label: {
                 Label(UIStrings.copyPNG, systemImage: "doc.on.doc")
@@ -159,7 +170,7 @@ struct EditorToolbar: ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
             ExportOptionsButton(model: model)
             Button {
-                Task { await Panels.export(from: model) }
+                Task { await DocumentFlows.export(controller) }
             } label: {
                 Label(model.exportButtonTitle, systemImage: "square.and.arrow.up")
                     .labelStyle(.titleAndIcon)
