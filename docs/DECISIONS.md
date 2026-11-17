@@ -464,3 +464,52 @@ S5, S6, S7, S8, S9, S11 and S14 were built in parallel and merged on main. What 
   `ContentProjection` in `ContentMapping` and map snippet density, then lift the guard.
 - **Bulk export (S14) file names** follow Settings ▸ Filename format (via `EditorModel.filenameTemplate`), plus `_{INDEX}`.
 - `RGBAColor.mixed` (S5, alpha-aware) and S8's opaque mix clashed; S8's is now `mixedOpaque`.
+
+## S10 implementation notes (2026-11-17)
+- **The crop lives on the document, not in `Project`.** `EditorDocument.crop: CropRect?` (whole content pixels of the
+  original image) is saved as `crop` in `document.json` (`DocumentManifest.crop`, tolerant: missing = no crop). It
+  belongs to one image, so themes, layout presets and bulk edit (which share `Project` across images) never carry
+  it. Replacing or clearing the content, starting a snippet, or capturing drops it. A crop equal to the whole image
+  is stored as nil (one representation of "uncropped"), and an out-of-range crop from a hand-edited file is clamped
+  or ignored (`EditorDocument.effectiveCrop`), never an error.
+- **Non-destructive, on the single render path.** `Renderer.render(document:)` calls `croppedContent(of:)`
+  (`Renderer+Crop.swift`): `CGImage.cropping(to:)` (shares the original pixels) plus the project with its
+  annotations shifted. Everything downstream (frame, transform, shadow, effects, export) sees the cropped image as
+  the content, so `CanvasLayout` needs no change and no-crop renders are byte-identical (no snapshot re-recorded).
+  The original bytes (S7 media) are saved unchanged.
+- **Annotations stay in uncropped content pixels.** The renderer shifts them by minus the crop origin (redaction
+  too, which then rewrites the cropped image's pixels at the same source location); Annotate mode adds the origin
+  back (`ContentMapping.origin`, default zero). Changing or removing the crop never moves an annotation relative to
+  the image; annotations outside the crop are clipped, not deleted. `imageContentSize` (cropped) replaced
+  `content.pixelSize` in the title-bar rect, contentProjection, layout thumbnails, contentLongEdge and the
+  annotation mapping, and `contentPixelSize` returns the cropped size.
+- **Crop dialog** (`CropEditor` in Platform, maths in Core `CropGeometry` / `CropDisplay`): drags edit a draft only;
+  Apply is one "Crop Image" step (or "Remove Crop"), Cancel changes nothing. Ratio presets fit the largest centred
+  rect of that ratio inside the current draft; ratio-locked corner drags anchor at the opposite corner, edge drags at
+  the opposite edge centred on the other axis; min side 16 px; never flips. Images whose fitted width would be under
+  35 % of the dialog width (long website captures) fill the width and scroll.
+- **Capture lives in SunshotPlatform behind protocols.** `ScreenCapturing` (`SystemScreenCapturer`: ScreenCaptureKit
+  `SCScreenshotManager`, `CGPreflightScreenCaptureAccess` / `CGRequestScreenCaptureAccess`) and `WebPageCapturing`
+  (`WebKitPageCapturer`: offscreen `WKWebView` in a never-shown borderless window, non-persistent data store).
+  `scripts/quality.json` now allows `WebKit` and `ScreenCaptureKit` in SunshotPlatform only; Core/Render are
+  untouched. Tests use fakes (`FakeScreen`, `FakeWeb`) and an internal `capture(html:)` seam — WebKit renders local
+  HTML fine inside `swift test`, so AC11/AC12 are real integration tests with no network.
+- **Website capture**: only http(s) with a host (`https://` added to bare hosts; `file:`, `data:`, `javascript:` …
+  refused before anything loads, and again inside the capturer). Viewports Desktop 1440×900, Laptop 1280×800,
+  Tablet 834×1112, Phone 390×844. Full page scrolls through the page (lazy content) and grows the view to the page
+  height, capped at 16,000 CSS px. Delay 0…10 s, timeout 30 s (task-group race), Cancel via task cancellation; a
+  generation counter makes a cancelled capture finishing late a no-op. Output is at the backing scale (2× on
+  Retina). Sandbox: added `com.apple.security.network.client`.
+- **Screen capture**: area = a borderless, dimmed panel over the screen under the pointer (Esc cancels, < 8 pt is a
+  click), captured with `SCContentFilter(display:excludingApplications: [Sunshot])` and `sourceRect`; window = a
+  picker of on-screen layer-0 windows ≥ 40 pt, Sunshot excluded, captured without the system shadow (Sunshot draws
+  its own). Permission denied (preflight, request, or `SCStreamError.userDeclined`) shows an explanation with "Open
+  System Settings" and leaves the document unchanged. No Info.plist key exists for Screen Recording, so none added.
+- **Menus**: File ▸ Capture Area… ⌥⇧⌘4, Capture Window… ⌥⇧⌘5, Capture Website… ⌥⇧⌘L; Edit ▸ Crop… ⌥⌘C. The toolbar
+  has a Capture menu; the bottom pill has Crop.
+- **Global hotkey: implemented, off by default.** Settings ▸ "Capture Area from anywhere (⌥⇧⌘4)"
+  (`AppSettings.captureHotkeyEnabled`, key `app.sunshot.captureHotkey`). Carbon `RegisterEventHotKey` (sandbox-safe,
+  no Accessibility permission), registered only while the setting is on; same keys as the menu item, so there is
+  one shortcut for Capture Area.
+- **Limitations / follow-ups**: crop of video content is S13's (same `CropRect`); area selection spans one display;
+  website capture can't log in or dismiss cookie banners; pages that never finish loading hit the timeout.

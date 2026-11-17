@@ -73,8 +73,8 @@ extension EditorSession {
 
     /// Projected content on the canvas (for snapping and the mini preview), or nil when empty.
     public var contentProjection: ContentProjection? {
-        guard let content = document.content else { return nil }
-        let layout = CanvasLayout.compute(contentSize: content.pixelSize, project: document.project)
+        guard let size = document.imageContentSize else { return nil }
+        let layout = CanvasLayout.compute(contentSize: size, project: document.project)
         return ContentProjection(
             contentRect: layout.contentRect, canvasSize: layout.canvasSize, transform: contentTransform)
     }

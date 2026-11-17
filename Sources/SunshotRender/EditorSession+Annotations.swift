@@ -8,7 +8,7 @@ extension EditorSession {
 
     /// Long edge of the content in pixels (1000 when empty): sizes S/M/L and offsets scale with it.
     public var contentLongEdge: Double {
-        guard let size = document.content?.pixelSize else { return 1000 }
+        guard let size = document.imageContentSize else { return 1000 }
         return Double(max(size.width, size.height))
     }
 

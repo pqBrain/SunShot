@@ -30,7 +30,9 @@ struct EditorView: View {
         .toolbar { EditorToolbar(model: model, controller: controller) }
         .alert(
             model.alert?.title ?? "", isPresented: alertBinding, presenting: model.alert,
-            actions: { _ in Button("OK") {} }, message: { Text($0.message) })
+            actions: { _ in Button("OK") {} }, message: { Text($0.message) }
+        )
+        .modifier(CaptureSheets(model: model))
     }
 
     private var canvasArea: some View {
@@ -164,6 +166,8 @@ struct EditorToolbar: ToolbarContent {
             }
             .help(UIStrings.chooseImageAccessibility)
             .accessibilityLabel(UIStrings.chooseImageAccessibility)
+
+            CaptureToolbarMenu(model: model)
 
             Button {
                 Task { await model.clearContent() }

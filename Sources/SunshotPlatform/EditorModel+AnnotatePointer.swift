@@ -23,9 +23,10 @@ public struct HandleMark: Hashable, Sendable {
 extension EditorModel {
     /// Maps the displayed canvas to content pixels; nil without content.
     public func annotationMapping(viewWidth: Double, viewHeight: Double) -> ContentMapping? {
-        guard let content = session.document.content else { return nil }
+        guard let size = session.document.imageContentSize else { return nil }
         return ContentMapping(
-            contentSize: content.pixelSize, project: project, viewWidth: viewWidth, viewHeight: viewHeight)
+            contentSize: size, project: project, viewWidth: viewWidth, viewHeight: viewHeight,
+            origin: session.document.contentOrigin)
     }
 
     /// Pointer down. `additive` = ⌘ held; `clickCount` 2 on a text annotation opens it for editing.

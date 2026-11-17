@@ -44,8 +44,8 @@ extension EditorModel {
 
     /// Where the title bar sits on the canvas, as fractions (0…1) of the canvas size; nil without a title bar.
     public var titleBarUnitRect: CGRect? {
-        guard let content = session.document.content, project.frame.kind.hasTitle else { return nil }
-        let layout = CanvasLayout.compute(contentSize: content.pixelSize, project: project)
+        guard let size = session.document.imageContentSize, project.frame.kind.hasTitle else { return nil }
+        let layout = CanvasLayout.compute(contentSize: size, project: project)
         let style = layout.styleScale
         let box = layout.frameRect
         let geometry = FrameGeometry(frame: project.frame, boxWidth: box.width / style, boxHeight: box.height / style)

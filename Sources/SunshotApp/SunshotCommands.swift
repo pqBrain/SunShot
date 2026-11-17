@@ -33,6 +33,10 @@ struct SunshotCommands: Commands {
             item(.exportImage) { Task { await DocumentFlows.export(controller) } }
             Divider()
             item(.startOver) { DocumentFlows.startOver(controller) }
+            Divider()
+            item(.captureArea) { AreaCapture.start(model: model) }
+            item(.captureWindow) { Task { await model.loadCapturableWindows() } }
+            item(.captureWebsite) { model.capture.showsWebsiteSheet = true }
         }
         CommandGroup(after: .sidebar) {
             item(.toggleInspector) { model.showsInspector.toggle() }
@@ -55,6 +59,7 @@ struct SunshotCommands: Commands {
             Button(model.clearCommandTitle) { Task { await model.clearCommand() } }
                 .keyboardShortcut(MenuCatalog.shortcut(.clearContent).map(Self.keyboardShortcut))
                 .disabled(!model.canClear)
+            item(.crop) { model.openCrop() }
         }
     }
 

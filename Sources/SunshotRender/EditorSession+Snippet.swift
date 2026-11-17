@@ -21,6 +21,7 @@ extension EditorSession {
         history.apply(Self.newSnippetActionName) {
             $0.content = nil
             $0.snippet = snippet
+            $0.crop = nil
         }
     }
 

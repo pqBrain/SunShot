@@ -22,6 +22,16 @@ struct BottomToolbar: View {
             .accessibilityLabel(UIStrings.positionButtonAccessibility)
             .disabled(!model.hasContent)
             .popover(isPresented: $showsPosition, arrowEdge: .top) { PositionPopover(model: model) }
+            // S10: the crop pill.
+            Button {
+                model.openCrop()
+            } label: {
+                Label(UIStrings.cropButton, systemImage: "crop").labelStyle(.titleAndIcon)
+            }
+            .buttonStyle(.glass)
+            .help(UIStrings.cropAccessibility)
+            .accessibilityLabel(UIStrings.cropAccessibility)
+            .disabled(!model.canCrop)
         }
         .padding(6)
         .glassEffect(.regular, in: .capsule)

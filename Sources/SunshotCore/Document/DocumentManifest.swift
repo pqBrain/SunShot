@@ -21,12 +21,16 @@ public struct DocumentManifest: Codable, Hashable, Sendable {
     public var theme: Theme?
     /// Code-snippet content (S11), stored inline; nil for image or empty documents.
     public var snippet: CodeSnippet?
+    /// Non-destructive crop of the content image (S10), in its pixels; nil (or missing) = the whole image.
+    public var crop: CropRect?
 
     public init(
         schemaVersion: Int = DocumentManifest.currentSchemaVersion, project: Project = Project(),
-        content: ContentEntry? = nil, media: [MediaEntry] = [], theme: Theme? = nil, snippet: CodeSnippet? = nil
+        content: ContentEntry? = nil, media: [MediaEntry] = [], theme: Theme? = nil, snippet: CodeSnippet? = nil,
+        crop: CropRect? = nil
     ) {
         self.snippet = snippet
+        self.crop = crop
         self.schemaVersion = schemaVersion
         self.project = project
         self.content = content

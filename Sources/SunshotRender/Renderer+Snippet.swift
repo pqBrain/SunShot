@@ -26,9 +26,9 @@ extension Renderer {
 }
 
 extension EditorDocument {
-    /// Size of the content at 1× (the snippet's laid-out size, or the image's pixel size); nil when empty.
+    /// Size of the content at 1× (the snippet's laid-out size, or the image's cropped pixel size); nil when empty.
     public var contentPixelSize: PixelSize? {
         if let snippet { return CodeSnippetRenderer.layout(of: snippet).size }
-        return content?.pixelSize
+        return imageContentSize
     }
 }

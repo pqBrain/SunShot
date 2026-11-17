@@ -1,4 +1,5 @@
 import AppKit
+import SunshotCore
 import SunshotPlatform
 import SwiftUI
 import UniformTypeIdentifiers
@@ -13,6 +14,12 @@ struct SunshotApplication: App {
                 .environment(appDelegate.controller)
                 .navigationTitle(appDelegate.controller.displayName)
                 .frame(minWidth: 820, minHeight: 540)
+                .task(id: appDelegate.controller.settings.captureHotkeyEnabled) {
+                    let model = appDelegate.controller.model
+                    appDelegate.hotkey.setEnabled(appDelegate.controller.settings.captureHotkeyEnabled) {
+                        AreaCapture.start(model: model)
+                    }
+                }
         }
         .defaultSize(width: 1180, height: 760)
         .commands { SunshotCommands(controller: appDelegate.controller) }

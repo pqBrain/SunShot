@@ -37,6 +37,8 @@
       "CoreGraphics",
       "UniformTypeIdentifiers",
       "os",
+      "WebKit",
+      "ScreenCaptureKit",
       "SunshotCore",
       "SunshotRender"
     ]

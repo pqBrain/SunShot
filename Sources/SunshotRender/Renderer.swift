@@ -22,9 +22,10 @@ public enum Renderer {
                 project: document.project, snippet: snippet, media: document.media, scale: scale,
                 grid: showsTransparencyGrid ? grid : nil)
         }
-        guard let content = document.content else { return nil }
+        // S10: the crop is applied here, so the original image (and its saved bytes) stay intact.
+        guard let (image, project) = croppedContent(of: document) else { return nil }
         return try render(
-            project: document.project, content: content.image, media: document.media, scale: scale,
+            project: project, content: image, media: document.media, scale: scale,
             grid: showsTransparencyGrid ? grid : nil)
     }
 

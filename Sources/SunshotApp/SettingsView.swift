@@ -37,6 +37,11 @@ struct SettingsView: View {
 
             Toggle(UIStrings.confirmReset, isOn: $controller.settings.confirmReset)
 
+            Toggle(isOn: $controller.settings.captureHotkeyEnabled) {
+                Text(UIStrings.globalCaptureShortcut)
+                Text(UIStrings.globalCaptureShortcutHint)
+            }
+
             Picker(UIStrings.defaultTemplate, selection: $controller.settings.defaultTemplate) {
                 Text(AppSettings.screenshotTemplate).tag(AppSettings.screenshotTemplate)
             }

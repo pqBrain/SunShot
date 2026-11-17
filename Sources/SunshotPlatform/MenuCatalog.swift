@@ -3,7 +3,8 @@
 public enum MenuCommand: String, CaseIterable, Sendable {
     case settings, hide, hideOthers, quit
     case new, newCodeSnippet, open, importMultiple, openRecent, close, save, saveAs, exportImage, exportAll, startOver
-    case undo, redo, cut, copy, paste, selectAll, clearContent
+    case captureArea, captureWindow, captureWebsite
+    case undo, redo, cut, copy, paste, selectAll, clearContent, crop
     case toggleInspector, enterFullScreen
     case minimize, zoom
     case help
@@ -85,6 +86,10 @@ public enum MenuCatalog {
                 MenuItemSpec(.exportImage, "Export Image…", KeyShortcut("e", [.command, .shift])),
                 MenuItemSpec(.exportAll, "Export All…", KeyShortcut("e", [.command, .option, .shift])),
                 MenuItemSpec(.startOver, "Start Over"),
+                // S10: ⌥⇧⌘4 is also the optional global capture shortcut (Settings), off by default.
+                MenuItemSpec(.captureArea, "Capture Area…", KeyShortcut("4", [.command, .option, .shift])),
+                MenuItemSpec(.captureWindow, "Capture Window…", KeyShortcut("5", [.command, .option, .shift])),
+                MenuItemSpec(.captureWebsite, "Capture Website…", KeyShortcut("l", [.command, .option, .shift])),
             ]),
         MenuSpec(
             title: "Edit",
@@ -96,6 +101,7 @@ public enum MenuCatalog {
                 MenuItemSpec(.paste, "Paste", KeyShortcut("v")),
                 MenuItemSpec(.selectAll, "Select All", KeyShortcut("a")),
                 MenuItemSpec(.clearContent, "Clear Content", KeyShortcut(KeyShortcut.deleteKey)),
+                MenuItemSpec(.crop, "Crop…", KeyShortcut("c", [.command, .option])),
             ]),
         MenuSpec(
             title: "View",

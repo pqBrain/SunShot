@@ -163,6 +163,9 @@ extension DocumentController {
         switch command {
         case .exportImage: model.canExport
         case .copy, .clearContent, .save: model.hasContent
+        case .crop: model.canCrop
+        case .captureArea, .captureWindow: !model.capture.isCapturingScreen
+        case .captureWebsite: !model.capture.isCapturingWebsite
         case .startOver: model.session.canStartOver
         case .undo: model.canUndo
         case .redo: model.canRedo

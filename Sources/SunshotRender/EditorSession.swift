@@ -30,16 +30,19 @@ public struct EditorDocument: Equatable, Sendable {
     public var theme: Theme?
     /// Code-snippet content (S11); when set it is the content and `content` is nil.
     public var snippet: CodeSnippet?
+    /// Non-destructive crop of the content image (S10), in its pixels; nil shows the whole image.
+    public var crop: CropRect?
 
     public init(
         project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:],
-        theme: Theme? = nil, snippet: CodeSnippet? = nil
+        theme: Theme? = nil, snippet: CodeSnippet? = nil, crop: CropRect? = nil
     ) {
         self.project = project
         self.content = content
         self.media = media
         self.theme = theme
         self.snippet = snippet
+        self.crop = crop
     }
 }
 
@@ -70,6 +73,7 @@ public struct EditorSession: Sendable {
         history.apply(name) {
             $0.content = ContentImage(image, data: data)
             $0.snippet = nil
+            $0.crop = nil
         }
     }
 
@@ -84,6 +88,7 @@ public struct EditorSession: Sendable {
         history.apply(Self.clearActionName) {
             $0.content = nil
             $0.snippet = nil
+            $0.crop = nil
         }
     }
 

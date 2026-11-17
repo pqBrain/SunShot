@@ -47,7 +47,7 @@ public enum DocumentPackage {
         }
         let manifest = DocumentManifest(
             project: document.project, content: contentEntry, media: entries, theme: document.theme,
-            snippet: document.snippet)
+            snippet: document.snippet, crop: contentEntry == nil ? nil : document.crop)
         return (manifest, files)
     }
 
@@ -108,7 +108,8 @@ public enum DocumentPackage {
         }
         if !missing.isEmpty && !allowPlaceholders { throw DocumentFormatError.missingMedia(missing) }
 
-        var document = EditorDocument(project: manifest.project, theme: manifest.theme, snippet: manifest.snippet)
+        var document = EditorDocument(
+            project: manifest.project, theme: manifest.theme, snippet: manifest.snippet, crop: manifest.crop)
         if let content = manifest.content {
             let id = UUID(uuidString: content.mediaID) ?? UUID()
             if let file = loaded[content.mediaID] {

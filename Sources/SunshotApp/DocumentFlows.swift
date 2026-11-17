@@ -135,6 +135,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let controller = DocumentController()
     /// S14 batch: shares the editor's style; lives as long as the app.
     lazy var bulk = BulkSession(editor: controller.model)
+    /// S10: optional global Capture Area shortcut (off by default).
+    let hotkey = GlobalCaptureHotkey()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller.settings.appearance.apply(to: NSApplication.shared)

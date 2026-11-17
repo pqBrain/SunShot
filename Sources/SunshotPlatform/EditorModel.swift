@@ -39,6 +39,9 @@ public final class EditorModel {
     public let annotate = AnnotationEditor()
     /// S6: layout thumbnails, preset animation and position-drag guides.
     public let layout = LayoutState()
+    /// S10: screen / website capture state and the crop dialog's draft.
+    public let capture = CaptureController()
+    public let crop = CropEditor()
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
     var renderGeneration = 0

@@ -15,14 +15,18 @@ public struct AppSettings: Equatable, Sendable {
     public var confirmReset: Bool
     /// Template opened for new documents. Only "Screenshot" exists until the template gallery (S12).
     public var defaultTemplate: String
+    /// S10: the global Capture Area shortcut (⌥⇧⌘4) works while Sunshot is in the background. Off by default.
+    public var captureHotkeyEnabled: Bool
 
     public static let screenshotTemplate = "Screenshot"
     public static let defaults = AppSettings()
 
     public init(
         appearance: AppearanceSetting = .system, filenameTemplate: String = SunshotDefaults.filenameTemplate,
-        exportFolder: URL? = nil, confirmReset: Bool = true, defaultTemplate: String = AppSettings.screenshotTemplate
+        exportFolder: URL? = nil, confirmReset: Bool = true, defaultTemplate: String = AppSettings.screenshotTemplate,
+        captureHotkeyEnabled: Bool = false
     ) {
+        self.captureHotkeyEnabled = captureHotkeyEnabled
         self.appearance = appearance
         self.filenameTemplate = filenameTemplate
         self.exportFolder = exportFolder

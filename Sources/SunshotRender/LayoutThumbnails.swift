@@ -29,8 +29,8 @@ public enum LayoutThumbnails {
 
     /// Render scale that fits the document's canvas into `maxSide`, or nil when there's no content.
     public static func scale(for document: EditorDocument, maxSide: Int) -> Double? {
-        guard let content = document.content else { return nil }
-        let canvas = CanvasLayout.compute(contentSize: content.pixelSize, project: document.project).canvasSize
+        guard let size = document.imageContentSize else { return nil }
+        let canvas = CanvasLayout.compute(contentSize: size, project: document.project).canvasSize
         return Double(max(maxSide, 1)) / Double(max(canvas.width, canvas.height))
     }
 
