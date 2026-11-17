@@ -13,6 +13,7 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 
 ## S1 implementation notes (2026-11-17)
 - **WebP is import-only.** ImageIO can't write WebP on the supported OS (macOS 26+), so S4 export formats are PNG / JPEG / HEIC.
+  (S4 checks this at runtime instead of assuming it; see the S4 notes.)
 - **Truncated files:** ImageIO reports half a PNG/JPEG as "complete" and fills the rest with grey. The
   loader also requires the PNG `IEND` / JPEG end-of-image marker near the end of the file.
 - **Secondary text colour:** macOS `secondaryLabelColor` is ~4:1 on white (fails WCAG AA), so Sunshot uses
@@ -71,3 +72,48 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 - **The window is not movable by its background** (was `windowBackgroundDragBehavior(.enabled)` since S2): with
   it on, clicks on SwiftUI-drawn buttons in the glass inspector (swatches, presets, wallpapers, section headers,
   Reset) were taken as window drags and did nothing. The window still moves by its top (toolbar) area.
+
+## S4 implementation notes (2026-11-17)
+- **WebP export, checked at runtime:** `CGImageDestinationCopyTypeIdentifiers()` on macOS 27.2.1 lists `public.png`,
+  `public.jpeg` and `public.heic` but not `org.webmproject.webp`, so the format picker shows PNG / JPEG / HEIC.
+  WebP appears automatically on an OS that can write it (`ImageCodec.writableFormats`).
+- **Presets** live in `canvas-presets.json` (34: 10 general, 10 social, 14 app-store sizes) and are validated on
+  load (unique ids, declared groups, positive ratios, store presets need a pixel size within 0.5 % of their
+  ratio and ≤ 16384 px). `aspect-presets.json` (S0) was replaced. Store sizes were checked on 2026-11-17 against
+  Apple's App Store Connect screenshot specs, Google Play's graphic asset guide and the Chrome Web Store image
+  guide (URLs in the JSON `sources`).
+- **No brand names in preset names:** social presets are named by use ("Portrait post", "Story / vertical
+  video", "Link preview"); store presets by device or listing asset ("iPhone 6.7″", "Store feature graphic",
+  "Browser extension marquee"). Device platform names (iPhone, iPad, Mac, Apple TV, Android) are kept because
+  they are what the sizes are for. Group labels: General / Social / App stores.
+- **Ratio presets grow the canvas, never scale content** (S4-AC4). **Exact sizes (store presets and custom W×H)
+  scale content + padding uniformly to fit**, centred, so corner radius and shadow scale with it
+  (`CanvasLayout.styleScale`); small content is scaled up too, so a store screenshot is always filled the same way.
+- **Store / exact presets ignore the scale choice** and always export at their own size: the scale picker is
+  disabled with a hint, the button reads "Export 1290×2796 • PNG", and `{SCALE}` is `1x`.
+- **Custom W×H is a 1× canvas size**, so the scale applies to it. One side empty follows the Auto canvas ratio
+  (S4-AC7: 1200 → 774); both empty = Auto. Invalid input shows "Enter 1–16384" and changes nothing.
+- **Export options live in the document** (format, scale) and are undoable ("Change Export Format",
+  "Change Export Scale"); canvas changes are "Change Canvas Size". Defaults: PNG at 2×; JPEG / HEIC quality 0.9.
+  JPEG is flattened onto white, with a notice in the popover when the backdrop isn't opaque.
+- **Too large is refused, not clamped:** any output side over 16384 px disables Export and Copy with "This size is
+  too large to export (max 16384 px per side)"; the check runs before anything is rendered.
+- **Preview is capped at 6144 px on the long edge** so a 16384² custom canvas can't exhaust memory on screen;
+  exports are unaffected.
+- **File names:** `{TEMPLATE}_{SCALE}_sunshot_{DATE}` (replaces the S1 interim `sunshot-<date>.png`). The template
+  is fixed in S4 (S7 Settings makes it editable); the popover shows the resulting name read-only. `/ : \` become
+  `-`, unknown tokens stay literal, the base is cut to 200 characters / bytes.
+- **Copy honours the export size but is always PNG** (S4-AC18).
+- **Full-scale parity and budgets run in the release perf stage:** the debug build's per-pixel gradient fill takes
+  ~13 s at 6K, so the normal test run checks parity at 1× / 2× and the perf stage at 1× / 2× / 4K / 6K. The perf
+  stage now runs serially (`--no-parallel`): parallel heavy tests inflated each other's peak-memory readings.
+- **Measured (release, M-series, serial):** 4K render 51 ms (budget 500); 6K PNG export of 3712×2032 content incl.
+  encoding 354–395 ms (new budget 1000 ms); 8000² export at 1× +0.86 GB (budget 1.5); at 2× (16256², allowed)
+  +2.50 GB (budget 4); 4K→1× SSIM 0.998.
+- **Memory-heavy test suites run one after another** (`MemoryHeavySuites` in the Platform tests): the S1 8000²
+  memory test reads the process-wide footprint, and S4's 16384² preview test running beside it pushed it to
+  2.3 GB. The gate now also lists failing test expectations before the log tail, so a broad failure can't hide
+  the one that matters (needed by the snapshot self-test case).
+- **Known limitation:** a small image exported at 4K/6K with a strong shadow is slow (200×120 content at 6K with
+  spread/high: ~4.7 s), because the shadow blur grows with the scale (~750 px). It runs off the main thread;
+  rendering the shadow at reduced resolution is the fix if it matters in practice.

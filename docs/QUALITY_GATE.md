@@ -15,15 +15,15 @@ Logs per stage: `.build/gate/<stage>.log`; summary: `.build/gate/report.md` / `r
 | 8 | traceability | `scripts/check-traceability.py` | a `Done` slice has an AC with no citing test / unticked manual AC; a test cites an unknown AC; malformed AC file |
 | 9 | bundle | release `.app`, Info.plist lint, ad-hoc sign with sandbox entitlements, `codesign --verify` | build/sign fails or app > 10 MB |
 | 10 | smoke | sandboxed app renders a sample headlessly (`--smoke-test`), image size verified; with `CI` or `SUNSHOT_GATE_LAUNCH=1` also launches the GUI and checks it stays up | crash, timeout, wrong output |
-| 11 | perf | release-mode perf tests (`SUNSHOT_PERF=1`) | 4K export median > 500 ms |
+| 11 | perf | release-mode perf tests (`SUNSHOT_PERF=1`, run serially so memory peaks are not mixed) | 4K export median > 500 ms, 6K PNG export median > 1 s, memory over budget |
 
 `make gate-fast` (pre-commit) runs stages 1–6.
 
 ## The gate is tested too
-`make gate-selftest` copies the repo to a scratch dir, plants 16 known defects one at a time (bad format, `try!`,
+`make gate-selftest` copies the repo to a scratch dir, plants 18 known defects one at a time (bad format, `try!`,
 `print`, slice-less TODO, competitor brand, AppKit in Core, compiler warning, failing test, visual regression,
 coverage drop, untested `Done` AC, second drawing path, view-held document copy, unknown AC id, oversized app,
-shipped image in Resources) and asserts each is caught **for the right
+shipped image in Resources, malformed canvas preset JSON, unknown token in the default file-name template) and asserts each is caught **for the right
 reason**. CI runs it weekly. Add a case whenever you add a rule.
 
 ## Changing thresholds
