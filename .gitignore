@@ -1,0 +1,13 @@
+.DS_Store
+/.build/
+/.swiftpm/
+/build/
+/dist/
+*.xcodeproj/xcuserdata/
+DerivedData/
+Tests/**/__Snapshots__/**/*.failure.png
+Tests/**/__Snapshots__/**/*.diff.png
+
+# Local-only reference material (third-party product screenshots/notes) — never published.
+/ref/
+/postspark-macos-spec.md

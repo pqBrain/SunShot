@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1" # weekly gate self-test
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Quality gate
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # build number = commit count
+      - name: Toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+      - name: Cache SwiftPM build
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
+          restore-keys: spm-${{ runner.os }}-${{ hashFiles('Package.swift', 'Package.resolved') }}-
+      - name: Gate
+        run: scripts/gate.sh
+      - name: Gate self-test
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: scripts/gate-selftest.sh
+      - name: Job summary
+        if: always()
+        run: cat .build/gate/report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Upload gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-report
+          path: |
+            .build/gate/*.md
+            .build/gate/*.json
+            .build/gate/*.log
+            .build/gate/smoke.png
+            Tests/**/__Snapshots__/*.failure.png
+            Tests/**/__Snapshots__/*.diff.png
+          if-no-files-found: ignore
+      - name: Upload app
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sunshot.app
+          path: dist/Sunshot.app

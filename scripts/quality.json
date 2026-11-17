@@ -1,0 +1,16 @@
+{
+  "coverage": {
+    "SunshotCore": 90,
+    "SunshotRender": 85
+  },
+  "appSizeBudgetKB": 10240,
+  "maxSourceFileLines": 400,
+  "smokeTimeoutSeconds": 60,
+  "launchCheckSeconds": 4,
+  "bannedTerms": ["postspark", "post spark"],
+  "allowedImports": {
+    "SunshotCore": ["Foundation"],
+    "SunshotRender": ["Foundation", "CoreGraphics", "CoreImage", "CoreText", "ImageIO", "UniformTypeIdentifiers",
+                      "AVFoundation", "CoreMedia", "CoreVideo", "Metal", "Accelerate", "SunshotCore"]
+  }
+}

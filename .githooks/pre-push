@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Full gate before every push.
+exec "$(git rev-parse --show-toplevel)/scripts/gate.sh"

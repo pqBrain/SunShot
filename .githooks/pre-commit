@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Fast gate before every commit. Bypass only in emergencies: git commit --no-verify (CI will still catch it).
+exec "$(git rev-parse --show-toplevel)/scripts/gate.sh" --fast
