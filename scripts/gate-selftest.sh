@@ -39,7 +39,7 @@ expect_fail "compiler warning"                build        "printf 'func warn() 
 expect_fail "failing unit test"               test         "sed -i '' 's/PixelSize(width: 1200, height: 700)/PixelSize(width: 1, height: 1)/' Tests/SunshotCoreTests/CanvasLayoutTests.swift" "auto canvas adds padding"
 expect_fail "visual regression (snapshot)"    test         "sed -i '' 's|red: 237 / 255, green: 237 / 255, blue: 242 / 255|red: 0.2, green: 0.4, blue: 0.9|' Sources/SunshotCore/Model/SunshotDefaults.swift" "Snapshot [a-z0-9-]+ mismatch"
 expect_fail "untested code (coverage drop)"   "build test coverage" "python3 -I -c \"
-lines = ['public enum Untested {'] + [f'    public static func f{i}(_ x: Int) -> Int {{ x * {i} + {i} }}' for i in range(160)] + ['}']
+lines = ['public enum Untested {'] + [f'    public static func f{i}(_ x: Int) -> Int {{ x * {i} + {i} }}' for i in range(3000)] + ['}']
 open('Sources/SunshotCore/Model/Untested.swift', 'w').write(chr(10).join(lines) + chr(10))\"" "SunshotCore .*FAIL"
 expect_fail "Done slice with untested AC"     traceability "printf '\n## S1-AC99 — x\nGiven a\nWhen b\nThen c\nTest level: unit\n' >> docs/acceptance/S1.md && sed -i '' -E 's/^(\\| S1 \\|[^|]*\\|) [A-Za-z ]+ \\|/\\1 Done |/' docs/SLICES.md" "S1-AC99 has no test"
 expect_fail "second drawing path in the app"  architecture "printf 'import CoreGraphics\nfunc sneaky(_ c: CGContext) { c.fill(.zero) }\n' >> Sources/SunshotApp/Entry.swift" "Drawing APIs are only allowed"

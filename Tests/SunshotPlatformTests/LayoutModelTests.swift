@@ -111,14 +111,21 @@ struct LayoutModelTests {
         await model.perform { $0.moveContent(x: 0.2, y: 0) }.value
         #expect(model.layout.thumbnailTask == nil || model.layout.pendingThumbnailKey == nil)
 
-        let clock = ContinuousClock()
-        let start = clock.now
-        await model.perform { $0.setCornerRadius(4) }.value
-        await model.layout.thumbnailTask?.value
-        let elapsed = clock.now - start
-        // The 300 ms budget is enforced in release by LayoutThumbnailRenderPerformanceTests; a parallel debug run
-        // only proves the regeneration is debounced and finishes promptly.
-        #expect(elapsed <= .seconds(2), "\(elapsed)")
+        // The 300 ms wall-clock budget is enforced in release, serially, by LayoutThumbnailRenderPerformanceTests.
+        // Here we prove the mechanism without timing (a parallel debug run starves the utility-priority render):
+        // the debounce fits the budget, a style change schedules a regeneration instead of rendering inline,
+        // and awaiting that one task completes it. Scheduling is checked before any suspension point, so a slow
+        // preview render can't let the debounced task finish first.
+        #expect(model.layout.thumbnailDebounce < .milliseconds(300))
+        let edit = model.perform { $0.setCornerRadius(4) }
+        model.scheduleLayoutThumbnails()  // what the edit's preview refresh calls first; idempotent per key
+        let regeneration = try #require(model.layout.thumbnailTask)
+        #expect(model.layout.pendingThumbnailKey != nil, "the style change schedules a regeneration")
+        #expect(model.layout.thumbnails["centered"] === original["centered"], "nothing is rendered inline")
+        await edit.value
+        #expect(model.layout.thumbnailTask == regeneration, "the edit's own refresh doesn't restart it")
+        await regeneration.value
+        #expect(model.layout.pendingThumbnailKey == nil)
         let restyled = try #require(model.layout.thumbnails["centered"])
         #expect(restyled.dataProvider?.data as Data? != original["centered"]?.dataProvider?.data as Data?)
 

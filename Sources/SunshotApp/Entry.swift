@@ -4,7 +4,8 @@ import SunshotRender
 import SwiftUI
 
 /// Process entry point. `--smoke-test` renders a sample headlessly into the (sandboxed) temp directory, prints
-/// `smoke-test ok <W>x<H> <path>` and exits; otherwise launches the UI.
+/// the PNG as `smoke-test png <base64>` and `smoke-test ok <W>x<H> <path>`, and exits; otherwise launches the UI.
+/// The PNG goes over stdout because macOS blocks a shell from reading the app's sandbox container.
 @main
 enum Entry {
     static func main() {
@@ -60,7 +61,13 @@ enum SmokeTest {
             session.setContent(try SampleContent.image())
             guard let image = try session.render(scale: 2) else { throw RenderError.noContent }
             let output = directory.appendingPathComponent("sunshot-smoke.png")
-            try ImageCodec.pngData(image).write(to: output)
+            let png = try ImageCodec.pngData(image)
+            try png.write(to: output)
+            // The written file must decode back to the rendered size inside the sandbox.
+            let reread = try ImageCodec.decode(try Data(contentsOf: output))
+            guard reread.width == image.width, reread.height == image.height else {
+                throw RenderError.imageCreationFailed
+            }
             // A document must save and reopen inside the sandbox.
             let package = directory.appendingPathComponent("sunshot-smoke.\(DocumentPackage.fileExtension)")
             try DocumentPackage.write(session.document, to: package)
@@ -68,6 +75,7 @@ enum SmokeTest {
                 throw RenderError.imageCreationFailed
             }
             FileHandle.standardOutput.write(Data("smoke-test document ok\n".utf8))
+            FileHandle.standardOutput.write(Data("smoke-test png \(png.base64EncodedString())\n".utf8))
             FileHandle.standardOutput.write(Data("smoke-test ok \(image.width)x\(image.height) \(output.path)\n".utf8))
             return 0
         } catch {
