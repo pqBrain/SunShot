@@ -89,28 +89,20 @@ public enum Renderer {
         // Work in unscaled content units: the radius and shadow keep their 1× meaning.
         let target = CGRect(x: 0, y: 0, width: rect.width / style, height: rect.height / style)
         let shape = ContentShape.path(for: project.border, in: target)
-        let metrics = ShadowMetrics.of(project.shadow).scaled(by: scale * style)
-
-        context.saveGState()
-        context.translateBy(x: rect.x, y: rect.y)
-        context.scaleBy(x: style, y: style)
-        if metrics.opacity > 0 {
-            // Shadow offsets are in device space (y up), unaffected by our flipped CTM: negate y to fall down.
-            context.setShadow(
-                offset: CGSize(width: metrics.offsetX, height: -metrics.offsetY), blur: metrics.blur,
-                color: CGColor(gray: 0, alpha: metrics.opacity))
-            context.beginTransparencyLayer(auxiliaryInfo: nil)
+        // S6: the content transform wraps the silhouette (S5 frame chrome is drawn inside it, too).
+        ContentTransformRenderer.draw(
+            transform: project.placement.transform, layout: layout, shadow: ShadowMetrics.of(project.shadow),
+            scale: scale, bounds: target, in: context
+        ) { context in
+            context.saveGState()
+            context.addPath(shape)
+            context.clip()
+            // Images draw bottom-up; undo the flip locally so content is not mirrored.
+            context.translateBy(x: 0, y: target.minY + target.maxY)
+            context.scaleBy(x: 1, y: -1)
+            context.draw(image, in: target)
+            context.restoreGState()
         }
-        context.saveGState()
-        context.addPath(shape)
-        context.clip()
-        // Images draw bottom-up; undo the flip locally so content is not mirrored.
-        context.translateBy(x: 0, y: target.minY + target.maxY)
-        context.scaleBy(x: 1, y: -1)
-        context.draw(image, in: target)
-        context.restoreGState()
-        if metrics.opacity > 0 { context.endTransparencyLayer() }
-        context.restoreGState()
     }
 }
 

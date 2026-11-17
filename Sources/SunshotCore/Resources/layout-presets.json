@@ -1,0 +1,20 @@
+{
+  "about": "Sunshot's own layout presets (S6). x/y: offset in canvas units (-0.5...0.5); zoom: whole percent (25...400); rotation: degrees (-180...180); tiltX/tiltY: degrees (-60...60). Missing values are the identity. The first preset must be the identity.",
+  "presets": [
+    { "id": "centered", "name": "Centered", "transform": {} },
+    { "id": "close-up", "name": "Close-up", "transform": { "zoom": 125 } },
+    { "id": "breathing-room", "name": "Breathing Room", "transform": { "zoom": 78 } },
+    { "id": "swing-left", "name": "Swing Left", "transform": { "tiltY": -22, "zoom": 92 } },
+    { "id": "swing-right", "name": "Swing Right", "transform": { "tiltY": 22, "zoom": 92 } },
+    { "id": "tabletop", "name": "Tabletop", "transform": { "tiltX": 34, "y": 0.04, "zoom": 96 } },
+    { "id": "look-up", "name": "Look Up", "transform": { "tiltX": -20, "zoom": 94 } },
+    { "id": "showcase", "name": "Showcase", "transform": { "tiltX": 16, "tiltY": -24, "zoom": 90 } },
+    { "id": "blueprint", "name": "Blueprint", "transform": { "tiltX": 38, "rotation": -18, "zoom": 88 } },
+    { "id": "tipped-card", "name": "Tipped Card", "transform": { "rotation": -6, "zoom": 90 } },
+    { "id": "jaunty", "name": "Jaunty", "transform": { "rotation": 9, "zoom": 86, "x": 0.03 } },
+    { "id": "top-left-drift", "name": "Top-Left Drift", "transform": { "x": -0.1, "y": -0.08, "zoom": 84 } },
+    { "id": "corner-peek", "name": "Corner Peek", "transform": { "x": 0.22, "y": 0.18, "zoom": 130 } },
+    { "id": "bleed-right", "name": "Bleed Right", "transform": { "x": 0.28, "zoom": 115 } },
+    { "id": "rise-from-below", "name": "Rise from Below", "transform": { "y": 0.24, "zoom": 118 } }
+  ]
+}

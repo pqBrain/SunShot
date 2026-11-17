@@ -51,6 +51,8 @@ public struct Project: Codable, Hashable, Sendable {
     public var shadow: Shadow
     /// Format and scale chosen in the export options.
     public var export: ExportOptions
+    /// S6: content position, zoom, rotation and tilt, plus the applied layout preset. Identity by default.
+    public var placement = ContentPlacement()
 
     public init(
         canvas: CanvasSpec = .auto,
@@ -86,5 +88,22 @@ extension Project {
         Project(
             canvas: canvas, backdrop: backdrop, padding: padding, border: Border(style: .sharp),
             shadow: Shadow(style: .none))
+    }
+}
+
+extension Project {
+    /// Tolerant decoding: a key missing from an older (or newer) document keeps its default value.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = Project()
+        self.init(
+            canvas: try container.decodeIfPresent(CanvasSpec.self, forKey: .canvas) ?? defaults.canvas,
+            padding: try container.decodeIfPresent(Double.self, forKey: .padding) ?? defaults.padding,
+            border: try container.decodeIfPresent(Border.self, forKey: .border) ?? defaults.border,
+            shadow: try container.decodeIfPresent(Shadow.self, forKey: .shadow) ?? defaults.shadow,
+            export: try container.decodeIfPresent(ExportOptions.self, forKey: .export) ?? defaults.export)
+        backdropSettings =
+            try container.decodeIfPresent(BackdropSettings.self, forKey: .backdropSettings) ?? defaults.backdropSettings
+        placement = try container.decodeIfPresent(ContentPlacement.self, forKey: .placement) ?? defaults.placement
     }
 }

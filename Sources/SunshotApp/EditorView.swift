@@ -10,6 +10,7 @@ struct EditorView: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            LayoutSidebar(model: model).frame(width: 168).padding([.top, .bottom, .leading], 12)
             canvasArea
             if model.showsInspector {
                 InspectorView(model: model)
@@ -46,6 +47,7 @@ struct EditorView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
+        .overlay(alignment: .bottom) { if model.hasContent { BottomToolbar(model: model) } }
         .dropDestination(for: URL.self) { urls, _ in
             guard urls.contains(where: isSupportedImageFile) else { return false }
             Task { await model.importDroppedFiles(urls) }

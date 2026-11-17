@@ -117,3 +117,56 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 - **Known limitation:** a small image exported at 4K/6K with a strong shadow is slow (200×120 content at 6K with
   spread/high: ~4.7 s), because the shadow blur grows with the scale (~750 px). It runs off the main thread;
   rendering the shadow at reduced resolution is the fix if it matters in practice.
+
+## S6 implementation notes (2026-11-17)
+- **Transform model:** `Project.placement = ContentPlacement { transform, layoutPresetID }` with
+  `ContentTransform {x, y, zoom, rotation, tiltX, tiltY}` as in the ACs (x/y in canvas-width/height units around
+  the laid-out centre, zoom whole percent 25…400, rotation normalised into −180…180, tilt ±60°). Values are
+  sanitised on every assignment, so a stored transform is always in range. Decoding is tolerant: a missing or
+  invalid key becomes its identity value; `Project` now has a hand-written `init(from:)` that `decodeIfPresent`s
+  every field (pre-S6 documents get the identity placement). The placement is style, so it survives Clear and
+  re-import, and undo restores the preset selection with the transform.
+- **Order and conventions:** zoom about the centre → in-plane rotation (positive = clockwise) → tilt Y (positive
+  leans the right side away) → tilt X (positive leans the top away) → perspective from a camera 4× the *zoomed*
+  content's longer side (so zoom never changes the perspective look) → offset. All maths is pure
+  (`ContentProjection` in Core: projected corners, bounds, visible fraction).
+- **Rendering:** `ContentTransformRenderer` wraps "draw the content silhouette" (clipped content + border; S5's
+  frame chrome belongs inside the same closure). Identity runs exactly the pre-S6 sequence (byte-identical; AC1
+  asserts tolerance 0 against the S1 reference). Flat transforms use an affine CTM (crisp). Tilted content is
+  drawn upright into an offscreen bitmap at output resolution (capped at 8192 px / 2× the canvas long side),
+  warped with CoreImage's `CIPerspectiveTransform`, cropped to the canvas and drawn back in device space with the
+  shadow, so the shadow follows the warped alpha. Shadow offsets stay in device space (the light direction is
+  canvas-fixed, not rotated); blur and offset scale with zoom. One shared `CIContext`. Preview and export are the
+  same call, so they are byte-identical (AC10 asserts it at 1×, 2× and, in the perf stage, 4K).
+- **Strong zoom uses nearest-neighbour** (≥ 3 output px per content px): a zoomed screenshot shows crisp pixels
+  and a 1×1 image at 400 % is an exact 4×4 block instead of a soft blob.
+- **Axis lock** engages once the pointer has moved 6 px *and* that movement is within 10° of an axis; a clearly
+  diagonal drag stays free (otherwise S6-AC3's diagonal drag would need ⌥). The decision holds for the rest of the
+  drag. ⌥ frees, ⌘ disables snapping; centre snapping wins over edge snapping; a locked axis doesn't snap the
+  other one. Thresholds are in mini-canvas points.
+- **Tilt pad:** its edge is ±30° (S6-AC9); Tilt X / Tilt Y sliders below it reach the full ±60°.
+- **Layout presets:** 15 in `layout-presets.json` (Centered, Close-up, Breathing Room, Swing Left/Right, Tabletop,
+  Look Up, Showcase, Blueprint, Tipped Card, Jaunty, Top-Left Drift, Corner Peek, Bleed Right, Rise from Below).
+  The catalogue refuses out-of-range values instead of clamping; the first preset must be the identity. Every
+  preset keeps ≥ 20 % of the content visible for 1000×600, 600×1000 and 100×100 content on Auto, 1:1 and 9:16
+  (`[S6-AC17]`). The smoke test loads them and renders a tilted layout inside the sandbox.
+- **Preset apply:** the document takes the target immediately (one undo step "Apply Layout <name>"), so export
+  and copy never see an intermediate frame; only the preview animates (300 ms cubic ease-in-out, ~60 fps cap,
+  ends on a normal preview refresh). Reduce Motion (`NSWorkspace.accessibilityDisplayShouldReduceMotion`) skips
+  the animation. Any later edit supersedes a running animation. Re-applying the same layout records nothing.
+- **Reset Position** clears the preset selection too, and records nothing when the transform already is the
+  identity (even if a preset id was set).
+- **Thumbnails** (left "Layouts" sidebar): the current document with each preset's transform through
+  `Renderer.render` at 200 px long side, debounced 120 ms after a style/content change, rendered off the main
+  actor, keyed by `LayoutThumbnailKey` (project without placement + content id + media ids); the last 4 sets are
+  cached so undo/redo of a style change shows thumbnails at once. Position/zoom/tilt changes don't re-render them.
+- **UI:** a floating glass bottom bar holds the Position button (popover with Position / Tilt tabs, Zoom and
+  Rotation sliders with typed fields, Reset ↺). The Layouts sidebar sits on the left of the canvas.
+- **Deferred to the S5 merge:** S6-AC8 asks for frame = macWindow rotating with the content. Frames don't exist on
+  this branch; the snapshot covers border + shadow. Once S5 draws its chrome inside the silhouette closure in
+  `Renderer.drawContent` (and passes the chrome's local bounds as `bounds:` so tilt's offscreen includes it), the
+  frame rotates and tilts with the content; add a frame variant of `s6-rotation-20-border-shadow` then.
+- **Measured (release, M-series, other agents building in parallel):** 4K tilted + rotated + styled render median
+  251 ms (budget 500); 15 thumbnails of 2880×1800 content 22 ms (budget 600); 8000² at tilt 60/60, zoom 400 %,
+  rotation 180° 831 ms (budget 2 s); tilted 4K vs 1× SSIM 0.990. The perf stage's `RenderPerformanceTests` filter
+  matches the new `TransformRenderPerformanceTests` suite.
