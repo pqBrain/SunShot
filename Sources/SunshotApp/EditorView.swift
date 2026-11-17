@@ -8,6 +8,7 @@ struct EditorView: View {
     @Environment(DocumentController.self) private var controller
     @State private var isDropTargeted = false
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         HStack(spacing: 0) {
@@ -53,7 +54,7 @@ struct EditorView: View {
                 EmptyStateView(isTargeted: isDropTargeted) {
                     Task { await Panels.openImage(into: model) }
                 } newSnippet: {
-                    model.newCodeSnippet()
+                    model.setContentKind(.code)
                 }
             }
             if model.showsProgress {
@@ -63,6 +64,15 @@ struct EditorView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onGeometryChange(for: CGSize.self) {
+            $0.size
+        } action: { size in
+            // S6: render the preview at the size it can be shown (CanvasPreview's insets taken off).
+            let insets = CanvasPreview.insets
+            model.setPreviewDisplay(
+                width: (size.width - insets.leading - insets.trailing) * displayScale,
+                height: (size.height - insets.top - insets.bottom) * displayScale)
+        }
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
         .overlay(alignment: .bottom) {
             if model.hasContent {
@@ -89,21 +99,28 @@ struct EditorView: View {
     }
 }
 
-/// The rendered canvas, fitted to the space, never larger than 1 image pixel per screen pixel.
+/// The rendered canvas, fitted to the space (S6: rendered at that size, so it fills the editor sharply). The
+/// screenshot can be dragged, pinched and twisted in place; clicks reveal the matching inspector section.
 struct CanvasPreview: View {
+    /// Room around the canvas; the bottom leaves space for the floating Position / Crop bar.
+    static let insets = EdgeInsets(top: 36, leading: 36, bottom: 76, trailing: 36)
+
     let image: CGImage
     let accessibilityLabel: String
     /// S5: inline title editing over the frame's title bar; the title is the preview's accessibility value.
     let model: EditorModel
-    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
-        Image(decorative: image, scale: displayScale)
+        Image(decorative: image, scale: 1)
             .resizable()
             .interpolation(.high)
             .aspectRatio(contentMode: .fit)
+            .overlay {
+                if !model.annotate.isActive, !model.animate.isActive {
+                    GeometryReader { CanvasInteractionLayer(model: model, size: $0.size) }
+                }
+            }
             .overlay { FrameTitleOverlay(model: model) }
-            .frame(maxWidth: CGFloat(image.width) / displayScale, maxHeight: CGFloat(image.height) / displayScale)
             .clipShape(.rect(cornerRadius: 10, style: .continuous))
             .shadow(color: .black.opacity(0.22), radius: 24, y: 10)
             .accessibilityElement()
@@ -111,7 +128,7 @@ struct CanvasPreview: View {
             .accessibilityValue(model.previewAccessibilityValue)
             .accessibilityAddTraits(.isImage)
             .overlay { if model.annotate.isActive { AnnotationOverlay(model: model) } }
-            .padding(36)
+            .padding(Self.insets)
     }
 }
 
@@ -154,117 +171,6 @@ struct EmptyStateView: View {
         .scaleEffect(isTargeted ? 1.03 : 1)
         .animation(.smooth(duration: 0.2), value: isTargeted)
         .padding(40)
-    }
-}
-
-struct EditorToolbar: ToolbarContent {
-    let model: EditorModel
-    let controller: DocumentController
-
-    var body: some ToolbarContent {
-        ToolbarSpacer(.flexible, placement: .primaryAction)
-        ToolbarItemGroup(placement: .primaryAction) {
-            TemplatesButton(model: model)
-            Button {
-                Task { await Panels.openImage(into: model) }
-            } label: {
-                Label(UIStrings.chooseImage, systemImage: "photo.badge.plus")
-            }
-            .help(UIStrings.chooseImageAccessibility)
-            .accessibilityLabel(UIStrings.chooseImageAccessibility)
-
-            CaptureToolbarMenu(model: model)
-
-            Button {
-                Task { await model.clearContent() }
-            } label: {
-                Label(UIStrings.clearContent, systemImage: "trash")
-            }
-            .help(UIStrings.clearAccessibility)
-            .accessibilityLabel(UIStrings.clearAccessibility)
-            .disabled(!model.hasContent)
-
-            Button {
-                DocumentFlows.startOver(controller)
-            } label: {
-                Label(UIStrings.startOverButton, systemImage: "paintbrush")
-            }
-            .help(UIStrings.startOverButton)
-            .accessibilityLabel(UIStrings.startOverAccessibility)
-            .disabled(!controller.isEnabled(.startOver))
-
-            Button {
-                Task { await model.copyPNG(to: .general) }
-            } label: {
-                Label(UIStrings.copyPNG, systemImage: "doc.on.doc")
-            }
-            .help(UIStrings.copyAccessibility)
-            .accessibilityLabel(UIStrings.copyAccessibility)
-            .disabled(!model.hasContent)
-        }
-        ToolbarSpacer(.fixed, placement: .primaryAction)
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                model.toggleAnnotateMode()
-            } label: {
-                Label(UIStrings.annotate, systemImage: "pencil.tip.crop.circle")
-            }
-            .help(UIStrings.annotateAccessibility)
-            .accessibilityLabel(UIStrings.annotateAccessibility)
-            .disabled(!model.canAnnotate)
-            Button {
-                model.toggleAnimateMode()
-            } label: {
-                Label(UIStrings.animate, systemImage: "film.stack")
-            }
-            .help(UIStrings.animateAccessibility)
-            .accessibilityLabel(UIStrings.animateAccessibility)
-            .disabled(!model.canAnimate)
-        }
-        ToolbarSpacer(.fixed, placement: .primaryAction)
-        ToolbarItemGroup(placement: .primaryAction) {
-            ExportOptionsButton(model: model)
-            Button {
-                Task { await DocumentFlows.export(controller) }
-            } label: {
-                Label(model.exportButtonTitle, systemImage: "square.and.arrow.up")
-                    .labelStyle(.titleAndIcon)
-            }
-            .buttonStyle(.glassProminent)
-            .help(model.exportAccessibilityLabel)
-            .accessibilityLabel(model.exportAccessibilityLabel)
-            .disabled(!model.canExport)
-        }
-        ToolbarSpacer(.fixed, placement: .primaryAction)
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                model.showsInspector.toggle()
-            } label: {
-                Label(UIStrings.inspector, systemImage: "sidebar.trailing")
-            }
-            .help(UIStrings.toggleInspector)
-            .accessibilityLabel(UIStrings.toggleInspector)
-        }
-    }
-}
-
-/// Opens the export options popover (format, size, file name).
-struct ExportOptionsButton: View {
-    let model: EditorModel
-    @State private var showsOptions = false
-
-    var body: some View {
-        Button {
-            showsOptions.toggle()
-        } label: {
-            Label(UIStrings.exportOptions, systemImage: "slider.horizontal.3")
-        }
-        .help(UIStrings.exportOptionsAccessibility)
-        .accessibilityLabel(UIStrings.exportOptionsAccessibility)
-        .disabled(!model.hasContent)
-        .popover(isPresented: $showsOptions, arrowEdge: .bottom) {
-            ExportOptionsPopover(model: model) { showsOptions = false }
-        }
     }
 }
 

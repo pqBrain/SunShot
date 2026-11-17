@@ -234,4 +234,24 @@ struct SettingsThemeMenuTests {
         #expect(controller.menuTitle(.toggleInspector) == "Show Inspector")
         #expect(controller.menuTitle(.exportImage) == "Export Image…")
     }
+
+    @Test("[S7-AC22] settings, theme header and dialogs carry spoken labels; the theme reads \"Theme: Ocean\"")
+    func accessibilityLabels() async throws {
+        let fixture = try ControllerFixture()
+        defer { fixture.cleanUp() }
+        let controller = fixture.controller
+        await controller.model.importData(try TestImages.png())
+        _ = try controller.saveTheme(named: "Ocean")
+        #expect(UIStrings.themeAccessibility(controller.themeHeaderTitle) == "Theme: Ocean")
+        let settingsLabels = [
+            UIStrings.appearance, UIStrings.filenameFormat, UIStrings.exportFolder, UIStrings.confirmReset,
+            UIStrings.defaultTemplate, UIStrings.choose, UIStrings.clear,
+        ]
+        #expect(settingsLabels.allSatisfy { !$0.isEmpty } && Set(settingsLabels).count == settingsLabels.count)
+        #expect(AppearanceSetting.allCases.map(UIStrings.appearanceName).allSatisfy { !$0.isEmpty })
+        let dialogButtons = [UIStrings.save, UIStrings.dontSave, UIStrings.cancel, UIStrings.startOverButton]
+        #expect(dialogButtons.allSatisfy { !$0.isEmpty } && Set(dialogButtons).count == dialogButtons.count)
+        #expect(UIStrings.saveChangesTitle(UIStrings.untitled) == "Save changes to Untitled?")
+        #expect(!UIStrings.saveThemeAccessibility.isEmpty && !UIStrings.themeNamePrompt.isEmpty)
+    }
 }

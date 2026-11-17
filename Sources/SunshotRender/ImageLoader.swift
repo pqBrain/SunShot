@@ -7,6 +7,7 @@ public enum ImageLoadError: Error, Equatable, Sendable {
     case empty
     case unsupportedType(String)
     case unreadable
+    case tooLarge(width: Int, height: Int)
 
     /// One-line, user-facing reason.
     public var reason: String {
@@ -14,6 +15,8 @@ public enum ImageLoadError: Error, Equatable, Sendable {
         case .empty: "The file is empty."
         case .unsupportedType(let type): "\(type) files aren't supported. Use PNG, JPEG, HEIC, TIFF or WebP."
         case .unreadable: "The file is damaged or isn't an image."
+        case .tooLarge(let width, let height):
+            "The image is too large (\(width) × \(height) pixels). Use one under \(ImageLoader.maxPixelCount / 1_000_000) megapixels."
         }
     }
 }
@@ -21,6 +24,9 @@ public enum ImageLoadError: Error, Equatable, Sendable {
 /// Decodes user images: applies EXIF orientation, converts to 8-bit sRGB RGBA, rejects partial/non-image data.
 public enum ImageLoader {
     public static let supportedTypes: [UTType] = [.png, .jpeg, .heic, .tiff, .webP]
+    /// Largest image decoded (16384², about 1 GB of pixels). A tiny file can declare a huge size; it is refused
+    /// before decoding instead of exhausting memory.
+    public static let maxPixelCount = 16384 * 16384
 
     public static func load(_ data: Data) throws -> CGImage {
         guard !data.isEmpty else { throw ImageLoadError.empty }
@@ -40,6 +46,9 @@ public enum ImageLoader {
             let height = properties[kCGImagePropertyPixelHeight] as? Int,
             width > 0, height > 0
         else { throw ImageLoadError.unreadable }
+        guard width.multipliedReportingOverflow(by: height).partialValue <= maxPixelCount,
+            width <= maxPixelCount, height <= maxPixelCount
+        else { throw ImageLoadError.tooLarge(width: width, height: height) }
 
         // The thumbnail API is the supported way to apply EXIF orientation; max size = full size keeps all pixels.
         let decodeOptions =

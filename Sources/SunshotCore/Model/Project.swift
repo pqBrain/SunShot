@@ -62,6 +62,8 @@ public struct Project: Codable, Hashable, Sendable {
     /// S13: animation timeline. Optional so a document that never used Animate encodes exactly as before; read and
     /// write it through `timeline`.
     public var animation: AnimationTimeline?
+    /// S15: the screenshot layout (an id into `CollageCatalog`); nil = one screenshot. Ignored while a device is set.
+    public var collage: String?
 
     public init(
         canvas: CanvasSpec = .auto,
@@ -87,6 +89,13 @@ extension Project {
     public var backdrop: Backdrop {
         get { backdropSettings.backdrop }
         set { backdropSettings.backdrop = newValue }
+    }
+
+    /// S7: the backdrop is still the new-document default (type, value and effects), so the first import may style
+    /// it automatically.
+    public var hasUntouchedBackdrop: Bool {
+        let fresh = Project().backdropSettings
+        return backdrop == fresh.backdrop && backdropSettings.effects == fresh.effects
     }
 
     /// No rounding and no shadow: the S1 look, used where tests need content pixels untouched.

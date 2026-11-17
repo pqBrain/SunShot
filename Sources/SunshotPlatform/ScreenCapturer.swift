@@ -25,14 +25,34 @@ public struct SystemScreenCapturer: ScreenCapturing {
 
     public func requestPermission() -> Bool { CGRequestScreenCaptureAccess() }
 
+    /// Front to back (the window server's stacking order), each with its on-screen frame.
     public func windows() async throws -> [CapturableWindow] {
         let content = try await shareableContent()
-        return content.windows.filter { $0.windowLayer == 0 && $0.isOnScreen }.map { window in
-            CapturableWindow(
-                id: window.windowID, title: window.title ?? "",
-                appName: window.owningApplication?.applicationName ?? "", width: Int(window.frame.width),
-                height: Int(window.frame.height))
+        let order = Self.stackingOrder()
+        return content.windows.filter { $0.windowLayer == 0 && $0.isOnScreen }
+            .sorted { (order[$0.windowID] ?? .max) < (order[$1.windowID] ?? .max) }
+            .map { window in
+                let frame = window.frame
+                return CapturableWindow(
+                    id: window.windowID, title: window.title ?? "",
+                    appName: window.owningApplication?.applicationName ?? "", width: Int(frame.width),
+                    height: Int(frame.height),
+                    frame: LayoutRect(x: frame.minX, y: frame.minY, width: frame.width, height: frame.height))
+            }
+    }
+
+    /// Window id → position in the on-screen list (0 = front-most).
+    private static func stackingOrder() -> [UInt32: Int] {
+        let info =
+            CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
+            as? [[String: Any]] ?? []
+        var order: [UInt32: Int] = [:]
+        for (index, entry) in info.enumerated() {
+            if let number = entry[kCGWindowNumber as String] as? Int, order[UInt32(number)] == nil {
+                order[UInt32(number)] = index
+            }
         }
+        return order
     }
 
     public func captureWindow(id: UInt32) async throws -> CGImage {

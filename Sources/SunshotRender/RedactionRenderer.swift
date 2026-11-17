@@ -73,14 +73,14 @@ enum RedactionRenderer {
         guard drawn else { return nil }
         let columns = max(1, Int((Double(width) / block).rounded()))
         let rows = max(1, Int((Double(height) / block).rounded()))
-        var sums = [UInt32](repeating: 0, count: columns * rows * 4)
-        var counts = [UInt32](repeating: 0, count: columns * rows)
+        var sums = [UInt64](repeating: 0, count: columns * rows * 4)
+        var counts = [UInt64](repeating: 0, count: columns * rows)
         for y in 0..<height {
             let row = y * rows / height
             for x in 0..<width {
                 let bin = row * columns + x * columns / width
                 let offset = (y * width + x) * 4
-                for channel in 0..<4 { sums[bin * 4 + channel] += UInt32(pixels[offset + channel]) }
+                for channel in 0..<4 { sums[bin * 4 + channel] += UInt64(pixels[offset + channel]) }
                 counts[bin] += 1
             }
         }

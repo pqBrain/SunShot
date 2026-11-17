@@ -1,4 +1,5 @@
 import AppKit
+import Observation
 import SunshotCore
 import SunshotPlatform
 import SunshotRender
@@ -12,7 +13,7 @@ enum DocumentFlows {
     /// Runs the close prompt when needed. Returns false when the user cancelled.
     static func closeCurrent(_ controller: DocumentController) async -> Bool {
         guard controller.needsSavePrompt else {
-            await controller.close(discardChanges: false)
+            await controller.close(discardChanges: controller.discardsWithoutAsking)
             return true
         }
         let alert = NSAlert()
@@ -21,7 +22,14 @@ enum DocumentFlows {
         alert.addButton(withTitle: UIStrings.save)
         alert.addButton(withTitle: UIStrings.cancel)
         alert.addButton(withTitle: UIStrings.dontSave)
-        switch alert.runModal() {
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = UIStrings.dontAskAgain
+        let response = alert.runModal()
+        // "Don't ask again" remembers Don't Save; Settings turns the prompt back on.
+        if response == .alertThirdButtonReturn, alert.suppressionButton?.state == .on {
+            controller.settings.askToSaveOnClose = false
+        }
+        switch response {
         case .alertFirstButtonReturn:
             guard await saveAs(controller) else { return false }
             await controller.close(discardChanges: false)
@@ -141,6 +149,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller.settings.appearance.apply(to: NSApplication.shared)
         Task { await controller.recoverDraft() }
+        observeSettings()
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let closing = note.object as? NSWindow
+            MainActor.assumeIsolated { self?.windowWillClose(closing) }
+        }
+    }
+
+    /// S16: with the menu bar icon shown, closing the window leaves Sunshot running there (no Dock icon).
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        !controller.settings.showsMenuBarIcon
+    }
+
+    private func windowWillClose(_ window: NSWindow?) {
+        guard let window, window.identifier?.rawValue.contains(Studio.windowID) == true,
+            controller.settings.showsMenuBarIcon
+        else { return }
+        NSApp.setActivationPolicy(.accessory)
+    }
+
+    /// The global shortcut lives here, not on the window, so it works while the window is closed. Re-registered
+    /// whenever Settings change.
+    private func observeSettings() {
+        let settings = withObservationTracking {
+            controller.settings
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.observeSettings() }
+        }
+        let controller = controller
+        hotkey.configure(settings.captureHotkeyEnabled ? settings.captureShortcut : nil) {
+            AreaCapture.start(controller: controller, destination: controller.settings.globalCaptureDestination)
+        }
+        // Hiding the icon while the window is closed would leave no way back: bring the studio forward.
+        if !settings.showsMenuBarIcon, !NSApp.windows.contains(where: Studio.isStudio),
+            NSApp.activationPolicy() == .accessory
+        {
+            Studio.show(controller)
+        }
     }
 
     func applicationWillResignActive(_ notification: Notification) {

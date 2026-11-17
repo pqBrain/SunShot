@@ -33,8 +33,14 @@ public final class EditorModel {
     /// Whether the style inspector panel is visible.
     public var showsInspector = true
     public var notice: String?
+    /// S6: the inspector section the canvas last asked to bring into view (click on backdrop / screenshot).
+    public internal(set) var inspectorFocus: InspectorFocusRequest?
+    /// S6: device pixels available to the preview (set by the view); nil renders one canvas pixel per pixel.
+    public internal(set) var previewDisplayPixels: (width: Double, height: Double)?
     /// Export file-name template (Settings ▸ Filename format; S7).
     public var filenameTemplate = SunshotDefaults.filenameTemplate
+    /// S7: style an untouched backdrop from the first imported image (Settings; off unless a controller turns it on).
+    public var autoBackdropOnImport = false
     /// Annotate mode state (S9).
     public let annotate = AnnotationEditor()
     /// S6: layout thumbnails, preset animation and position-drag guides.
@@ -49,9 +55,16 @@ public final class EditorModel {
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
     var renderGeneration = 0
+    /// `renderGeneration` of the latest `refreshPreview` request; a higher generation belongs to an animation.
+    private var refreshGeneration = 0
+    private var previewRequests = 0
+    private var previewLoop: Task<Void, Never>?
     private let progressDelay: Duration
     /// An open colour-panel edit: merged into one undo step once the colour stops changing.
     var pendingContinuousEdit: (name: String, task: Task<Void, Never>)?
+    /// S16: the side of the document not shown right now (Screenshot ⇄ Code), so switching back restores it.
+    var stashedImage: ImageContentStash?
+    var stashedSnippet: CodeSnippet?
     /// Set by the batch (S14): drops of several images or a folder go there instead of the single-image flow.
     public var bulkDropHandler: (@MainActor ([URL]) async -> Bool)?
 
@@ -89,7 +102,7 @@ public final class EditorModel {
         }
         do {
             let image = try await Task.detached(priority: .userInitiated) { try ImageLoader.load(data) }.value
-            session.setContent(image, data: data)
+            session.setContent(image, data: data, autoBackdrop: autoBackdropOnImport)
             await refreshPreview()
         } catch {
             let reason = (error as? ImageLoadError)?.reason ?? error.localizedDescription
@@ -125,9 +138,17 @@ public final class EditorModel {
 
     public func canPaste(from pasteboard: NSPasteboard) -> Bool { PasteboardIO.hasImage(pasteboard) }
 
+    /// S15: the first paste sets the content; later pastes add the next screenshot, trimmed (see `addScreenshot`).
     public func paste(from pasteboard: NSPasteboard) async {
         guard let data = PasteboardIO.imageData(from: pasteboard) else { return }
-        await importData(data, fileName: nil)
+        do {
+            let image = try await Task.detached(priority: .userInitiated) { try ImageLoader.load(data) }.value
+            await addScreenshot(image, data: data, replacingName: EditorSession.importActionName)
+            await refreshPreview()
+        } catch {
+            alert = AlertContent(
+                title: Self.openFailedTitle, message: (error as? ImageLoadError)?.reason ?? error.localizedDescription)
+        }
     }
 
     // MARK: Edit
@@ -206,23 +227,41 @@ public final class EditorModel {
 
     // MARK: Preview
 
-    /// 1, or less for canvases whose long edge exceeds `SunshotDefaults.previewMaxSide` (huge custom sizes).
+    /// 1 (or the display-fitted scale), or less for canvases whose long edge exceeds `SunshotDefaults.previewMaxSide` (huge custom sizes).
+    /// S6: rendered at the displayed size when the preview area is larger than the canvas (see `PreviewSizing`).
     public var previewScale: Double {
         guard let size = session.canvasSize else { return 1 }
-        return min(1, Double(SunshotDefaults.previewMaxSide) / Double(max(size.width, size.height)))
+        return PreviewSizing.scale(canvas: size, displayPixels: previewDisplayPixels)
     }
 
-    /// Re-renders the preview through the same renderer as export. Stale renders are discarded.
+    /// Re-renders the preview through the same renderer as export. Returns once the preview shows the latest
+    /// document. Requests are coalesced: at most one render runs, and a burst of edits (a slider drag) queues
+    /// a single follow-up render of the newest document instead of one render per edit.
     public func refreshPreview() async {
         scheduleLayoutThumbnails()
         renderGeneration += 1
-        let generation = renderGeneration
-        let document = session.document
-        let grid = SunshotPalette.transparencyGrid(dark: isDarkAppearance)
-        let scale = previewScale
-        let image = try? await Task.detached(priority: .userInitiated) {
-            try Renderer.render(document: document, scale: scale, showsTransparencyGrid: true, grid: grid)
-        }.value
-        if generation == renderGeneration { preview = image ?? nil }
+        refreshGeneration = renderGeneration
+        previewRequests += 1
+        if let running = previewLoop { return await running.value }
+        let loop = Task { await runPreviewLoop() }
+        previewLoop = loop
+        await loop.value
+    }
+
+    private func runPreviewLoop() async {
+        var rendered = -1
+        while rendered != previewRequests {
+            rendered = previewRequests
+            let document = session.document
+            let grid = SunshotPalette.transparencyGrid(dark: isDarkAppearance)
+            let scale = previewScale
+            let image = try? await Task.detached(priority: .userInitiated) {
+                try Renderer.render(document: document, scale: scale, showsTransparencyGrid: true, grid: grid)
+            }.value
+            // Shown even if newer edits are queued (it is newer than what is on screen), unless a preset
+            // animation has taken over the preview since the latest request.
+            if renderGeneration == refreshGeneration { preview = image ?? nil }
+        }
+        previewLoop = nil
     }
 }

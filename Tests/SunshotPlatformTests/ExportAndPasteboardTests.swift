@@ -107,7 +107,11 @@ extension MemoryHeavySuites {
                 let tiff = try TestImages.encode(TestImages.solid(width: 14, height: 14), as: .tiff)
                 pasteboard.setData(tiff, forType: .tiff)
                 await model.paste(from: pasteboard)
-                #expect(model.session.document.content?.pixelSize == PixelSize(width: 14, height: 14))
+                // S15: a paste over an image adds it as the next screenshot; the main image stays.
+                #expect(model.session.document.content?.pixelSize == PixelSize(width: 12, height: 12))
+                #expect(model.session.document.slots[1]?.pixelSize == PixelSize(width: 14, height: 14))
+                #expect(model.undoTitle == "Undo Add Screenshot" && model.collage?.id == "side-by-side")
+                #expect(model.notice == "Added as screenshot 2 · Side by Side")
 
                 let file = directory.file("clip.png")
                 try TestImages.png(width: 16, height: 16).write(to: file)
@@ -115,6 +119,10 @@ extension MemoryHeavySuites {
                 pasteboard.writeObjects([file as NSURL])
                 #expect(model.canPaste(from: pasteboard))
                 await model.paste(from: pasteboard)
+                #expect(model.session.document.slots[2]?.pixelSize == PixelSize(width: 16, height: 16))
+                #expect(model.collage?.id == "row")
+                // Opening a file still replaces the main image (S1-AC16).
+                await model.importFile(at: file)
                 #expect(model.session.document.content?.pixelSize == PixelSize(width: 16, height: 16))
                 #expect(model.session.history.undoNames.last == "Replace Image")
             }

@@ -252,4 +252,23 @@ struct BulkSessionTests {
             UIStrings.batchItemLabel(name: "bad.png", index: 0, count: 2, isSelected: false, hasError: true)
                 == "Image 1 of 2, bad.png, can't open")
     }
+
+    @Test(
+        "[S14-AC18] menus and strip: Import Multiple / Export All shortcuts; Export All off without a batch or mid-export"
+    )
+    func menusAndStrip() async throws {
+        #expect(MenuCatalog.item(.importMultiple)?.shortcut?.description == "⇧⌘O")
+        #expect(MenuCatalog.item(.exportAll)?.shortcut?.description == "⌥⇧⌘E")
+        let directory = try TempDirectory()
+        defer { directory.cleanUp() }
+        let (_, bulk) = makeSession()
+        #expect(!bulk.isActive && !bulk.canExportAll, "no strip and no Export All without a batch")
+        await bulk.importURLs(try pngs(directory, ["a.png", "b.png", "c.png"]))
+        #expect(bulk.isActive && bulk.canExportAll && UIStrings.imageCount(bulk.items.count) == "3 images")
+        bulk.exportState = .running(BulkProgress(total: 3, completed: 1))
+        #expect(bulk.isExporting && !bulk.canExportAll, "progress replaces the strip; Export All is off")
+        #expect(bulk.progress.map(UIStrings.exportingProgress) == "Exporting 2 of 3")
+        bulk.exportState = .finished(BulkReport(total: 3, written: []))
+        #expect(bulk.report != nil && bulk.canExportAll && UIStrings.showInFinder == "Show in Finder")
+    }
 }

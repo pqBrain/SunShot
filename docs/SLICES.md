@@ -18,19 +18,21 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 |---|---|---|---|
 | S0 | Harness & quality gate | Done | — |
 | S1 | Walking skeleton: import → canvas → export | In progress | §2.3, §3.1, §10.1, §10.3, §16 |
-| S2 | Border & shadow | In progress | §9.2, §9.3 |
-| S3 | Backdrop basics: none / solid / gradient / image | In progress | §9.1 (type selector), §9.1 gradient editor |
-| S4 | Canvas size & export options | In progress | §4, §10.1, §15 (filename) |
-| S5 | Frames & colour tokens | In progress | §5, §9.4, §9.5 |
-| S6 | Position, tilt & layout presets | In progress | §6, §7.1 |
-| S7 | Documents, themes, settings & menus | In progress | §2.3 drafts/cleanup, §9 Save theme, §15, §16 |
+| S2 | Border & shadow | Done | §9.2, §9.3 |
+| S3 | Backdrop basics: none / solid / gradient / image | Done | §9.1 (type selector), §9.1 gradient editor |
+| S4 | Canvas size & export options | Done | §4, §10.1, §15 (filename) |
+| S5 | Frames & colour tokens | Done | §5, §9.4, §9.5 |
+| S6 | Position, tilt & layout presets | Done | §6, §7.1 |
+| S7 | Documents, themes, settings & menus | Done | §2.3 drafts/cleanup, §9 Save theme, §15, §16 |
 | S8 | Backdrop effects & auto backgrounds | In progress | §9.1 effects/pattern/vignette/overlay/auto |
 | S9 | Annotate | In progress | §7.2 |
 | S10 | Crop & capture (screen, website URL) | In progress | §3.2, §3.3 |
-| S11 | Code snippet template | In progress | §12 (Code Snippet) |
-| S12 | Device mockups & template gallery | In progress | §3.4, §12 (Device), §13 |
+| S11 | Code snippet template | Done | §12 (Code Snippet) |
+| S12 | Device mockups & template gallery | Done | §3.4, §12 (Device), §13 |
 | S13 | Animate & video export | In progress | §7.3, §8, §10.2 |
 | S14 | Bulk edit & batch export | In progress | §11 |
+| S15 | Multiple screenshots | In progress | — |
+| S16 | Menu bar quick capture, default style & studio journey | In progress | — |
 
 **MVP = S1–S7** (a complete, saveable, still-image beautifier).
 
@@ -123,6 +125,12 @@ transparent backdrops, progress + cancel.
 ### S14 — Bulk edit
 Import many images, one shared style, preview strip, export all to a folder
 with progress.
+
+### S15 — Multiple screenshots
+Several images in one document. Staged: (a) each device of a multi-device
+arrangement shows its own image; (b) Sunshot screenshot layouts — 2–4 framed
+screenshots arranged side by side, overlapping, cascaded or fanned. One shared
+slot model; empty slots show the main image. Screenshots inspector section.
 
 ## Deferred — needs a product decision
 - Social post templates (X / Bluesky): need network fetching of third-party content.

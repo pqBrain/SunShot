@@ -36,6 +36,15 @@ public enum DocumentPackage {
             entries.append(MediaEntry(id: id, path: path))
             contentEntry = ContentEntry(mediaID: id, pixelSize: content.pixelSize)
         }
+        var slotEntries: [SlotEntry] = []
+        for (number, slot) in document.slots.sorted(by: { $0.key < $1.key }) {
+            let data = try slot.data ?? ImageCodec.pngData(slot.image)
+            let id = slot.id.uuidString
+            let path = DocumentManifestCodec.mediaPath(id: id, fileExtension: fileExtension(for: data))
+            files[path] = data
+            entries.append(MediaEntry(id: id, path: path))
+            slotEntries.append(SlotEntry(number: number, mediaID: id, pixelSize: slot.pixelSize))
+        }
         let video = try videoFile(for: document)
         if let video {
             files[video.media.path] = video.data
@@ -52,7 +61,8 @@ public enum DocumentPackage {
         }
         let manifest = DocumentManifest(
             project: document.project, content: contentEntry, media: entries, theme: document.theme,
-            snippet: document.snippet, crop: contentEntry == nil ? nil : document.crop, video: video?.entry)
+            snippet: document.snippet, crop: contentEntry == nil ? nil : document.crop, video: video?.entry,
+            slots: slotEntries.isEmpty ? nil : slotEntries)
         return (manifest, files)
     }
 
@@ -124,7 +134,16 @@ public enum DocumentPackage {
             }
         }
         missing += try readVideo(manifest, root: root, into: &document, allowPlaceholders: allowPlaceholders)
-        for entry in manifest.media where entry.id != manifest.content?.mediaID {
+        let slotIDs = Set((manifest.slots ?? []).map(\.mediaID))
+        for slot in manifest.slots ?? [] {
+            let id = UUID(uuidString: slot.mediaID) ?? UUID()
+            if let file = loaded[slot.mediaID] {
+                document.slots[slot.number] = ContentImage(file.image, id: id, data: file.data)
+            } else {
+                document.slots[slot.number] = ContentImage(try placeholder(size: slot.pixelSize), id: id)
+            }
+        }
+        for entry in manifest.media where entry.id != manifest.content?.mediaID && !slotIDs.contains(entry.id) {
             guard let file = loaded[entry.id] else { continue }
             let reference = MediaReference(
                 id: entry.id, fileName: entry.fileName,

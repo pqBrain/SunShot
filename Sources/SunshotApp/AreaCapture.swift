@@ -1,32 +1,31 @@
 import AppKit
-import Carbon.HIToolbox
 import SunshotCore
 import SunshotPlatform
 import SwiftUI
 
 /// File ▸ Capture Area…: a dimmed, borderless panel over the screen under the pointer; drag out an area, Esc
-/// cancels. The panel closes before the capture, and Sunshot's own windows are excluded from it anyway.
+/// cancels, Space switches to picking a window (S16). The panel closes before the capture, and Sunshot's own windows
+/// are excluded from it anyway.
 @MainActor
 enum AreaCapture {
     private static var panel: NSPanel?
 
-    static func start(model: EditorModel) {
-        guard panel == nil, model.ensureScreenCapturePermission() else {
+    /// `destination` is where the capture goes: the studio for File ▸ Capture Area…, the shortcut's choice (S16:
+    /// copied with the default style unless changed) for the global shortcut and the menu bar.
+    static func start(controller: DocumentController, destination: GlobalCaptureDestination = .editor) {
+        guard panel == nil, !WindowCapture.isActive, controller.model.ensureScreenCapturePermission() else {
             NSApp.activate()
             return
         }
         guard let screen = ScreenDisplays.screenUnderPointer, let displayID = ScreenDisplays.displayID(of: screen)
         else { return }
-        let overlay = KeyPanel(
-            contentRect: screen.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-        overlay.level = .screenSaver
-        overlay.backgroundColor = .clear
-        overlay.isOpaque = false
-        overlay.hasShadow = false
-        overlay.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        let overlay = CapturePanel.make(frame: screen.frame)
         overlay.contentView = NSHostingView(
             rootView: AreaSelectionView(size: screen.frame.size) { rect in
-                finish(rect, displayID: displayID, model: model)
+                finish(rect, displayID: displayID, controller: controller, destination: destination)
+            } switchToWindow: {
+                close()
+                WindowCapture.start(controller: controller, destination: destination)
             })
         overlay.setFrame(screen.frame, display: true)
         panel = overlay
@@ -34,17 +33,55 @@ enum AreaCapture {
         NSCursor.crosshair.push()
     }
 
-    private static func finish(_ rect: LayoutRect?, displayID: UInt32, model: EditorModel) {
+    static var isActive: Bool { panel != nil }
+
+    private static func close() {
         NSCursor.pop()
         panel?.orderOut(nil)
         panel = nil
+    }
+
+    private static func finish(
+        _ rect: LayoutRect?, displayID: UInt32, controller: DocumentController, destination: GlobalCaptureDestination
+    ) {
+        close()
         guard let rect, AreaSelection.isCapturable(rect) else { return }
+        CaptureDelivery.deliver(.area(rect, displayID: displayID), controller: controller, destination: destination)
+    }
+}
+
+/// S16: hands a finished selection to the controller after the overlay has gone, then shows the result: the
+/// "copied" bubble for clipboard captures (Sunshot stays in the background), the studio for editor captures.
+@MainActor
+enum CaptureDelivery {
+    static func deliver(_ source: CaptureSource, controller: DocumentController, destination: GlobalCaptureDestination)
+    {
         Task {
             // Let the window server remove the overlay before the screen is read.
             try? await Task.sleep(for: .milliseconds(150))
-            await model.captureArea(rect, displayID: displayID)
-            NSApp.activate()
+            let copied = await controller.deliverCapture(source, to: destination)
+            if destination.copies {
+                // Only a failure brings Sunshot forward to explain it.
+                if copied { CaptureToast.show(UIStrings.copiedToClipboard) } else { Studio.show(controller) }
+            } else {
+                Studio.show(controller)
+            }
         }
+    }
+}
+
+/// The borderless, all-spaces panel both capture overlays use.
+@MainActor
+enum CapturePanel {
+    static func make(frame: NSRect) -> NSPanel {
+        let overlay = KeyPanel(
+            contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        overlay.level = .screenSaver
+        overlay.backgroundColor = .clear
+        overlay.isOpaque = false
+        overlay.hasShadow = false
+        overlay.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        return overlay
     }
 }
 
@@ -56,6 +93,7 @@ private final class KeyPanel: NSPanel {
 private struct AreaSelectionView: View {
     let size: CGSize
     let finish: (LayoutRect?) -> Void
+    let switchToWindow: () -> Void
     @State private var selection: LayoutRect?
     @FocusState private var focused: Bool
 
@@ -78,7 +116,7 @@ private struct AreaSelectionView: View {
                     .foregroundStyle(.white)
                     .offset(x: selection.x, y: max(0, selection.y - 24))
             } else {
-                Text(UIStrings.captureAreaHint)
+                Text(UIStrings.areaSwitchHint)
                     .padding(12)
                     .glassEffect(.regular, in: .capsule)
                     .frame(width: size.width, height: size.height)
@@ -103,47 +141,14 @@ private struct AreaSelectionView: View {
             finish(nil)
             return .handled
         }
+        .onKeyPress(.space) {
+            guard selection == nil else { return .ignored }
+            switchToWindow()
+            return .handled
+        }
     }
 
     private static func cgRect(_ rect: LayoutRect) -> CGRect {
         CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
-    }
-}
-
-/// The optional global ⌥⇧⌘4 shortcut (Settings ▸ Capture Area from anywhere; off by default), registered with
-/// the Carbon hot-key API, which needs no Accessibility permission and works in the sandbox.
-@MainActor
-final class GlobalCaptureHotkey {
-    private var hotKey: EventHotKeyRef?
-    private var handler: EventHandlerRef?
-    private var action: (@MainActor () -> Void)?
-
-    func setEnabled(_ enabled: Bool, action: @escaping @MainActor () -> Void) {
-        self.action = action
-        if enabled { register() } else { unregister() }
-    }
-
-    private func register() {
-        guard hotKey == nil else { return }
-        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        let context = Unmanaged.passUnretained(self).toOpaque()
-        InstallEventHandler(
-            GetApplicationEventTarget(),
-            { _, _, context in
-                guard let context else { return noErr }
-                let hotkey = Unmanaged<GlobalCaptureHotkey>.fromOpaque(context).takeUnretainedValue()
-                MainActor.assumeIsolated { hotkey.action?() }
-                return noErr
-            }, 1, &eventType, context, &handler)
-        let modifiers = UInt32(cmdKey | optionKey | shiftKey)
-        let id = EventHotKeyID(signature: OSType(0x534E_5348), id: 1)  // "SNSH"
-        RegisterEventHotKey(UInt32(kVK_ANSI_4), modifiers, id, GetApplicationEventTarget(), 0, &hotKey)
-    }
-
-    private func unregister() {
-        if let hotKey { UnregisterEventHotKey(hotKey) }
-        if let handler { RemoveEventHandler(handler) }
-        hotKey = nil
-        handler = nil
     }
 }

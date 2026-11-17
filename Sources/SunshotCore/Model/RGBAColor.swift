@@ -14,6 +14,16 @@ public struct RGBAColor: Codable, Hashable, Sendable {
         self.alpha = Self.clamp(alpha)
     }
 
+    /// Decoded through the clamping initialiser: out-of-range or non-finite components from a file become valid.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            red: try container.decode(Double.self, forKey: .red),
+            green: try container.decode(Double.self, forKey: .green),
+            blue: try container.decode(Double.self, forKey: .blue),
+            alpha: try container.decode(Double.self, forKey: .alpha))
+    }
+
     /// `0xRRGGBB` literal.
     public init(rgb: UInt32, alpha: Double = 1) {
         self.init(

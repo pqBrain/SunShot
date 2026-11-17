@@ -3,7 +3,8 @@ import SunshotCore
 import SunshotPlatform
 import SwiftUI
 
-/// The S10 sheets on the editor window: crop, website capture, window picker, and the Screen Recording help.
+/// The S10 sheets on the editor window: crop, website capture and the Screen Recording help. (S16: windows are
+/// picked by hovering them on screen, see `WindowCapture`.)
 struct CaptureSheets: ViewModifier {
     @Bindable var model: EditorModel
 
@@ -15,7 +16,6 @@ struct CaptureSheets: ViewModifier {
             .sheet(isPresented: $capture.showsWebsiteSheet, onDismiss: { model.cancelWebsiteCapture() }) {
                 WebsiteCaptureSheet(model: model)
             }
-            .sheet(isPresented: $capture.showsWindowPicker) { WindowPickerSheet(model: model) }
             .alert(ScreenCaptureError.permissionDenied.title, isPresented: $capture.showsPermissionHelp) {
                 Button(UIStrings.openPrivacySettings) {
                     if let url = ScreenDisplays.privacySettingsURL { NSWorkspace.shared.open(url) }
@@ -79,55 +79,15 @@ struct WebsiteCaptureSheet: View {
     }
 }
 
-/// File ▸ Capture Window…: the open windows of other apps; double-click or Capture.
-struct WindowPickerSheet: View {
-    @Bindable var model: EditorModel
-    @State private var selection: UInt32?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(UIStrings.windowPickerTitle).font(.headline)
-            if model.capture.windows.isEmpty {
-                Text(UIStrings.windowPickerEmpty).foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
-            }
-            List(model.capture.windows, selection: $selection) { window in
-                Text(UIStrings.windowLabel(window))
-                    .lineLimit(1)
-                    .tag(window.id)
-                    .accessibilityLabel(UIStrings.windowLabel(window))
-            }
-            .contextMenu(forSelectionType: UInt32.self) { _ in
-            } primaryAction: { ids in
-                if let id = ids.first { capture(id) }
-            }
-            .frame(height: 280)
-            HStack {
-                Spacer()
-                Button(UIStrings.cancel, role: .cancel) { model.capture.showsWindowPicker = false }
-                    .keyboardShortcut(.cancelAction)
-                Button(UIStrings.captureButton) { if let selection { capture(selection) } }
-                    .keyboardShortcut(.defaultAction)
-                    .buttonStyle(.glassProminent)
-                    .disabled(selection == nil)
-            }
-        }
-        .padding(20)
-        .frame(width: 480)
-    }
-
-    private func capture(_ id: UInt32) {
-        Task { await model.captureWindow(id: id) }
-    }
-}
-
 /// The Capture menu on the toolbar (area, window, website).
 struct CaptureToolbarMenu: View {
-    let model: EditorModel
+    let controller: DocumentController
+    private var model: EditorModel { controller.model }
 
     var body: some View {
         Menu {
-            Button(UIStrings.captureArea) { AreaCapture.start(model: model) }
-            Button(UIStrings.captureWindow) { Task { await model.loadCapturableWindows() } }
+            Button(UIStrings.captureArea) { AreaCapture.start(controller: controller) }
+            Button(UIStrings.captureWindow) { WindowCapture.start(controller: controller) }
             Button(UIStrings.captureWebsite) { model.capture.showsWebsiteSheet = true }
         } label: {
             Label(UIStrings.captureMenu, systemImage: "camera.viewfinder")

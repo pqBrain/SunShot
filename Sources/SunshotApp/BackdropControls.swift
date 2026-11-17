@@ -20,6 +20,9 @@ struct BackdropControls: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            // Regular size needs ~249 pt for four segments; the inspector column has 240, and an over-wide row
+            // widens the whole inspector past the window edge.
+            .controlSize(.small)
             .accessibilityLabel(UIStrings.backdropType)
             .accessibilityValue(UIStrings.backdropKindName(settings.kind))
 

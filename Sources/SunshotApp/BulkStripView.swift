@@ -21,7 +21,12 @@ struct BulkStripView: View {
             .padding(12)
             .glassEffect(.regular, in: .rect(cornerRadius: 20))
             .padding([.horizontal, .bottom], 12)
-            .task(id: bulk.editor.project) { await bulk.refreshThumbnails() }
+            .task(id: bulk.editor.project) {
+                // Debounced: a slider drag changes the project on every tick; render once it settles.
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+                await bulk.refreshThumbnails()
+            }
         }
     }
 

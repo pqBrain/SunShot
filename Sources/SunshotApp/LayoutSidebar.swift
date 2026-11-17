@@ -3,26 +3,60 @@ import SunshotPlatform
 import SunshotRender
 import SwiftUI
 
-/// Left sidebar: layout presets as live thumbnails of the current image and style. Click or Return applies;
-/// the applied layout has an accent outline. Disabled with placeholders while there's no content.
+/// Left sidebar: one picker for Layouts, Templates and Themes (S7), so the toolbar and inspector stay short.
 struct LayoutSidebar: View {
+    let model: EditorModel
+    @State private var pane: SidebarPane = .layouts
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Picker(UIStrings.sidebarPickerAccessibility, selection: $pane) {
+                ForEach(SidebarPane.allCases) { pane in
+                    Image(systemName: Self.symbol(pane))
+                        .help(pane.title)
+                        .accessibilityLabel(pane.title)
+                        .tag(pane)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, 10)
+            .padding(.top, 12)
+            Text(pane.title)
+                .font(.headline)
+                .foregroundStyle(Color(nsColor: SunshotPalette.primaryText))
+                .padding(.horizontal, 14)
+                .accessibilityAddTraits(.isHeader)
+            switch pane {
+            case .layouts: LayoutList(model: model)
+            case .templates: SidebarTemplates(model: model)
+            case .themes: SidebarThemes(model: model)
+            }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .glassEffect(.regular, in: .rect(cornerRadius: 24))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(pane.title)
+    }
+
+    private static func symbol(_ pane: SidebarPane) -> String {
+        switch pane {
+        case .layouts: "rectangle.3.group"
+        case .templates: "square.grid.2x2"
+        case .themes: "paintpalette"
+        }
+    }
+}
+
+/// Layout presets as live thumbnails of the current image and style. Click or Return applies; the applied layout
+/// has an accent outline. Before there is an image only a hint is shown.
+private struct LayoutList: View {
     let model: EditorModel
     /// Keyboard cursor (arrow keys move it; Return applies it).
     @State private var cursor: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(UIStrings.layoutsTitle)
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: SunshotPalette.primaryText))
-                .padding(.horizontal, 14)
-                .padding(.top, 14)
-            if !model.hasContent {
-                Text(UIStrings.layoutsEmpty)
-                    .font(.caption)
-                    .foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
-                    .padding(.horizontal, 14)
-            }
+        if model.hasContent {
             List(model.layout.presets, selection: $cursor) { preset in
                 LayoutRow(
                     preset: preset, thumbnail: model.layout.thumbnails[preset.id],
@@ -40,17 +74,30 @@ struct LayoutSidebar: View {
                 apply(preset)
                 return .handled
             }
-            .disabled(!model.hasContent)
+        } else {
+            SidebarHint(UIStrings.layoutsEmpty)
         }
-        .glassEffect(.regular, in: .rect(cornerRadius: 24))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(UIStrings.layoutsTitle)
     }
 
     private func apply(_ preset: LayoutPreset) {
         guard model.hasContent else { return }
         cursor = preset.id
         model.applyLayoutPreset(preset)
+    }
+}
+
+/// Secondary-text caption used for the sidebar's empty states.
+struct SidebarHint: View {
+    let text: String
+
+    init(_ text: String) { self.text = text }
+
+    var body: some View {
+        Text(text)
+            .font(.caption)
+            .foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 14)
     }
 }
 

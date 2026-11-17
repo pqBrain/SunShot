@@ -106,4 +106,27 @@ struct SnippetModelTests {
         #expect(empty.autoDetectTitle == "Auto-detect")
         #expect(empty.highlightedLinesText.isEmpty)
     }
+
+    @Test("[S11-AC18] snippet documents show the editor and Code section; image documents show neither")
+    func editorPanelAndSection() async throws {
+        let model = await snippetModel()
+        #expect(model.isSnippet, "the code editor panel and Code section are shown for snippets")
+        #expect(UIStrings.codePlaceholder == "Enter some code…" && UIStrings.codeEditorAccessibility == "Code editor")
+        let controls = [
+            UIStrings.languagePicker, UIStrings.themePicker, UIStrings.lineNumbersToggle,
+            UIStrings.highlightedLinesField, UIStrings.titleField, UIStrings.fontSizeSlider,
+            UIStrings.codePaddingSlider,
+        ]
+        #expect(
+            controls == ["Language", "Theme", "Line numbers", "Highlighted lines", "Title", "Font size", "Padding"])
+        model.setCode("import Foundation\nlet x = 1\n", idle: .zero)
+        #expect(model.autoDetectTitle == "Auto-detect (Swift)")
+        let snippet = try #require(model.snippet)
+        #expect(UIStrings.languageAccessibility(snippet) == "Language: Auto-detect (Swift)")
+        #expect(UIStrings.fontSizeAccessibility(14) == "Code font size, 14 pixels")
+        #expect(UIStrings.codePaddingAccessibility(32) == "Code padding, 32 pixels")
+        #expect(CodeLanguage.allCases.count >= 2)
+        await model.importData(try TestImages.png(), fileName: "shot.png")
+        #expect(!model.isSnippet && model.snippet == nil, "images hide the editor and the Code section")
+    }
 }

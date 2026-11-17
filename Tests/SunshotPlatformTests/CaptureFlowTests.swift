@@ -137,10 +137,9 @@ struct CaptureFlowTests {
 
     // MARK: Screen
 
-    @Test("[S10-AC15] area and window captures replace the content as one step, keeping the style")
+    @Test("[S10-AC15] the first capture becomes the content, later ones add screenshots, keeping the style")
     func screenCaptures() async throws {
         let model = model(screen: FakeScreen(image: try image(300, 200)))
-        await model.importData(try TestImages.png())
         model.perform { $0.setCornerStyle(.sharp) }
         await model.captureArea(LayoutRect(x: 10, y: 10, width: 150, height: 100), displayID: 1)
         #expect(model.session.document.content?.pixelSize == PixelSize(width: 300, height: 200))
@@ -153,7 +152,10 @@ struct CaptureFlowTests {
         await model.captureArea(LayoutRect(x: 0, y: 0, width: 4, height: 40), displayID: 1)
         #expect(model.session.history.undoCount == depth, "areas under 8 pt are ignored")
         await model.captureWindow(id: 7)
-        #expect(model.session.document.content?.pixelSize == PixelSize(width: 64, height: 48))
+        // S15: a capture over an image is added as the next screenshot.
+        #expect(model.session.document.content?.pixelSize == PixelSize(width: 300, height: 200))
+        #expect(model.session.document.slots[1]?.pixelSize == PixelSize(width: 64, height: 48))
+        #expect(model.undoTitle == "Undo Add Screenshot")
         #expect(!model.capture.showsWindowPicker)
     }
 
@@ -233,10 +235,10 @@ struct CaptureFlowTests {
         let defaults = UserDefaults(suiteName: suite) ?? .standard
         defer { defaults.removePersistentDomain(forName: suite) }
         let store = SettingsStore(defaults: defaults)
-        #expect(!store.load().captureHotkeyEnabled)
-        var settings = store.load()
-        settings.captureHotkeyEnabled = true
-        store.save(settings)
         #expect(store.load().captureHotkeyEnabled)
+        var settings = store.load()
+        settings.captureHotkeyEnabled = false
+        store.save(settings)
+        #expect(!store.load().captureHotkeyEnabled)
     }
 }

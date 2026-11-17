@@ -138,7 +138,7 @@ public final class BulkSession {
         let project = editor.project
         let media = editor.session.document.media
         for item in batch.items {
-            guard generation == thumbnailGeneration else { return }
+            guard generation == thumbnailGeneration, !Task.isCancelled else { return }
             let cached = proxies[item.id]
             if cached == nil, itemErrors[item.id] != nil { continue }
             let result = await Task.detached(priority: .utility) {

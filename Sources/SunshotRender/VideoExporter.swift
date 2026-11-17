@@ -81,7 +81,7 @@ public enum VideoExporter {
                 let time = plan.time(ofFrame: index)
                 let buffer = try await pooledBuffer(adaptor, writer: writer)
                 try autoreleasepool { try renderFrame(document, at: time, frames: frames, plan: plan, into: buffer) }
-                try await waitUntilReady(input, writer: writer)
+                try await waitUntilReady(input, writer: writer) { audio?.pump(until: plan.time(ofFrame: index + 1)) }
                 guard
                     adaptor.append(
                         buffer, withPresentationTime: CMTime(value: Int64(index), timescale: Int32(plan.fps)))
@@ -164,12 +164,22 @@ public enum VideoExporter {
             in: CGRect(x: 0, y: plan.height - image.height, width: image.width, height: image.height))
     }
 
-    static func waitUntilReady(_ input: AVAssetWriterInput, writer: AVAssetWriter) async throws {
+    /// Longest the writer may refuse data before the export fails instead of hanging.
+    static let stallTimeout: Duration = .seconds(30)
+
+    /// Waits until `input` takes data. `whileWaiting` runs on each poll (feeds the other input, which the writer
+    /// may be waiting on to interleave).
+    static func waitUntilReady(
+        _ input: AVAssetWriterInput, writer: AVAssetWriter, whileWaiting: () -> Void = {}
+    ) async throws {
+        let deadline = ContinuousClock.now + stallTimeout
         while !input.isReadyForMoreMediaData {
             try Task.checkCancellation()
             if writer.status == .failed {
                 throw VideoExportError.writeFailed(writer.error?.localizedDescription ?? "writer failed")
             }
+            guard ContinuousClock.now < deadline else { throw VideoExportError.writeFailed("the writer stalled") }
+            whileWaiting()
             try await Task.sleep(for: .milliseconds(1))
         }
     }

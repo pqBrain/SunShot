@@ -7,8 +7,8 @@ public struct SettingsStore {
     public static let prefix = "app.sunshot."
     enum Key: String, CaseIterable {
         case appearance, filenameTemplate, exportFolderPath, exportFolderBookmark, confirmReset, defaultTemplate
-        case captureHotkey
-        case suggestDevice
+        case captureHotkey, captureShortcut, captureDestination
+        case suggestDevice, autoBackdropOnImport, askToSaveOnClose, showsMenuBarIcon, annotateOnOpen
         var name: String { SettingsStore.prefix + rawValue }
     }
 
@@ -28,9 +28,33 @@ public struct SettingsStore {
             settings.confirmReset = defaults.bool(forKey: Key.confirmReset.name)
         }
         if let template = defaults.string(forKey: Key.defaultTemplate.name) { settings.defaultTemplate = template }
-        settings.captureHotkeyEnabled = defaults.bool(forKey: Key.captureHotkey.name)
+        if defaults.object(forKey: Key.captureHotkey.name) != nil {
+            settings.captureHotkeyEnabled = defaults.bool(forKey: Key.captureHotkey.name)
+        }
+        if let data = defaults.data(forKey: Key.captureShortcut.name),
+            let shortcut = try? JSONDecoder().decode(GlobalShortcut.self, from: data), shortcut.isValid
+        {
+            settings.captureShortcut = shortcut
+        }
+        if let raw = defaults.string(forKey: Key.captureDestination.name),
+            let destination = GlobalCaptureDestination(rawValue: raw)
+        {
+            settings.globalCaptureDestination = destination
+        }
         if defaults.object(forKey: Key.suggestDevice.name) != nil {
             settings.suggestDevice = defaults.bool(forKey: Key.suggestDevice.name)
+        }
+        if defaults.object(forKey: Key.autoBackdropOnImport.name) != nil {
+            settings.autoBackdropOnImport = defaults.bool(forKey: Key.autoBackdropOnImport.name)
+        }
+        if defaults.object(forKey: Key.askToSaveOnClose.name) != nil {
+            settings.askToSaveOnClose = defaults.bool(forKey: Key.askToSaveOnClose.name)
+        }
+        if defaults.object(forKey: Key.showsMenuBarIcon.name) != nil {
+            settings.showsMenuBarIcon = defaults.bool(forKey: Key.showsMenuBarIcon.name)
+        }
+        if defaults.object(forKey: Key.annotateOnOpen.name) != nil {
+            settings.annotateOnOpen = defaults.bool(forKey: Key.annotateOnOpen.name)
         }
         settings.exportFolder = BookmarkedURL.resolve(
             bookmark: defaults.data(forKey: Key.exportFolderBookmark.name),
@@ -44,7 +68,13 @@ public struct SettingsStore {
         defaults.set(settings.confirmReset, forKey: Key.confirmReset.name)
         defaults.set(settings.defaultTemplate, forKey: Key.defaultTemplate.name)
         defaults.set(settings.captureHotkeyEnabled, forKey: Key.captureHotkey.name)
+        defaults.set(try? JSONEncoder().encode(settings.captureShortcut), forKey: Key.captureShortcut.name)
+        defaults.set(settings.globalCaptureDestination.rawValue, forKey: Key.captureDestination.name)
         defaults.set(settings.suggestDevice, forKey: Key.suggestDevice.name)
+        defaults.set(settings.autoBackdropOnImport, forKey: Key.autoBackdropOnImport.name)
+        defaults.set(settings.askToSaveOnClose, forKey: Key.askToSaveOnClose.name)
+        defaults.set(settings.showsMenuBarIcon, forKey: Key.showsMenuBarIcon.name)
+        defaults.set(settings.annotateOnOpen, forKey: Key.annotateOnOpen.name)
         if let folder = settings.exportFolder {
             if defaults.string(forKey: Key.exportFolderPath.name) != folder.path {
                 defaults.set(folder.path, forKey: Key.exportFolderPath.name)

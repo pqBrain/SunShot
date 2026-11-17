@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a release Sunshot.app into dist/, ad-hoc signs it (sandboxed) and enforces the size budget.
+# Builds a release Sunshot.app into dist/, signs it (sandboxed) and enforces the size budget.
 source "$(dirname "$0")/lib/common.sh"
 cd "$ROOT"
 
@@ -19,8 +19,19 @@ sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD/" Support/Info.plist > "
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 
 strip -x "$APP/Contents/MacOS/Sunshot" 2>/dev/null || true
-codesign --force --sign - --options runtime --entitlements Support/Sunshot.entitlements "$APP" >/dev/null
+# Signing identity: an ad-hoc signature's designated requirement is the binary's cdhash, so macOS privacy grants
+# (Screen Recording) are lost on every rebuild. A real certificate keeps the requirement stable across builds.
+# Order: $SUNSHOT_SIGN_IDENTITY, then an "Apple Development" or "Sunshot Local Signing" certificate, else ad-hoc.
+identity="${SUNSHOT_SIGN_IDENTITY:-}"
+if [[ -z "$identity" ]]; then
+  identity="$(security find-identity -p codesigning 2>/dev/null \
+    | grep -E '"(Apple Development: .*|Sunshot Local Signing)"' | head -1 | awk '{print $2}' || true)"
+fi
+identity="${identity:--}"
+codesign --force --sign "$identity" --options runtime --entitlements Support/Sunshot.entitlements "$APP" >/dev/null
 codesign --verify --strict "$APP"
+[[ "$identity" == "-" ]] && echo "signed: ad-hoc (Screen Recording permission resets on each rebuild)" \
+  || echo "signed: $identity"
 
 size_kb="$(du -sk "$APP" | cut -f1)"
 budget_kb="$(q .appSizeBudgetKB)"

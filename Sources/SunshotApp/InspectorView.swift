@@ -7,19 +7,36 @@ import SwiftUI
 struct InspectorView: View {
     @Bindable var model: EditorModel
     @State private var borderExpanded = true
-    @State private var shadowExpanded = true
+    @State private var shadowExpanded = false
     @State private var backdropExpanded = true
     @State private var canvasExpanded = true
-    @State private var frameExpanded = true
-    @State private var deviceExpanded = true
+    @State private var frameExpanded = false
+    @State private var deviceExpanded = false
+    @State private var screenshotsExpanded = false
     @State private var colorsExpanded = false
     @State private var codeExpanded = true
 
     var body: some View {
+        ScrollViewReader { proxy in
+            sections
+                .onChange(of: model.inspectorFocus) { _, request in
+                    guard let request else { return }
+                    // S6: a click on the canvas reveals the matching section.
+                    switch request.section {
+                    case .backdrop: backdropExpanded = true
+                    case .border:
+                        borderExpanded = true
+                        shadowExpanded = true
+                    }
+                    withAnimation(.smooth(duration: 0.3)) { proxy.scrollTo(request.section, anchor: .top) }
+                }
+        }
+    }
+
+    private var sections: some View {
         ScrollView {
             VStack(spacing: 10) {
                 if model.isInspectorEnabled {
-                    ThemeHeaderView()
                     if model.isSnippet {
                         InspectorSection(
                             title: UIStrings.codeSection, isExpanded: $codeExpanded,
@@ -34,10 +51,12 @@ struct InspectorView: View {
                         title: UIStrings.backdropSection, isExpanded: $backdropExpanded,
                         reset: { model.perform { $0.resetBackdrop() } }
                     ) { BackdropControls(model: model) }
+                    .id(InspectorSectionID.backdrop)
                     InspectorSection(
                         title: UIStrings.borderSection, isExpanded: $borderExpanded,
                         reset: { model.perform { $0.resetBorder() } }
                     ) { BorderControls(model: model) }
+                    .id(InspectorSectionID.border)
                     InspectorSection(
                         title: UIStrings.shadowSection, isExpanded: $shadowExpanded,
                         reset: { model.perform { $0.resetShadow() } }
@@ -50,6 +69,12 @@ struct InspectorView: View {
                         title: UIStrings.deviceSection, isExpanded: $deviceExpanded,
                         reset: { model.setDevice(nil) }
                     ) { DeviceControls(model: model) }
+                    if !model.isSnippet {
+                        InspectorSection(
+                            title: UIStrings.screenshotsSection, isExpanded: $screenshotsExpanded,
+                            reset: { model.setCollage(nil) }
+                        ) { ScreenshotsControls(model: model) }
+                    }
                     InspectorSection(
                         title: UIStrings.colorsSection, isExpanded: $colorsExpanded,
                         reset: { model.perform { $0.resetColors() } }

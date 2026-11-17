@@ -6,11 +6,14 @@ public import SunshotCore
 /// can wrap the whole silhouette. With frame `none` it draws exactly what S2 drew: the clipped content.
 public enum FrameRenderer {
     /// `box` is the frame box in the current (top-left origin) user space, in unscaled content pixels.
-    public static func draw(_ image: CGImage, project: Project, in box: CGRect, context: CGContext) {
-        let geometry = FrameGeometry(frame: project.frame, boxWidth: box.width, boxHeight: box.height)
+    /// `slots` are the S15 slot images (index → image); a slot without one shows `image`. `collage` is the
+    /// screenshot layout laid out around the primary frame box (the box then holds the whole layout).
+    public static func draw(
+        _ image: CGImage, project: Project, in box: CGRect, slots: [Int: CGImage] = [:],
+        collage: CollageLayout? = nil, context: CGContext
+    ) {
         // S9: redaction replaces content pixels before anything is drawn, so originals never reach the output.
         let image = RedactionRenderer.apply(project.annotations, to: image)
-        let annotations = project.annotations
         context.saveGState()
         context.translateBy(x: box.minX, y: box.minY)
         defer { context.restoreGState() }
@@ -18,9 +21,24 @@ public enum FrameRenderer {
         // S12: a device mockup replaces the frame chrome.
         if let device = DeviceLayout(frame: project.frame) {
             let local = CGRect(origin: .zero, size: box.size)
-            DeviceRenderer.draw(image, layout: device, annotations: annotations, box: local, context: context)
+            DeviceRenderer.draw(
+                image, slots: slots, layout: device, annotations: project.annotations, box: local, context: context)
             return
         }
+        // S15: a screenshot layout draws the frame silhouette once per slot.
+        if let collage {
+            CollageRenderer.draw(
+                image, slots: slots, layout: collage, project: project, box: box.size, context: context)
+            return
+        }
+        drawSilhouette(image, project: project, size: box.size, annotations: project.annotations, context: context)
+    }
+
+    /// One frame silhouette (chrome + content + annotations) in a local box at the origin.
+    static func drawSilhouette(
+        _ image: CGImage, project: Project, size: CGSize, annotations: AnnotationLayer, context: CGContext
+    ) {
+        let geometry = FrameGeometry(frame: project.frame, boxWidth: size.width, boxHeight: size.height)
         switch project.frame.kind {
         case .none:
             drawClippedContent(image, border: project.border, geometry: geometry, context: context)

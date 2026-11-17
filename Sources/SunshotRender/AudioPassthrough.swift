@@ -9,6 +9,7 @@ final class AudioPassthrough {
     private let input: AVAssetWriterInput
     private var pending: CMSampleBuffer?
     private var isDone = false
+    private var isFinished = false
 
     private init(reader: AVAssetReader, output: AVAssetReaderTrackOutput, input: AVAssetWriterInput) {
         self.reader = reader
@@ -44,16 +45,29 @@ final class AudioPassthrough {
             if pending == nil {
                 pending = output.copyNextSampleBuffer()
                 if pending == nil {
-                    isDone = true
+                    // Close the input as soon as the audio runs out: the writer interleaves its inputs and would
+                    // otherwise hold the video back waiting for audio that never comes.
+                    close()
                     break
                 }
             }
             guard let sample = pending else { break }
             let start = CMSampleBufferGetPresentationTimeStamp(sample).seconds
             if start >= time || !input.isReadyForMoreMediaData { break }
-            input.append(sample)
             pending = nil
+            guard input.append(sample) else {
+                close()
+                break
+            }
         }
+    }
+
+    private func close() {
+        isDone = true
+        guard !isFinished else { return }
+        isFinished = true
+        reader.cancelReading()
+        input.markAsFinished()
     }
 
     /// Appends the rest of the audio up to `time` (waiting for the writer), then closes the input.
@@ -63,7 +77,6 @@ final class AudioPassthrough {
             pump(until: time)
             if let sample = pending, CMSampleBufferGetPresentationTimeStamp(sample).seconds >= time { break }
         }
-        reader.cancelReading()
-        input.markAsFinished()
+        close()
     }
 }

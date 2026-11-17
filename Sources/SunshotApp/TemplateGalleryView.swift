@@ -2,7 +2,7 @@ import SunshotCore
 import SunshotPlatform
 import SwiftUI
 
-/// File ▸ Templates… (⇧⌘T) and the toolbar's Templates button: a sheet of Sunshot's templates, each previewed live
+/// File ▸ Templates… (⇧⌘T) and the sidebar's "Show all templates…": a sheet of Sunshot's templates, each previewed live
 /// with the current content by the shared renderer. Choosing one restyles the document as one undo step.
 struct TemplateGalleryView: View {
     let model: EditorModel
@@ -51,10 +51,12 @@ struct TemplateGalleryView: View {
     }
 }
 
-private struct TemplateCard: View {
+/// One template, previewed with the current content (gallery sheet and the sidebar's Templates pane).
+struct TemplateCard: View {
     let template: DocumentTemplate
     let image: CGImage?
     let isCurrent: Bool
+    var previewHeight: CGFloat = 112
     let action: () -> Void
 
     var body: some View {
@@ -67,7 +69,7 @@ private struct TemplateCard: View {
                         ProgressView().controlSize(.small)
                     }
                 }
-                .frame(height: 112)
+                .frame(height: previewHeight)
                 .frame(maxWidth: .infinity)
                 .padding(6)
                 .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 12, style: .continuous))
@@ -87,21 +89,6 @@ private struct TemplateCard: View {
         .help(template.summary)
         .accessibilityLabel(UIStrings.templateOption(template, current: isCurrent))
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
-    }
-}
-
-/// Toolbar button that opens the gallery.
-struct TemplatesButton: View {
-    let model: EditorModel
-
-    var body: some View {
-        Button {
-            model.showTemplateGallery()
-        } label: {
-            Label(UIStrings.templatesButton, systemImage: "square.grid.2x2")
-        }
-        .help(UIStrings.templatesAccessibility)
-        .accessibilityLabel(UIStrings.templatesAccessibility)
     }
 }
 

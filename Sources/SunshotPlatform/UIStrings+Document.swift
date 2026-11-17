@@ -21,13 +21,15 @@ extension UIStrings {
     public static let startOverMessage =
         "This removes the image and resets every style to the defaults. You can undo it."
     public static let startOverButton = "Start Over"
-    public static let startOverAccessibility = "Start over"
 
     // Close
     public static func saveChangesTitle(_ name: String) -> String { "Save changes to \(name)?" }
     public static let saveChangesMessage = "Your changes will be lost if you don't save them."
     public static let save = "Save"
     public static let dontSave = "Don't Save"
+    public static let dontAskAgain = "Don't ask again"
+    public static let askToSaveSetting = "Ask to save untitled documents when closing"
+    public static let askToSaveSettingHint = "When off, closing an unsaved document discards it."
 
     // Themes
     public static let saveTheme = "Save…"

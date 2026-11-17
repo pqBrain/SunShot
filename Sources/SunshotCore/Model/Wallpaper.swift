@@ -22,6 +22,18 @@ public struct Wallpaper: Codable, Hashable, Sendable, Identifiable {
         self.fieldCount = min(max(fieldCount, 0), 16)
     }
 
+    /// Decoded through `init`, so `fieldCount` from a file is clamped like everywhere else.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(String.self, forKey: .id),
+            name: try container.decode(String.self, forKey: .name),
+            seed: try container.decode(UInt64.self, forKey: .seed),
+            base: try container.decode(GradientSpec.self, forKey: .base),
+            palette: try container.decode([RGBAColor].self, forKey: .palette),
+            fieldCount: try container.decode(Int.self, forKey: .fieldCount))
+    }
+
     /// Soft colour fields, generated deterministically from `seed` (same seed → same wallpaper).
     public var fields: [ColorField] {
         guard !palette.isEmpty else { return [] }

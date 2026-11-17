@@ -118,7 +118,9 @@ public struct ExportPlan: Hashable, Sendable {
     }
 
     /// The single rounding rule shared with the renderer.
-    public static func scaled(_ length: Int, by scale: Double) -> Int { Int((Double(length) * scale).rounded()) }
+    public static func scaled(_ length: Int, by scale: Double) -> Int {
+        Int(saturatingLength: Double(length) * scale)
+    }
 
     public var outputSize: PixelSize { PixelSize(width: width, height: height) }
 

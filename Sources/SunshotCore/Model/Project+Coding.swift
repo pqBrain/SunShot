@@ -5,7 +5,7 @@ import Foundation
 extension Project {
     enum CodingKeys: String, CodingKey {
         case canvas, backdropSettings, padding, border, shadow, export, frame, tokens, annotationLayer, placement,
-            animation
+            animation, collage
     }
 
     public init(from decoder: any Decoder) throws {
@@ -14,7 +14,8 @@ extension Project {
         canvas = try container.decodeIfPresent(CanvasSpec.self, forKey: .canvas) ?? canvas
         backdropSettings =
             try container.decodeIfPresent(BackdropSettings.self, forKey: .backdropSettings) ?? backdropSettings
-        padding = try container.decodeIfPresent(Double.self, forKey: .padding) ?? padding
+        let decodedPadding = try container.decodeIfPresent(Double.self, forKey: .padding) ?? padding
+        padding = decodedPadding.isFinite ? min(max(decodedPadding, 0), SunshotDefaults.maxPadding) : padding
         border = try container.decodeIfPresent(Border.self, forKey: .border) ?? border
         shadow = try container.decodeIfPresent(Shadow.self, forKey: .shadow) ?? shadow
         export = try container.decodeIfPresent(ExportOptions.self, forKey: .export) ?? export
@@ -23,5 +24,6 @@ extension Project {
         annotationLayer = try container.decodeIfPresent(AnnotationLayer.self, forKey: .annotationLayer)
         placement = try container.decodeIfPresent(ContentPlacement.self, forKey: .placement) ?? placement
         animation = try? container.decodeIfPresent(AnimationTimeline.self, forKey: .animation)
+        collage = try container.decodeIfPresent(String.self, forKey: .collage)
     }
 }

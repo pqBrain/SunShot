@@ -47,9 +47,30 @@ extension UIStrings {
     public static let captureDelay = "Delay"
     public static let capturingWebsite = "Loading the page…"
     public static let openPrivacySettings = "Open System Settings"
-    public static let globalCaptureShortcut = "Capture Area from anywhere (⌥⇧⌘4)"
-    public static let globalCaptureShortcutHint =
-        "Lets ⌥⇧⌘4 start an area capture even when Sunshot is in the background."
+    public static let globalCaptureShortcut = "Capture Area from anywhere"
+    public static func globalCaptureShortcutHint(_ shortcut: GlobalShortcut) -> String {
+        "Lets \(shortcut) start an area capture even when Sunshot is in the background."
+    }
+    public static let captureShortcutLabel = "Shortcut"
+    public static let recordShortcutPrompt = "Type shortcut…"
+    public static let recordShortcutHelp = "Click, then press the new keys. Esc cancels."
+    public static let restoreDefaultShortcut = "Restore Default"
+    public static let shortcutUnavailable = "Another app is using this shortcut. Choose different keys."
+    public static func shortcutProblem(_ problem: GlobalShortcut.Problem) -> String {
+        switch problem {
+        case .needsModifier: "Use ⌃ or ⌥ (or ⇧⌘) with the key, or a function key."
+        case .reservedBySystem: "macOS uses these keys for its own screenshots."
+        }
+    }
+    public static let afterShortcutCapture = "After a shortcut capture"
+    public static func captureDestinationName(_ destination: GlobalCaptureDestination) -> String {
+        switch destination {
+        case .editor: "Open in Sunshot"
+        case .clipboard: "Copy to clipboard"
+        case .styledClipboard: "Copy with default style"
+        }
+    }
+    public static let copiedToClipboard = "Screenshot copied to clipboard"
 
     public static func viewportName(_ viewport: WebViewport) -> String {
         let name =

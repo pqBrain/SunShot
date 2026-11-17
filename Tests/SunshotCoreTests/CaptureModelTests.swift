@@ -104,9 +104,10 @@ struct CaptureModelTests {
         #expect(try DocumentManifestCodec.decode(old).manifest.crop == nil)
     }
 
-    @Test("[S10-AC17] the global capture shortcut is off by default")
+    @Test("[S10-AC17] [S16-AC1] the global capture shortcut, menu bar icon and annotate-on-open are on by default")
     func hotkeyDefault() {
-        #expect(AppSettings().captureHotkeyEnabled == false)
-        #expect(AppSettings.defaults.captureHotkeyEnabled == false)
+        #expect(AppSettings().captureHotkeyEnabled)
+        #expect(AppSettings.defaults.captureHotkeyEnabled)
+        #expect(AppSettings().showsMenuBarIcon && AppSettings().annotateOnOpen)
     }
 }

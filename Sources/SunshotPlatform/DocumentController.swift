@@ -9,10 +9,14 @@ import os
 public struct DocumentLocations: Sendable {
     public var drafts: URL
     public var themes: URL
+    /// S16: the default style file (`DefaultStyle.json`).
+    public var quickStyle: URL
 
-    public init(drafts: URL, themes: URL) {
+    public init(drafts: URL, themes: URL, quickStyle: URL? = nil) {
         self.drafts = drafts
         self.themes = themes
+        self.quickStyle =
+            quickStyle ?? themes.deletingLastPathComponent().appendingPathComponent("DefaultStyle.json")
     }
 
     /// `~/Library/Application Support/Sunshot/{Drafts,Themes}`.
@@ -62,6 +66,8 @@ public final class DocumentController {
     /// The document as last written (or opened); changes since then make it dirty.
     public internal(set) var savedDocument: EditorDocument
     public internal(set) var themes: [Theme] = []
+    /// S16: the saved default style (quick captures and new documents), nil until one is saved.
+    public internal(set) var quickStyle: QuickStyle?
     public private(set) var recents: RecentList<RecentDocument>
     public var placeholderOffer: PlaceholderOffer?
     public var settings: AppSettings {
@@ -92,7 +98,9 @@ public final class DocumentController {
         draftURL = Self.newDraftURL(in: locations.drafts)
         savedDocument = model.session.document
         themes = themeStore.load()
+        quickStyle = QuickStyleStore(file: locations.quickStyle).load()
         model.filenameTemplate = settings.effectiveFilenameTemplate
+        model.autoBackdropOnImport = settings.autoBackdropOnImport
         openDefaultTemplateAtLaunch()
         observeDocument()
     }
@@ -106,10 +114,14 @@ public final class DocumentController {
     public var isDirty: Bool { model.session.document != savedDocument }
 
     /// Closing asks "Save changes to Untitled?" only for never-saved documents with content (and for read-only
-    /// documents that were changed); everything else is saved silently.
-    public var needsSavePrompt: Bool {
-        model.hasContent && (fileURL == nil || (isReadOnly && isDirty))
-    }
+    /// documents that were changed), unless the prompt is turned off; everything else is saved silently.
+    public var needsSavePrompt: Bool { hasUnsavableChanges && settings.askToSaveOnClose }
+
+    /// The close prompt is turned off (Settings, or "Don't ask again"): what it would have asked about is discarded.
+    public var discardsWithoutAsking: Bool { hasUnsavableChanges && !settings.askToSaveOnClose }
+
+    /// Content that closing can't keep without asking: never saved, or changed while read-only.
+    private var hasUnsavableChanges: Bool { model.hasContent && (fileURL == nil || (isReadOnly && isDirty)) }
 
     // MARK: New, open, save
 
@@ -212,6 +224,7 @@ public final class DocumentController {
             (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
         }
         guard let newest = drafts.max(by: { modified($0) < modified($1) }) else { return false }
+        let launchDocument = model.session.document
         let loaded = try? await Task.detached(priority: .userInitiated) {
             try DocumentPackage.read(from: newest, allowPlaceholders: true)
         }.value
@@ -219,6 +232,9 @@ public final class DocumentController {
             try? FileManager.default.removeItem(at: newest)
             return false
         }
+        // The user started working (pasted, opened a file) while the draft was decoding: keep their work and
+        // leave the draft on disk rather than silently replacing the document.
+        guard model.session.document == launchDocument else { return false }
         await replaceDocument(with: loaded.document, fileURL: nil, readOnly: false)
         draftURL = newest
         return true
@@ -271,6 +287,7 @@ public final class DocumentController {
     private func settingsChanged() {
         settingsStore.save(settings)
         model.filenameTemplate = settings.effectiveFilenameTemplate
+        model.autoBackdropOnImport = settings.autoBackdropOnImport
         if let app = NSApp { settings.appearance.apply(to: app) }
     }
 }

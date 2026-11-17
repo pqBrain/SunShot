@@ -47,7 +47,12 @@ extension EditorModel {
         guard let size = session.document.imageContentSize, project.frame.kind.hasTitle else { return nil }
         let layout = CanvasLayout.compute(contentSize: size, project: project)
         let style = layout.styleScale
-        let box = layout.frameRect
+        // The main screenshot's frame box (with an S15 screenshot layout, `frameRect` holds the whole layout).
+        let chrome = FrameGeometry.layoutBox(for: project.frame, contentSize: size).insets
+        let content = layout.contentRect
+        let box = LayoutRect(
+            x: content.x - chrome.left * style, y: content.y - chrome.top * style,
+            width: content.width + chrome.horizontal * style, height: content.height + chrome.vertical * style)
         let geometry = FrameGeometry(frame: project.frame, boxWidth: box.width / style, boxHeight: box.height / style)
         guard let bar = geometry.bar else { return nil }
         let width = Double(layout.canvasSize.width)
@@ -76,11 +81,14 @@ final class FrameThumbnailCache {
     }
 
     private var images: [Key: CGImage] = [:]
+    /// The sample window content, generated once instead of per thumbnail.
+    private lazy var sample: CGImage? = try? SampleContent.image(width: 320, height: 200)
 
     func thumbnail(_ kind: FrameKind, project: Project, size: PixelSize) -> CGImage? {
         let key = Key(kind: kind, border: project.border, tokens: project.tokens, uiScale: project.frame.uiScale)
         if let image = images[key] { return image }
-        guard let image = try? Renderer.renderFrameThumbnail(kind, project: project, size: size) else { return nil }
+        guard let image = try? Renderer.renderFrameThumbnail(kind, project: project, size: size, content: sample)
+        else { return nil }
         if images.count > 64 { images.removeAll() }
         images[key] = image
         return image

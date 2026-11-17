@@ -34,11 +34,16 @@ public struct EditorDocument: Equatable, Sendable {
     public var crop: CropRect?
     /// Video content (S13); it is the content while `content` is its first frame (see `activeVideo`).
     public var video: VideoContent?
+    /// S15: images for the other screenshots, keyed by screenshot number (1, 2…). A slot without an image shows
+    /// the main content. Kept when the arrangement changes, so switching back shows them again.
+    public var slots: [Int: ContentImage]
 
     public init(
         project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:],
-        theme: Theme? = nil, snippet: CodeSnippet? = nil, crop: CropRect? = nil, video: VideoContent? = nil
+        theme: Theme? = nil, snippet: CodeSnippet? = nil, crop: CropRect? = nil, video: VideoContent? = nil,
+        slots: [Int: ContentImage] = [:]
     ) {
+        self.slots = slots
         self.project = project
         self.content = content
         self.media = media
@@ -70,13 +75,23 @@ public struct EditorSession: Sendable {
         return CanvasLayout.compute(contentSize: contentSize, project: document.project).canvasSize
     }
 
-    /// Sets (or replaces) the content image as one undoable step.
-    public mutating func setContent(_ image: CGImage, data: Data? = nil) {
-        let name = hasContent ? Self.replaceActionName : Self.importActionName
+    /// Sets (or replaces) the content image as one undoable step. With `autoBackdrop`, the first image of a
+    /// document whose backdrop is still untouched also gets the first auto background of its colours (S7), in the
+    /// same undo step.
+    public mutating func setContent(_ image: CGImage, data: Data? = nil, autoBackdrop: Bool = false) {
+        let first = !hasContent
+        let name = first ? Self.importActionName : Self.replaceActionName
         history.apply(name) {
             $0.content = ContentImage(image, data: data)
             $0.snippet = nil
             $0.crop = nil
+            if autoBackdrop && first && $0.project.hasUntouchedBackdrop {
+                let palette = ContentPalette.extract(from: image)
+                let shuffle = $0.project.backdropSettings.autoShuffle
+                if let wallpaper = AutoBackground.suggestions(palette: palette, shuffle: shuffle).first {
+                    Self.select(wallpaper, in: &$0)
+                }
+            }
         }
     }
 
@@ -92,6 +107,7 @@ public struct EditorSession: Sendable {
             $0.content = nil
             $0.snippet = nil
             $0.crop = nil
+            $0.slots = [:]
         }
     }
 

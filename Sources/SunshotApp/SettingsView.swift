@@ -6,6 +6,7 @@ import SwiftUI
 /// Sunshot ▸ Settings… (⌘,). Values are written to UserDefaults as they change.
 struct SettingsView: View {
     @Bindable var controller: DocumentController
+    let hotkey: GlobalCaptureHotkey
 
     var body: some View {
         Form {
@@ -37,9 +38,22 @@ struct SettingsView: View {
 
             Toggle(UIStrings.confirmReset, isOn: $controller.settings.confirmReset)
 
-            Toggle(isOn: $controller.settings.captureHotkeyEnabled) {
-                Text(UIStrings.globalCaptureShortcut)
-                Text(UIStrings.globalCaptureShortcutHint)
+            Toggle(isOn: $controller.settings.askToSaveOnClose) {
+                Text(UIStrings.askToSaveSetting)
+                Text(UIStrings.askToSaveSettingHint)
+            }
+
+            Section(UIStrings.menuBarSection) {
+                Toggle(isOn: $controller.settings.showsMenuBarIcon) {
+                    Text(UIStrings.showMenuBarIconSetting)
+                    Text(UIStrings.showMenuBarIconHint)
+                }
+                GlobalCaptureSettings(controller: controller, hotkey: hotkey)
+                DefaultStyleSetting(controller: controller)
+                Toggle(isOn: $controller.settings.annotateOnOpen) {
+                    Text(UIStrings.annotateOnOpenSetting)
+                    Text(UIStrings.annotateOnOpenHint)
+                }
             }
 
             Picker(UIStrings.defaultTemplate, selection: $controller.defaultTemplateID) {
@@ -48,6 +62,8 @@ struct SettingsView: View {
             .disabled(controller.model.templates.templates.isEmpty)
 
             Toggle(UIStrings.suggestDeviceSetting, isOn: $controller.settings.suggestDevice)
+
+            Toggle(UIStrings.autoBackdropSetting, isOn: $controller.settings.autoBackdropOnImport)
         }
         .formStyle(.grouped)
         .frame(width: 520)
@@ -64,6 +80,28 @@ struct SettingsView: View {
         panel.directoryURL = controller.settings.exportFolder
         guard panel.runModal() == .OK, let url = panel.url else { return }
         controller.settings.exportFolder = url
+    }
+}
+
+/// S16: whether a default style is saved (and when), with Clear. Saving happens in the studio.
+struct DefaultStyleSetting: View {
+    let controller: DocumentController
+
+    var body: some View {
+        LabeledContent {
+            Button(UIStrings.clearDefaultStyle) { controller.clearQuickStyle() }
+                .disabled(!controller.hasQuickStyle)
+                .accessibilityLabel("\(UIStrings.clearDefaultStyle) \(UIStrings.defaultStyleSection)")
+        } label: {
+            Text(UIStrings.defaultStyleSection)
+            Text(status)
+            Text(UIStrings.defaultStyleHint)
+        }
+    }
+
+    private var status: String {
+        guard let style = controller.quickStyle else { return UIStrings.defaultStyleNone }
+        return UIStrings.defaultStyleSaved(style.savedAt.formatted(date: .abbreviated, time: .shortened))
     }
 }
 

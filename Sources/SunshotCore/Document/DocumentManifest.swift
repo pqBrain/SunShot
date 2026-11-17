@@ -25,12 +25,15 @@ public struct DocumentManifest: Codable, Hashable, Sendable {
     public var crop: CropRect?
     /// Video content (S13): which media file is the movie. Nil for image, snippet or empty documents.
     public var video: VideoEntry?
+    /// S15: slot images (which media file shows in which slot). Nil (omitted) when the document has none.
+    public var slots: [SlotEntry]?
 
     public init(
         schemaVersion: Int = DocumentManifest.currentSchemaVersion, project: Project = Project(),
         content: ContentEntry? = nil, media: [MediaEntry] = [], theme: Theme? = nil, snippet: CodeSnippet? = nil,
-        crop: CropRect? = nil, video: VideoEntry? = nil
+        crop: CropRect? = nil, video: VideoEntry? = nil, slots: [SlotEntry]? = nil
     ) {
+        self.slots = slots
         self.snippet = snippet
         self.crop = crop
         self.video = video
@@ -49,6 +52,20 @@ public struct ContentEntry: Codable, Hashable, Sendable {
     public var pixelSize: PixelSize
 
     public init(mediaID: String, pixelSize: PixelSize) {
+        self.mediaID = mediaID
+        self.pixelSize = pixelSize
+    }
+}
+
+/// An S15 slot image: the screenshot number (1, 2…), its media file and its size (for a placeholder when the
+/// file is missing).
+public struct SlotEntry: Codable, Hashable, Sendable {
+    public var number: Int
+    public var mediaID: String
+    public var pixelSize: PixelSize
+
+    public init(number: Int, mediaID: String, pixelSize: PixelSize) {
+        self.number = number
         self.mediaID = mediaID
         self.pixelSize = pixelSize
     }
@@ -125,6 +142,9 @@ public enum DocumentManifestCodec {
             for entry in manifest.media { try validate(path: entry.path) }
             if let content = manifest.content, !manifest.media.contains(where: { $0.id == content.mediaID }) {
                 throw DocumentFormatError.missingMedia([content.mediaID])
+            }
+            for slot in manifest.slots ?? [] where !manifest.media.contains(where: { $0.id == slot.mediaID }) {
+                throw DocumentFormatError.missingMedia([slot.mediaID])
             }
             return DecodedManifest(manifest: manifest, isReadOnly: version > DocumentManifest.currentSchemaVersion)
         } catch let error as DocumentFormatError {

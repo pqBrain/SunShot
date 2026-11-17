@@ -8,6 +8,8 @@ public struct LayoutThumbnailKey: Hashable, Sendable {
     public let project: Project
     public let contentID: UUID
     public let mediaIDs: [String]
+    /// S15: slot images by index (their ids), so a new slot image refreshes the thumbnails.
+    public let slotIDs: [Int: UUID]
     public let maxSide: Int
 
     public init?(document: EditorDocument, maxSide: Int) {
@@ -17,6 +19,7 @@ public struct LayoutThumbnailKey: Hashable, Sendable {
         self.project = project
         contentID = content.id
         mediaIDs = document.media.keys.sorted()
+        slotIDs = document.slots.mapValues(\.id)
         self.maxSide = maxSide
     }
 }

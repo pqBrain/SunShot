@@ -26,16 +26,16 @@ public enum Renderer {
         guard let (image, project) = croppedContent(of: document) else { return nil }
         return try render(
             project: project, content: image, media: document.media, scale: scale,
-            grid: showsTransparencyGrid ? grid : nil)
+            grid: showsTransparencyGrid ? grid : nil, slots: document.slotImages)
     }
 
     /// Renders `project` with `content` at `scale` (1 = canvas points map to pixels).
     /// `layoutSize` lays out a downsampled proxy as if it were the full-size image (S14 strip thumbnails).
     /// `contentSize` is the content's size at 1× when the image is drawn at a higher density (code snippets).
-    /// Both nil means the image's pixel size.
+    /// Both nil means the image's pixel size. `slots` are the S15 slot images (index → image).
     public static func render(
         project: Project, content: CGImage, contentSize: PixelSize? = nil, media: [String: MediaAsset] = [:],
-        scale: Double = 1, grid: TransparencyGrid? = nil, layoutSize: PixelSize? = nil
+        scale: Double = 1, grid: TransparencyGrid? = nil, layoutSize: PixelSize? = nil, slots: [Int: CGImage] = [:]
     ) throws -> CGImage {
         let contentSize = layoutSize ?? contentSize ?? PixelSize(width: content.width, height: content.height)
         let layout = CanvasLayout.compute(contentSize: contentSize, project: project)
@@ -51,9 +51,15 @@ public enum Renderer {
         context.scaleBy(x: CGFloat(safeScale), y: -CGFloat(safeScale))
         context.interpolationQuality = .high
 
-        EffectsRenderer.drawBackdrop(
+        BackdropCache.shared.drawBackdrop(
             project.backdropSettings, size: layout.canvasSize, media: media, grid: grid, in: context)
-        drawContent(content, layout: layout, project: project, scale: safeScale, context: context)
+        let frameBox = FrameGeometry.layoutBox(for: project.frame, contentSize: contentSize)
+        let collage = CollageLayout(
+            project: project, boxWidth: frameBox.width + frameBox.insets.horizontal,
+            boxHeight: frameBox.height + frameBox.insets.vertical)
+        drawContent(
+            content, slots: slots, collage: collage, layout: layout, project: project, scale: safeScale,
+            context: context)
         EffectsRenderer.drawAboveContent(project.backdropSettings.effects, size: layout.canvasSize, in: context)
 
         guard let image = context.makeImage() else { throw RenderError.imageCreationFailed }
@@ -93,7 +99,8 @@ public enum Renderer {
     /// scaled together by `layout.styleScale`, so the look is the same as on an Auto canvas, just resized.
     /// The frame (S5) is drawn with the content by `FrameRenderer`, inside the same shadow layer.
     private static func drawContent(
-        _ image: CGImage, layout: CanvasLayout, project: Project, scale: Double, context: CGContext
+        _ image: CGImage, slots: [Int: CGImage], collage: CollageLayout?, layout: CanvasLayout, project: Project,
+        scale: Double, context: CGContext
     ) {
         let rect = layout.frameRect
         let style = layout.styleScale.isFinite && layout.styleScale > 0 ? layout.styleScale : 1
@@ -108,7 +115,8 @@ public enum Renderer {
             transform: project.placement.transform, layout: silhouette, shadow: ShadowMetrics.of(project.shadow),
             scale: scale, bounds: target, in: context
         ) { context in
-            FrameRenderer.draw(image, project: project, in: target, context: context)
+            FrameRenderer.draw(
+                image, project: project, in: target, slots: slots, collage: collage, context: context)
         }
     }
 }

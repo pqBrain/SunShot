@@ -7,8 +7,12 @@ public struct CapturableWindow: Identifiable, Hashable, Sendable {
     public let appName: String
     public let width: Int
     public let height: Int
+    /// S16: where the window is on screen, in global display points with a top-left origin (the main display's
+    /// top-left is 0, 0); nil when unknown. Used by the hover-to-pick window capture.
+    public let frame: LayoutRect?
 
-    public init(id: UInt32, title: String, appName: String, width: Int, height: Int) {
+    public init(id: UInt32, title: String, appName: String, width: Int, height: Int, frame: LayoutRect? = nil) {
+        self.frame = frame
         self.id = id
         self.title = title
         self.appName = appName

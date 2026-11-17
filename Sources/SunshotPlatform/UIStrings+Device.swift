@@ -13,8 +13,6 @@ extension UIStrings {
     public static let suggestDeviceSetting = "Suggest the device that matches imported images"
     public static let deviceMockupsSetting = "Device mockups"
     public static let templatesTitle = "Templates"
-    public static let templatesButton = "Templates"
-    public static let templatesAccessibility = "Choose a template"
     public static let templatesScreens = "Screens"
     public static let templatesDevices = "Devices"
     public static let templatesHint = "Templates restyle the document. Your content stays."

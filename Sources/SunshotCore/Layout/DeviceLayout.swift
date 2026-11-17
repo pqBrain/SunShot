@@ -155,4 +155,24 @@ extension FrameGeometry {
         }
         return (Double(contentSize.width), Double(contentSize.height), insets(for: frame))
     }
+
+    /// Like `layoutBox(for:contentSize:)`, plus the S15 screenshot layout of `project` around the frame box: the
+    /// other screenshots are extra insets, so the primary content keeps its 1:1 pixels.
+    public static func layoutBox(
+        for project: Project, contentSize: PixelSize, catalog: DeviceCatalog = .bundled,
+        collages: CollageCatalog = .bundled
+    ) -> (width: Double, height: Double, insets: FrameInsets) {
+        let box = layoutBox(for: project.frame, contentSize: contentSize, catalog: catalog)
+        let frameWidth = box.width + box.insets.horizontal
+        let frameHeight = box.height + box.insets.vertical
+        guard
+            let collage = CollageLayout(
+                project: project, boxWidth: frameWidth, boxHeight: frameHeight, catalog: collages)
+        else { return box }
+        let around = collage.insets
+        let insets = FrameInsets(
+            top: box.insets.top + around.top, left: box.insets.left + around.left,
+            bottom: box.insets.bottom + around.bottom, right: box.insets.right + around.right)
+        return (box.width, box.height, insets)
+    }
 }

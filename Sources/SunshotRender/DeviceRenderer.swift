@@ -11,14 +11,17 @@ enum DeviceRenderer {
     static let lensColor = RGBAColor(rgb: 0x16181C)
 
     /// `box` is local (origin 0, 0), in unscaled content units; `annotations` draw on the primary screen.
+    /// `slots` (S15) give a device its own image by arrangement slot index; the others show `image`.
     static func draw(
-        _ image: CGImage, layout: DeviceLayout, annotations: AnnotationLayer, box: CGRect, context: CGContext
+        _ image: CGImage, slots: [Int: CGImage] = [:], layout: DeviceLayout, annotations: AnnotationLayer,
+        box: CGRect, context: CGContext
     ) {
         let fitted = layout.fitted(toWidth: box.width)
-        for device in fitted.devices {
+        for (index, device) in fitted.devices.enumerated() {
+            let shown = device.isPrimary ? image : slots[index] ?? image
             for part in device.parts {
                 if part.role == .screen {
-                    drawScreen(image, part: part, finish: fitted.finish, context: context)
+                    drawScreen(shown, part: part, finish: fitted.finish, context: context)
                     if device.isPrimary { drawAnnotations(annotations, image: image, screen: part.rect.cg, context) }
                 } else {
                     drawPart(part, finish: fitted.finish, unit: device.unit, context: context)

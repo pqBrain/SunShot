@@ -43,6 +43,11 @@ public struct ContentTransform: Hashable, Sendable {
     /// Zoom as a factor (1 = 100 %).
     public var scale: Double { zoom / 100 }
 
+    /// True when the content is meant to run off the canvas (zoomed in, or pushed well off centre) — the
+    /// Close-up, Bleed Right, Corner Peek and Rise from Below look. With several screenshots (S15) that cuts the
+    /// outer ones off, so adding a screenshot resets such a transform.
+    public var bleedsOffCanvas: Bool { zoom > 100 || abs(x) > 0.15 || abs(y) > 0.15 }
+
     // MARK: Sanitising
 
     public static func clampPosition(_ value: Double) -> Double { clamp(value, to: positionRange, fallback: 0) }

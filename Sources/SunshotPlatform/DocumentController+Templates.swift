@@ -8,8 +8,12 @@ extension DocumentController {
         model.templates.library.template(matching: settings.defaultTemplate)
     }
 
-    /// The empty document File ▸ New and Start Over produce.
-    public var defaultTemplateDocument: EditorDocument { EditorSession.document(for: defaultTemplate) }
+    /// The empty document File ▸ New and Start Over produce: S16's saved default style when there is one, else the
+    /// default template.
+    public var defaultTemplateDocument: EditorDocument {
+        if let quickStyle { return EditorDocument(project: quickStyle.project) }
+        return EditorSession.document(for: defaultTemplate)
+    }
 
     /// The id the Settings picker shows for the stored value (S7 stored the name "Screenshot").
     public var defaultTemplateID: String {

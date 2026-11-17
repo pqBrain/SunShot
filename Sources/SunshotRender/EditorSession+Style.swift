@@ -9,6 +9,7 @@ extension EditorSession {
     public static let lightActionName = "Move Light Source"
     public static let resetBorderActionName = "Reset Border"
     public static let resetShadowActionName = "Reset Shadow"
+    public static let paddingActionName = "Change Padding"
 
     public var project: Project { document.project }
 
@@ -27,6 +28,12 @@ extension EditorSession {
         guard let value = Border.parseRadius(text) else { return false }
         setCornerRadius(value)
         return true
+    }
+
+    /// S6: padding around the content in canvas pixels at 1× (0…`SunshotDefaults.maxPadding`, whole pixels).
+    public mutating func setPadding(_ padding: Double) {
+        let value = padding.isFinite ? min(max(padding.rounded(), 0), SunshotDefaults.maxPadding) : project.padding
+        editProject(Self.paddingActionName) { $0.padding = value }
     }
 
     public mutating func setShadowStyle(_ style: ShadowStyle) {

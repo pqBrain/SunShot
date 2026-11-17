@@ -1,11 +1,25 @@
+public import AppKit
 import CoreGraphics
 import Foundation
 public import SunshotCore
 import SunshotRender
 import os
 
-/// Screen and website capture (S10). A capture replaces the content as one undo step ("Capture Screenshot" /
-/// "Capture Website"), keeps the style, and stores the captured PNG as the original media. Failures never touch
+/// S16: what a capture is of.
+public enum CaptureSource: Equatable, Sendable {
+    /// Display points, top-left origin, of display `displayID`.
+    case area(LayoutRect, displayID: UInt32)
+    case window(UInt32)
+}
+
+/// S16: how a capture is copied: as captured, or with a style (the default style) applied.
+public enum CaptureCopyStyle: Equatable, Sendable {
+    case raw
+    case styled(QuickStyle?)
+}
+
+/// Screen and website capture (S10). The first capture becomes the content as one undo step ("Capture Screenshot" /
+/// "Capture Website"); with image content already open it is added as the next screenshot (S15). Keeps the style, and stores the captured PNG as the original media. Failures never touch
 /// the document: they show a message (permission problems offer System Settings).
 extension EditorModel {
     private static let captureLogger = Logger(subsystem: "app.sunshot", category: "capture")
@@ -44,6 +58,69 @@ extension EditorModel {
         guard AreaSelection.isCapturable(rect) else { return }
         let screen = capture.screen
         await runScreenCapture { try await screen.captureArea(rect, displayID: displayID) }
+    }
+
+    /// A global-shortcut capture with the clipboard destination: the captured area is written to `pasteboard` as
+    /// a PNG, ready to paste, and the document is unchanged. Returns whether it was copied; failures are reported
+    /// as for any capture. S16: `.styled` copies it with the default style applied.
+    @discardableResult
+    public func copyCapturedArea(
+        _ rect: LayoutRect, displayID: UInt32, to pasteboard: NSPasteboard, as style: CaptureCopyStyle = .raw
+    ) async -> Bool {
+        guard AreaSelection.isCapturable(rect) else { return false }
+        return await copyCaptured(.area(rect, displayID: displayID), to: pasteboard, as: style)
+    }
+
+    /// S16: captures `source` and writes it to `pasteboard` (raw or styled); the document is unchanged.
+    @discardableResult
+    public func copyCaptured(
+        _ source: CaptureSource, to pasteboard: NSPasteboard, as style: CaptureCopyStyle
+    ) async
+        -> Bool
+    {
+        guard ensureScreenCapturePermission() else { return false }
+        capture.isCapturingScreen = true
+        defer { capture.isCapturingScreen = false }
+        do {
+            let image = try await capturedImage(source)
+            let data = try await Task.detached(priority: .userInitiated) {
+                switch style {
+                case .raw: try ImageCodec.pngData(image)
+                case .styled(let quickStyle): try QuickStyleRenderer.pngData(image, style: quickStyle)
+                }
+            }.value
+            PasteboardIO.writePNG(data, to: pasteboard)
+            return true
+        } catch {
+            report(error)
+            return false
+        }
+    }
+
+    /// S16: captures `source` into the document (as File ▸ Capture Area / Window do).
+    public func capture(_ source: CaptureSource) async {
+        switch source {
+        case .area(let rect, let displayID): await captureArea(rect, displayID: displayID)
+        case .window(let id): await captureWindow(id: id)
+        }
+    }
+
+    /// S16: the windows the hover picker offers, front to back, or nil (permission help shown) when not allowed.
+    public func pickableWindows() async -> [CapturableWindow]? {
+        guard ensureScreenCapturePermission() else { return nil }
+        do {
+            return WindowPicking.candidates(try await capture.screen.windows(), excludingApp: ownAppName)
+        } catch {
+            report(error)
+            return nil
+        }
+    }
+
+    private func capturedImage(_ source: CaptureSource) async throws -> CGImage {
+        switch source {
+        case .area(let rect, let displayID): try await capture.screen.captureArea(rect, displayID: displayID)
+        case .window(let id): try await capture.screen.captureWindow(id: id)
+        }
     }
 
     private func runScreenCapture(_ operation: @escaping @Sendable () async throws -> CGImage) async {
@@ -138,7 +215,11 @@ extension EditorModel {
     /// Sets a captured image as the content (encoded to PNG off the main actor for the saved original).
     func setCaptured(_ image: CGImage, actionName: String) async {
         let data = try? await Task.detached(priority: .userInitiated) { try ImageCodec.pngData(image) }.value
-        session.setCapturedContent(image, data: data, actionName: actionName)
+        // S15: a capture over an image adds the next screenshot instead of replacing it.
+        // A web page's own margins are content, so website captures are never trimmed.
+        await addScreenshot(
+            image, data: data, replacingName: actionName,
+            trims: actionName != EditorSession.captureWebsiteActionName)
         await refreshPreview()
     }
 }

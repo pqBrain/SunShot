@@ -29,7 +29,7 @@ public struct CanvasLayout: Hashable, Sendable {
     /// so chrome grows an Auto canvas and never covers or scales the content.
     public static func compute(contentSize: PixelSize, project: Project) -> CanvasLayout {
         // S12: with a device mockup the laid-out content is the device screen cut from the content.
-        let laid = FrameGeometry.layoutBox(for: project.frame, contentSize: contentSize)
+        let laid = FrameGeometry.layoutBox(for: project, contentSize: contentSize)
         let insets = laid.insets
         let box = boxLayout((laid.width + insets.horizontal, laid.height + insets.vertical), project: project)
         let style = box.styleScale
@@ -75,12 +75,12 @@ public struct CanvasLayout: Hashable, Sendable {
         }
     }
 
-    private static func rounded(_ value: Double) -> Int { Int(value.rounded()) }
+    private static func rounded(_ value: Double) -> Int { Int(saturatingLength: value) }
 
     private static func ratioLayout(
         _ rawRatio: Double, content: (width: Double, height: Double), padded: (width: Double, height: Double)
     ) -> CanvasLayout {
-        let ratio = rawRatio.isFinite && rawRatio > 0 ? rawRatio : 1
+        let ratio = rawRatio.isFinite && rawRatio > 0 ? min(max(rawRatio, 1e-3), 1e3) : 1
         var width = padded.width
         var height = padded.width / ratio
         if height < padded.height {
@@ -94,6 +94,9 @@ public struct CanvasLayout: Hashable, Sendable {
     private static func fitted(
         _ content: (width: Double, height: Double), padded: (width: Double, height: Double), in canvas: PixelSize
     ) -> CanvasLayout {
+        // Exact and custom sizes come straight from the document: cap them like computed lengths.
+        let canvas = PixelSize(
+            width: min(canvas.width, Int.maxLayoutLength), height: min(canvas.height, Int.maxLayoutLength))
         let scale = min(Double(canvas.width) / padded.width, Double(canvas.height) / padded.height)
         return centered((content.width * scale, content.height * scale), in: canvas, styleScale: scale)
     }

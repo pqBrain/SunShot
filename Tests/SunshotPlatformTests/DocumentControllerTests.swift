@@ -213,6 +213,21 @@ extension MemoryHeavySuites {
             #expect(try DocumentPackage.read(from: url).document.project.border.radius == 77)
         }
 
+        @Test("[S7-AC19] with the close prompt turned off, unsaved untitled documents are discarded unasked")
+        func closeWithoutAsking() async throws {
+            let fixture = try ControllerFixture()
+            defer { fixture.cleanUp() }
+            let controller = fixture.controller
+            controller.settings.askToSaveOnClose = false
+            #expect(!controller.discardsWithoutAsking)
+            await controller.model.importData(try TestImages.png())
+            #expect(!controller.needsSavePrompt && controller.discardsWithoutAsking)
+            #expect(fixture.relaunch().settings.askToSaveOnClose == false)
+            await controller.close(discardChanges: controller.discardsWithoutAsking)
+            #expect(fixture.drafts.isEmpty)
+            controller.settings.askToSaveOnClose = true
+        }
+
         @Test("[S7-AC6] Open Recent: 10 most recent first, missing files alert and are removed, Clear Menu empties")
         func openRecent() async throws {
             let fixture = try ControllerFixture()

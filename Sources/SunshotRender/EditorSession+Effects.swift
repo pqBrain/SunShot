@@ -136,7 +136,7 @@ extension EditorSession {
         }
     }
 
-    private static func select(_ wallpaper: Wallpaper, in document: inout EditorDocument) {
+    static func select(_ wallpaper: Wallpaper, in document: inout EditorDocument) {
         document.project.backdrop = .image(.wallpaper(wallpaper))
         // The user image (if any) is no longer referenced; undo keeps it in the earlier state.
         let keep = document.project.backdropSettings.mediaReference?.id

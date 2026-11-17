@@ -1,54 +1,6 @@
 import AppKit
 import SunshotCore
 import SunshotPlatform
-import SwiftUI
-
-/// Inspector header: the applied theme ("No Theme", "Ocean", "Ocean (modified)"), a menu to apply or manage
-/// saved themes, and Save.
-struct ThemeHeaderView: View {
-    @Environment(DocumentController.self) private var controller
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Menu {
-                if controller.themes.isEmpty {
-                    Text(UIStrings.noSavedThemes)
-                }
-                ForEach(controller.themes) { theme in
-                    Button(theme.name) { controller.applyTheme(theme) }
-                }
-                if !controller.themes.isEmpty {
-                    Divider()
-                    Menu(UIStrings.manageThemes) {
-                        ForEach(controller.themes) { theme in
-                            Menu(theme.name) {
-                                Button(UIStrings.rename) { ThemePrompts.rename(theme, in: controller) }
-                                Button(UIStrings.duplicate) { _ = try? controller.duplicateTheme(id: theme.id) }
-                                Button(UIStrings.delete, role: .destructive) {
-                                    try? controller.deleteTheme(id: theme.id)
-                                }
-                            }
-                        }
-                    }
-                }
-            } label: {
-                Text(controller.themeHeaderTitle)
-                    .font(.headline)
-                    .lineLimit(1)
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .accessibilityLabel(UIStrings.themeAccessibility(controller.themeHeaderTitle))
-            Spacer()
-            Button(UIStrings.saveTheme) { ThemePrompts.save(in: controller) }
-                .buttonStyle(.glass)
-                .controlSize(.small)
-                .accessibilityLabel(UIStrings.saveThemeAccessibility)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 6)
-    }
-}
 
 /// Name prompts for Save and Rename (NSAlert with a text field: Return confirms, Esc cancels).
 @MainActor

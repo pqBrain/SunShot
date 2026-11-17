@@ -37,8 +37,8 @@ struct SunshotCommands: Commands {
             Divider()
             item(.startOver) { DocumentFlows.startOver(controller) }
             Divider()
-            item(.captureArea) { AreaCapture.start(model: model) }
-            item(.captureWindow) { Task { await model.loadCapturableWindows() } }
+            item(.captureArea) { AreaCapture.start(controller: controller) }
+            item(.captureWindow) { WindowCapture.start(controller: controller) }
             item(.captureWebsite) { model.capture.showsWebsiteSheet = true }
         }
         CommandGroup(after: .sidebar) {

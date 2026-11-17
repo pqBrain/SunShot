@@ -45,6 +45,11 @@ public final class LayoutState {
 
     public let library: LayoutLibrary
     var drag: PositionDrag?
+    var pinch: CanvasPinch?
+    var twist: CanvasTwist?
+    var paddingDrag: PaddingDrag?
+    var tiltDrag: TiltDrag?
+    var cornerDragStart: Double?
     var thumbnailKey: LayoutThumbnailKey?
     var pendingThumbnailKey: LayoutThumbnailKey?
     /// The running thumbnail render (await it in tests).

@@ -15,10 +15,23 @@ public struct AppSettings: Equatable, Sendable {
     public var confirmReset: Bool
     /// Template opened for new documents and Start Over: a template id (S12), or the name saved by S7.
     public var defaultTemplate: String
-    /// S10: the global Capture Area shortcut (⌥⇧⌘4) works while Sunshot is in the background. Off by default.
+    /// S10: the global Capture Area shortcut (⌥⇧⌘4 unless changed) works while Sunshot is in the background.
+    /// S16: on by default, since Sunshot keeps running in the menu bar for quick captures.
     public var captureHotkeyEnabled: Bool
+    /// S10: the keys of the global Capture Area shortcut (Settings ▸ Shortcut).
+    public var captureShortcut: GlobalShortcut
+    /// S10: what a global-shortcut capture does: open in the editor, or copy to the clipboard (S16: styled, by default).
+    public var globalCaptureDestination: GlobalCaptureDestination
     /// S12: offer the device that matches imported media (Settings ▸ Device Mockups).
     public var suggestDevice: Bool
+    /// S7: the first image of a document with the default backdrop gets an auto background made from its colours.
+    public var autoBackdropOnImport: Bool
+    /// Closing a never-saved document with content asks "Save changes?". Off: it is discarded without asking.
+    public var askToSaveOnClose: Bool
+    /// S16: Sunshot shows an icon in the menu bar and keeps running there after its window closes.
+    public var showsMenuBarIcon: Bool
+    /// S16: a capture opened in the studio starts in Annotate mode.
+    public var annotateOnOpen: Bool
 
     public static let screenshotTemplate = "Screenshot"
     public static let defaults = AppSettings()
@@ -26,9 +39,18 @@ public struct AppSettings: Equatable, Sendable {
     public init(
         appearance: AppearanceSetting = .system, filenameTemplate: String = SunshotDefaults.filenameTemplate,
         exportFolder: URL? = nil, confirmReset: Bool = true, defaultTemplate: String = AppSettings.screenshotTemplate,
-        captureHotkeyEnabled: Bool = false, suggestDevice: Bool = true
+        captureHotkeyEnabled: Bool = true, captureShortcut: GlobalShortcut = .default,
+        globalCaptureDestination: GlobalCaptureDestination = .styledClipboard, suggestDevice: Bool = true,
+        autoBackdropOnImport: Bool = true, askToSaveOnClose: Bool = true, showsMenuBarIcon: Bool = true,
+        annotateOnOpen: Bool = true
     ) {
+        self.showsMenuBarIcon = showsMenuBarIcon
+        self.annotateOnOpen = annotateOnOpen
+        self.askToSaveOnClose = askToSaveOnClose
+        self.autoBackdropOnImport = autoBackdropOnImport
         self.captureHotkeyEnabled = captureHotkeyEnabled
+        self.captureShortcut = captureShortcut
+        self.globalCaptureDestination = globalCaptureDestination
         self.appearance = appearance
         self.filenameTemplate = filenameTemplate
         self.exportFolder = exportFolder

@@ -66,6 +66,7 @@ extension EditorSession {
         editProject(name) { project in
             project.frame.device = selection
             project.frame.kind = .none
+            project.collage = nil  // S15: a device and a screenshot layout are mutually exclusive.
         }
     }
 
