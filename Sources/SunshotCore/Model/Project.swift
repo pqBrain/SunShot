@@ -51,6 +51,9 @@ public struct Project: Codable, Hashable, Sendable {
     public var shadow: Shadow
     /// Format and scale chosen in the export options.
     public var export: ExportOptions
+    /// Annotations (S9). Optional so documents without the key decode and a document without annotations encodes
+    /// exactly as before; read and write it through `annotations`.
+    public var annotationLayer: AnnotationLayer?
 
     public init(
         canvas: CanvasSpec = .auto,

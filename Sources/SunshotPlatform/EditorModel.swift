@@ -33,6 +33,8 @@ public final class EditorModel {
     /// Whether the style inspector panel is visible.
     public var showsInspector = true
     public var notice: String?
+    /// Annotate mode state (S9).
+    public let annotate = AnnotationEditor()
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
     private var renderGeneration = 0

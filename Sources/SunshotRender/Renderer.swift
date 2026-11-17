@@ -105,9 +105,10 @@ public enum Renderer {
         context.addPath(shape)
         context.clip()
         // Images draw bottom-up; undo the flip locally so content is not mirrored.
-        context.translateBy(x: 0, y: target.minY + target.maxY)
-        context.scaleBy(x: 1, y: -1)
-        context.draw(image, in: target)
+        // Redaction (S9) replaces content pixels first; annotations are drawn in content pixels, inside the clip.
+        RedactionRenderer.drawImage(
+            RedactionRenderer.apply(project.annotations, to: image), in: target, context: context)
+        AnnotationRenderer.draw(project.annotations, in: context)
         context.restoreGState()
         if metrics.opacity > 0 { context.endTransparencyLayer() }
         context.restoreGState()

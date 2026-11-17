@@ -49,10 +49,11 @@ struct SunshotCommands: Commands {
             Button(UIStrings.paste) { Task { await model.paste(from: .general) } }
                 .keyboardShortcut("v")
             Divider()
-            Button(UIStrings.clearContent) { Task { await model.clearContent() } }
+            Button(model.clearCommandTitle) { Task { await model.clearCommand() } }
                 .keyboardShortcut(.delete, modifiers: [.command])
-                .disabled(!model.hasContent)
+                .disabled(!model.canClear)
         }
+        AnnotateCommands(model: model)
     }
 }
 

@@ -117,3 +117,47 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 - **Known limitation:** a small image exported at 4K/6K with a strong shadow is slow (200×120 content at 6K with
   spread/high: ~4.7 s), because the shadow blur grows with the scale (~750 px). It runs off the main thread;
   rendering the shadow at reduced resolution is the fix if it matters in practice.
+
+## S9 implementation notes (2026-11-17)
+- **Coordinates are content pixels** (origin at the top-left of the unscaled content image, y down), not normalised:
+  stroke widths, font sizes and arrow heads keep one meaning, and annotations stay on the same content pixels when
+  padding, canvas size or exact-size scaling change (`ContentMapping` converts preview points ↔ content pixels and is
+  unit-tested). Replacing the content image keeps annotations at their pixel positions.
+- **Stored in `Project.annotationLayer: AnnotationLayer?`** (read/write through `Project.annotations`). Optional so
+  synthesized decoding treats a missing key as "none" and a document without annotations encodes exactly as before;
+  setting an empty layer stores nil, so a cleared document equals an untouched one. Decoding is tolerant: an
+  annotation with an unknown kind or too few points is skipped, any other missing field takes its default.
+- **One flat `Annotation` value type** (kind, points, colour, line width, line style, fill, rotation, text, font size,
+  alignment, redaction mode). Geometry is always `points`: the path (pen/highlighter), `[start, end]` (arrow) or two
+  corners (rectangle, text, step, redaction, sticker). Rotation is in degrees about the bounds centre; hit-testing,
+  handles and resizing work in the unrotated frame, and resizing a rotated object keeps the opposite corner fixed.
+- **Drawn inside the content's clip**, after the content image, in `Renderer.drawContent` (so S6's content transform
+  will carry annotations along). The reference lets annotations span the whole canvas; Sunshot keeps them on the
+  content for now (callouts on the padding are a possible later extension).
+- **Redaction rewrites the content pixels before the content is drawn** (`RedactionRenderer.apply`), instead of
+  painting over them: inside each region every pixel is replaced (blend mode copy) with the average of its block
+  (pixelate: blocks of max(8, 2 × line width) content px, drawn without interpolation; blur: blocks twice that size,
+  drawn with smooth interpolation). Original values never reach the preview or export, also on translucent content
+  (an overlay would let them show through). Consequence: redactions sit under all other annotations whatever their
+  z-order, and don't redact other annotations.
+- **Sizes S/M/L** are 3/6/12 content px for content up to 1000 px on its long edge and grow linearly above that, so a
+  stroke looks the same on a retina screenshot. Highlighter = 3× width at 45 % alpha with multiply blend; text font =
+  4× width; step diameter = 6× width + 12; sticker = 12× width; arrow head = max(10, 4× width).
+- **Step numbers are not stored**: a step's label is its position among the steps (back to front), so deleting step 2
+  renumbers the rest. Numbers or letters is a document setting (`AnnotationLayer.stepFormat`).
+- **Text** is laid out by CoreText with the system font (S5's font tokens can replace it later); its box is an
+  estimate (0.6 em per character, 1.25 line height) used for hit-testing and selection.
+- **Emoji stickers** are drawn as text with the system font's colour-emoji fallback (no bitmap assets). The picker
+  offers 24 emoji; the tool has no single-letter key (⌥⌘S opens the picker).
+- **Selection is editor state** (`AnnotationEditor` in SunshotPlatform), never an undo entry; ids that undo removed
+  are dropped on read. Every document change is one undo entry per gesture (`beginGesture` → live `setAnnotations` →
+  `endGesture`; a click that moves nothing records nothing). Style changes with a selection apply to it as one entry.
+- **Shortcuts:** single-letter tool keys, `[` `]`, ⇧1–3, F, ⌫ and Esc are handled by the focused annotation overlay
+  (`onKeyPress`), not by menu key equivalents, so they never steal typing from text fields. The Annotate menu lists
+  every tool and binds only ⌘ shortcuts: ⇧⌘A (mode), ⌘D (duplicate), ⌥⌘S (stickers). ⌘⌫ reads "Clear Annotations"
+  in Annotate mode and "Clear Content" otherwise.
+- **Multi-selection** supports move, duplicate, delete and restyle; resize/rotate handles appear for a single object.
+  Arrows show endpoint handles instead of corners.
+- **Live drawing goes through the shared renderer** (each pointer move updates the document and re-renders the preview
+  off-main, stale frames dropped); the overlay draws only selection chrome. Not measured on a 4K image yet under the
+  current machine load — listed as a manual check (S9-AC20).
