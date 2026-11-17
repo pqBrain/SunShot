@@ -30,16 +30,19 @@ public struct EditorDocument: Equatable, Sendable {
     public var theme: Theme?
     /// Code-snippet content (S11); when set it is the content and `content` is nil.
     public var snippet: CodeSnippet?
+    /// Video content (S13); it is the content while `content` is its first frame (see `activeVideo`).
+    public var video: VideoContent?
 
     public init(
         project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:],
-        theme: Theme? = nil, snippet: CodeSnippet? = nil
+        theme: Theme? = nil, snippet: CodeSnippet? = nil, video: VideoContent? = nil
     ) {
         self.project = project
         self.content = content
         self.media = media
         self.theme = theme
         self.snippet = snippet
+        self.video = video
     }
 }
 

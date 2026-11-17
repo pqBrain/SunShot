@@ -59,6 +59,9 @@ public struct Project: Codable, Hashable, Sendable {
     public var annotationLayer: AnnotationLayer?
     /// S6: content position, zoom, rotation and tilt, plus the applied layout preset. Identity by default.
     public var placement = ContentPlacement()
+    /// S13: animation timeline. Optional so a document that never used Animate encodes exactly as before; read and
+    /// write it through `timeline`.
+    public var animation: AnimationTimeline?
 
     public init(
         canvas: CanvasSpec = .auto,

@@ -39,6 +39,8 @@ public final class EditorModel {
     public let annotate = AnnotationEditor()
     /// S6: layout thumbnails, preset animation and position-drag guides.
     public let layout = LayoutState()
+    /// S13: Animate mode, playback and video export.
+    public let animate = AnimateState()
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
     var renderGeneration = 0
@@ -106,6 +108,10 @@ public final class EditorModel {
     @discardableResult
     public func importDroppedFiles(_ urls: [URL]) async -> Bool {
         if let bulkDropHandler, isBatchDrop(urls) { return await bulkDropHandler(urls) }
+        if !urls.contains(where: isSupportedImageFile), let video = urls.first(where: VideoLoader.isVideoFile) {
+            await importVideo(at: video)
+            return true
+        }
         guard let first = urls.first(where: isSupportedImageFile) else { return false }
         if urls.count > 1 { notice = Self.multipleFilesNotice }
         await importFile(at: first)

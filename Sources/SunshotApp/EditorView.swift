@@ -24,6 +24,8 @@ struct EditorView: View {
         }
         .animation(.smooth(duration: 0.3), value: model.showsInspector)
         .task(id: colorScheme) { await model.setDarkAppearance(colorScheme == .dark)?.value }
+        .task(id: model.animationFrameRequest) { if !model.animate.isPlaying { await model.renderAnimationFrame() } }
+        .sheet(isPresented: Bindable(model.animate).showsExportSheet) { VideoExportSheet(model: model) }
         .containerBackground(.ultraThinMaterial, for: .window)
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .toolbar(removing: .title)
@@ -42,7 +44,7 @@ struct EditorView: View {
 
     private var previewArea: some View {
         ZStack {
-            if let preview = model.preview, model.hasContent {
+            if let preview = model.displayedPreview, model.hasContent {
                 CanvasPreview(image: preview, accessibilityLabel: model.previewAccessibilityLabel, model: model)
             } else {
                 EmptyStateView(isTargeted: isDropTargeted) {
@@ -63,6 +65,8 @@ struct EditorView: View {
             if model.hasContent {
                 if model.annotate.isActive {
                     AnnotationPalette(model: model).padding(.bottom, 16)
+                } else if model.animate.isActive {
+                    AnimateTimelineView(model: model)
                 } else {
                     BottomToolbar(model: model)
                 }
@@ -202,6 +206,14 @@ struct EditorToolbar: ToolbarContent {
             .help(UIStrings.annotateAccessibility)
             .accessibilityLabel(UIStrings.annotateAccessibility)
             .disabled(!model.canAnnotate)
+            Button {
+                model.toggleAnimateMode()
+            } label: {
+                Label(UIStrings.animate, systemImage: "film.stack")
+            }
+            .help(UIStrings.animateAccessibility)
+            .accessibilityLabel(UIStrings.animateAccessibility)
+            .disabled(!model.canAnimate)
         }
         ToolbarSpacer(.fixed, placement: .primaryAction)
         ToolbarItemGroup(placement: .primaryAction) {

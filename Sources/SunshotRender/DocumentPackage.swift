@@ -36,6 +36,11 @@ public enum DocumentPackage {
             entries.append(MediaEntry(id: id, path: path))
             contentEntry = ContentEntry(mediaID: id, pixelSize: content.pixelSize)
         }
+        let video = try videoFile(for: document)
+        if let video {
+            files[video.media.path] = video.data
+            entries.append(video.media)
+        }
         for (id, asset) in document.media.sorted(by: { $0.key < $1.key }) {
             let data = asset.data.isEmpty ? try ImageCodec.pngData(asset.image) : asset.data
             var path = DocumentManifestCodec.mediaPath(id: id, fileExtension: fileExtension(for: data))
@@ -47,7 +52,7 @@ public enum DocumentPackage {
         }
         let manifest = DocumentManifest(
             project: document.project, content: contentEntry, media: entries, theme: document.theme,
-            snippet: document.snippet)
+            snippet: document.snippet, video: video?.entry)
         return (manifest, files)
     }
 
@@ -98,7 +103,7 @@ public enum DocumentPackage {
 
         var loaded: [String: (data: Data, image: CGImage)] = [:]
         var missing: [String] = []
-        for entry in manifest.media {
+        for entry in manifest.media where entry.id != manifest.video?.mediaID {
             let file = try contained(entry.path, in: root)
             if let data = try? Data(contentsOf: file), !data.isEmpty, let image = try? ImageLoader.load(data) {
                 loaded[entry.id] = (data, image)
@@ -117,6 +122,7 @@ public enum DocumentPackage {
                 document.content = ContentImage(try placeholder(size: content.pixelSize), id: id)
             }
         }
+        missing += try readVideo(manifest, root: root, into: &document, allowPlaceholders: allowPlaceholders)
         for entry in manifest.media where entry.id != manifest.content?.mediaID {
             guard let file = loaded[entry.id] else { continue }
             let reference = MediaReference(

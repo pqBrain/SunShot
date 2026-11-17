@@ -21,12 +21,16 @@ public struct DocumentManifest: Codable, Hashable, Sendable {
     public var theme: Theme?
     /// Code-snippet content (S11), stored inline; nil for image or empty documents.
     public var snippet: CodeSnippet?
+    /// Video content (S13): which media file is the movie. Nil for image, snippet or empty documents.
+    public var video: VideoEntry?
 
     public init(
         schemaVersion: Int = DocumentManifest.currentSchemaVersion, project: Project = Project(),
-        content: ContentEntry? = nil, media: [MediaEntry] = [], theme: Theme? = nil, snippet: CodeSnippet? = nil
+        content: ContentEntry? = nil, media: [MediaEntry] = [], theme: Theme? = nil, snippet: CodeSnippet? = nil,
+        video: VideoEntry? = nil
     ) {
         self.snippet = snippet
+        self.video = video
         self.schemaVersion = schemaVersion
         self.project = project
         self.content = content

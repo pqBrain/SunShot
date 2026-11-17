@@ -5,6 +5,7 @@ public enum MenuCommand: String, CaseIterable, Sendable {
     case new, newCodeSnippet, open, importMultiple, openRecent, close, save, saveAs, exportImage, exportAll, startOver
     case undo, redo, cut, copy, paste, selectAll, clearContent
     case toggleInspector, enterFullScreen
+    case importVideo, exportVideo, animate
     case minimize, zoom
     case help
 }
@@ -84,6 +85,8 @@ public enum MenuCatalog {
                 MenuItemSpec(.saveAs, "Save As…", KeyShortcut("s", [.command, .shift])),
                 MenuItemSpec(.exportImage, "Export Image…", KeyShortcut("e", [.command, .shift])),
                 MenuItemSpec(.exportAll, "Export All…", KeyShortcut("e", [.command, .option, .shift])),
+                MenuItemSpec(.importVideo, "Import Video…", KeyShortcut("i", [.command, .option])),
+                MenuItemSpec(.exportVideo, "Export Video…", KeyShortcut("e", [.command, .control])),
                 MenuItemSpec(.startOver, "Start Over"),
             ]),
         MenuSpec(
@@ -101,6 +104,7 @@ public enum MenuCatalog {
             title: "View",
             items: [
                 MenuItemSpec(.toggleInspector, "Show/Hide Inspector", KeyShortcut("e", [.command, .option])),
+                MenuItemSpec(.animate, "Animate", KeyShortcut("m", [.command, .shift])),
                 MenuItemSpec(
                     .enterFullScreen, "Enter Full Screen", KeyShortcut("f", [.command, .control]), system: true),
             ]),

@@ -15,6 +15,7 @@ struct SunshotCommands: Commands {
             item(.new) { Task { await DocumentFlows.newDocument(controller) } }
             item(.newCodeSnippet) { model.newCodeSnippet() }
             item(.open) { Task { await DocumentFlows.open(controller) } }
+            item(.importVideo) { Task { await VideoPanels.importVideo(into: model) } }
             Menu(MenuCatalog.title(.openRecent)) {
                 ForEach(controller.recents.items) { recent in
                     Button(recent.name) { Task { await DocumentFlows.openRecent(recent, in: controller) } }
@@ -31,11 +32,13 @@ struct SunshotCommands: Commands {
         }
         CommandGroup(replacing: .importExport) {
             item(.exportImage) { Task { await DocumentFlows.export(controller) } }
+            item(.exportVideo) { model.animate.showsExportSheet = true }
             Divider()
             item(.startOver) { DocumentFlows.startOver(controller) }
         }
         CommandGroup(after: .sidebar) {
             item(.toggleInspector) { model.showsInspector.toggle() }
+            item(.animate) { model.toggleAnimateMode() }
         }
         CommandGroup(replacing: .undoRedo) {
             item(.undo) { Task { await model.undo() } }
