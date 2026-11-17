@@ -21,16 +21,16 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 | S2 | Border & shadow | In progress | §9.2, §9.3 |
 | S3 | Backdrop basics: none / solid / gradient / image | In progress | §9.1 (type selector), §9.1 gradient editor |
 | S4 | Canvas size & export options | In progress | §4, §10.1, §15 (filename) |
-| S5 | Frames & colour tokens | Planned | §5, §9.4, §9.5 |
-| S6 | Position, tilt & layout presets | Planned | §6, §7.1 |
-| S7 | Documents, themes, settings & menus | Planned | §2.3 drafts/cleanup, §9 Save theme, §15, §16 |
-| S8 | Backdrop effects & auto backgrounds | Planned | §9.1 effects/pattern/vignette/overlay/auto |
-| S9 | Annotate | Planned | §7.2 |
+| S5 | Frames & colour tokens | In progress | §5, §9.4, §9.5 |
+| S6 | Position, tilt & layout presets | In progress | §6, §7.1 |
+| S7 | Documents, themes, settings & menus | In progress | §2.3 drafts/cleanup, §9 Save theme, §15, §16 |
+| S8 | Backdrop effects & auto backgrounds | In progress | §9.1 effects/pattern/vignette/overlay/auto |
+| S9 | Annotate | In progress | §7.2 |
 | S10 | Crop & capture (screen, website URL) | Planned | §3.2, §3.3 |
-| S11 | Code snippet template | Planned | §12 (Code Snippet) |
+| S11 | Code snippet template | In progress | §12 (Code Snippet) |
 | S12 | Device mockups & template gallery | Planned | §3.4, §12 (Device), §13 |
 | S13 | Animate & video export | Planned | §7.3, §8, §10.2 |
-| S14 | Bulk edit & batch export | Planned | §11 |
+| S14 | Bulk edit & batch export | In progress | §11 |
 
 **MVP = S1–S7** (a complete, saveable, still-image beautifier).
 

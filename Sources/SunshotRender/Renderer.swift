@@ -99,21 +99,16 @@ public enum Renderer {
         guard rect.width > 0, rect.height > 0 else { return }
         // Work in unscaled content units: the radius and shadow keep their 1× meaning.
         let target = CGRect(x: 0, y: 0, width: rect.width / style, height: rect.height / style)
-        let metrics = ShadowMetrics.of(project.shadow).scaled(by: scale * style)
-
-        context.saveGState()
-        context.translateBy(x: rect.x, y: rect.y)
-        context.scaleBy(x: style, y: style)
-        if metrics.opacity > 0 {
-            // Shadow offsets are in device space (y up), unaffected by our flipped CTM: negate y to fall down.
-            context.setShadow(
-                offset: CGSize(width: metrics.offsetX, height: -metrics.offsetY), blur: metrics.blur,
-                color: CGColor(gray: 0, alpha: metrics.opacity))
-            context.beginTransparencyLayer(auxiliaryInfo: nil)
+        // S6: the content transform wraps the whole silhouette — S5 frame chrome, content and S9 annotations —
+        // so a framed window moves, rotates and tilts as one object around the frame box's centre.
+        let silhouette = CanvasLayout(
+            canvasSize: layout.canvasSize, contentRect: layout.frameRect, styleScale: layout.styleScale)
+        ContentTransformRenderer.draw(
+            transform: project.placement.transform, layout: silhouette, shadow: ShadowMetrics.of(project.shadow),
+            scale: scale, bounds: target, in: context
+        ) { context in
+            FrameRenderer.draw(image, project: project, in: target, context: context)
         }
-        FrameRenderer.draw(image, project: project, in: target, context: context)
-        if metrics.opacity > 0 { context.endTransparencyLayer() }
-        context.restoreGState()
     }
 }
 

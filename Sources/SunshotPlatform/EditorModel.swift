@@ -26,7 +26,7 @@ public final class EditorModel {
     public static let defaultProgressDelay: Duration = .milliseconds(250)
 
     public internal(set) var session = EditorSession()
-    public private(set) var preview: CGImage?
+    public internal(set) var preview: CGImage?
     public private(set) var isImporting = false
     public private(set) var showsProgress = false
     public var alert: AlertContent?
@@ -37,9 +37,11 @@ public final class EditorModel {
     public var filenameTemplate = SunshotDefaults.filenameTemplate
     /// Annotate mode state (S9).
     public let annotate = AnnotationEditor()
+    /// S6: layout thumbnails, preset animation and position-drag guides.
+    public let layout = LayoutState()
     /// Dark appearance picks the dark checkerboard behind transparent backdrops (preview only).
     public private(set) var isDarkAppearance = false
-    private var renderGeneration = 0
+    var renderGeneration = 0
     private let progressDelay: Duration
     /// An open colour-panel edit: merged into one undo step once the colour stops changing.
     var pendingContinuousEdit: (name: String, task: Task<Void, Never>)?
@@ -201,6 +203,7 @@ public final class EditorModel {
 
     /// Re-renders the preview through the same renderer as export. Stale renders are discarded.
     public func refreshPreview() async {
+        scheduleLayoutThumbnails()
         renderGeneration += 1
         let generation = renderGeneration
         let document = session.document

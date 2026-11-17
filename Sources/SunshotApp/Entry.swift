@@ -39,6 +39,16 @@ enum SmokeTest {
             let canvasPresets = try CanvasPresetCatalog.load()
             guard !canvasPresets.presets.isEmpty else { throw CanvasPresetCatalogError.invalid("no canvas presets") }
             FileHandle.standardOutput.write(Data("smoke-test canvas presets \(canvasPresets.presets.count)\n".utf8))
+            // S6: layout presets must load, and a tilted layout must render (CoreImage inside the sandbox).
+            let layouts = try LayoutPresetCatalog.load().presets
+            guard let tilted = layouts.first(where: { !$0.transform.isFlat }) else {
+                throw LayoutPresetCatalogError.invalid("no tilted layout")
+            }
+            let sample = EditorDocument(content: ContentImage(try SampleContent.image()))
+            guard try LayoutThumbnails.render(document: sample, presets: [tilted])[tilted.id] != nil else {
+                throw RenderError.imageCreationFailed
+            }
+            FileHandle.standardOutput.write(Data("smoke-test layout presets \(layouts.count)\n".utf8))
             var session = EditorSession()
             session.setContent(try SampleContent.image())
             guard let image = try session.render(scale: 2) else { throw RenderError.noContent }

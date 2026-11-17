@@ -57,6 +57,8 @@ public struct Project: Codable, Hashable, Sendable {
     /// Annotations (S9). Optional so documents without the key decode and a document without annotations encodes
     /// exactly as before; read and write it through `annotations`.
     public var annotationLayer: AnnotationLayer?
+    /// S6: content position, zoom, rotation and tilt, plus the applied layout preset. Identity by default.
+    public var placement = ContentPlacement()
 
     public init(
         canvas: CanvasSpec = .auto,

@@ -12,7 +12,11 @@ public enum AnnotateKey: Equatable, Sendable {
 /// Annotate mode (S9): entering/leaving, tools and style, pointer handling and selection commands.
 /// Views pass view-space points of the displayed canvas; all maths lives in `ContentMapping` / `AnnotationInteraction`.
 extension EditorModel {
-    public var canAnnotate: Bool { hasContent }
+    /// Annotating needs image content shown flat: pointer mapping (S9 `ContentMapping`) doesn't yet invert the S6
+    /// position / zoom / rotation / tilt, and code snippets (S11) are drawn at output density (see DECISIONS, integration notes).
+    public var canAnnotate: Bool {
+        session.document.content != nil && session.document.project.placement.transform.isIdentity
+    }
 
     public var hasAnnotations: Bool { !session.annotations.isEmpty }
 

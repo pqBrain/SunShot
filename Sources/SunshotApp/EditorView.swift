@@ -11,6 +11,7 @@ struct EditorView: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            LayoutSidebar(model: model).frame(width: 168).padding([.top, .bottom, .leading], 12)
             canvasArea
             if model.showsInspector {
                 InspectorView(model: model)
@@ -59,7 +60,13 @@ struct EditorView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
         .overlay(alignment: .bottom) {
-            if model.annotate.isActive, model.hasContent { AnnotationPalette(model: model).padding(.bottom, 16) }
+            if model.hasContent {
+                if model.annotate.isActive {
+                    AnnotationPalette(model: model).padding(.bottom, 16)
+                } else {
+                    BottomToolbar(model: model)
+                }
+            }
         }
         .dropDestination(for: URL.self) { urls, _ in
             guard model.canAcceptDrop(urls) else { return false }

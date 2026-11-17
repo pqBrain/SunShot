@@ -15,8 +15,8 @@ public final class BulkSession {
     /// Items that couldn't be read, with the reason (shown as an error badge, never an alert).
     public private(set) var itemErrors: [UUID: String] = [:]
     public internal(set) var exportState: BulkExportState = .idle
-    /// The export file-name template (S4's; S7 settings may make it editable).
-    public var exportTemplate = SunshotDefaults.filenameTemplate
+    /// The export file-name template: the editor's, which follows Settings ▸ Filename format (S7).
+    public var exportTemplate: String { editor.filenameTemplate }
     @ObservationIgnored private var proxies: [UUID: BulkProxy] = [:]
     @ObservationIgnored private var thumbnailGeneration = 0
     @ObservationIgnored private var selectionGeneration = 0
