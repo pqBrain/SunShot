@@ -45,6 +45,13 @@ extension DocumentController {
 
     public var hasQuickStyle: Bool { quickStyle != nil }
 
+    /// Whether the open document's style and layout are exactly the saved default (the inspector's Set as Default
+    /// button then shows as done).
+    public var isCurrentStyleDefault: Bool {
+        guard let quickStyle else { return false }
+        return QuickStyle(project: model.project, savedAt: quickStyle.savedAt) == quickStyle
+    }
+
     /// Saves the current style and layout as the default (Format ▸ Save as Default Style). Not an undoable document
     /// edit: it is a preference, like Settings.
     public func saveQuickStyle(now: Date = Date()) {

@@ -78,13 +78,17 @@ public struct EditorSession: Sendable {
     /// Sets (or replaces) the content image as one undoable step. With `autoBackdrop`, the first image of a
     /// document whose backdrop is still untouched also gets the first auto background of its colours (S7), in the
     /// same undo step.
-    public mutating func setContent(_ image: CGImage, data: Data? = nil, autoBackdrop: Bool = false) {
+    /// S16: `plainFrame` (a macOS screenshot, which has its own window chrome) sets the frame to None in the same step.
+    public mutating func setContent(
+        _ image: CGImage, data: Data? = nil, autoBackdrop: Bool = false, plainFrame: Bool = false
+    ) {
         let first = !hasContent
         let name = first ? Self.importActionName : Self.replaceActionName
         history.apply(name) {
             $0.content = ContentImage(image, data: data)
             $0.snippet = nil
             $0.crop = nil
+            if plainFrame { $0.project.frame.kind = .none }
             if autoBackdrop && first && $0.project.hasUntouchedBackdrop {
                 let palette = ContentPalette.extract(from: image)
                 let shuffle = $0.project.backdropSettings.autoShuffle

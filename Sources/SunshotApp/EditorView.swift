@@ -7,6 +7,7 @@ struct EditorView: View {
     @Bindable var model: EditorModel
     @Environment(DocumentController.self) private var controller
     @State private var isDropTargeted = false
+    @State private var previewAreaSize = CGSize.zero
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.displayScale) private var displayScale
 
@@ -17,7 +18,7 @@ struct EditorView: View {
             if model.showsInspector {
                 InspectorView(model: model)
                     .fixedSize(horizontal: false, vertical: !model.isInspectorEnabled)
-                    .frame(width: 292)
+                    .frame(width: InspectorView.width)
                     .frame(maxHeight: .infinity, alignment: .top)
                     .padding([.top, .bottom, .trailing], 12)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -67,18 +68,17 @@ struct EditorView: View {
         .onGeometryChange(for: CGSize.self) {
             $0.size
         } action: { size in
-            // S6: render the preview at the size it can be shown (CanvasPreview's insets taken off).
-            let insets = CanvasPreview.insets
-            model.setPreviewDisplay(
-                width: (size.width - insets.leading - insets.trailing) * displayScale,
-                height: (size.height - insets.top - insets.bottom) * displayScale)
+            previewAreaSize = size
+            updatePreviewDisplay()
         }
+        .onChange(of: model.showsAnnotationBar) { updatePreviewDisplay() }
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
+        .overlay(alignment: .top) {
+            if model.showsAnnotationBar { AnnotationPalette(model: model).padding(.top, 10) }
+        }
         .overlay(alignment: .bottom) {
-            if model.hasContent {
-                if model.annotate.isActive {
-                    AnnotationPalette(model: model).padding(.bottom, 16)
-                } else if model.animate.isActive {
+            if model.hasContent, !model.annotate.isActive {
+                if model.animate.isActive {
                     AnimateTimelineView(model: model)
                 } else {
                     BottomToolbar(model: model)
@@ -94,6 +94,14 @@ struct EditorView: View {
         }
     }
 
+    /// S6: render the preview at the size it can be shown (CanvasPreview's insets taken off).
+    private func updatePreviewDisplay() {
+        let insets = CanvasPreview.insets(annotationBar: model.showsAnnotationBar)
+        model.setPreviewDisplay(
+            width: (previewAreaSize.width - insets.leading - insets.trailing) * displayScale,
+            height: (previewAreaSize.height - insets.top - insets.bottom) * displayScale)
+    }
+
     private var alertBinding: Binding<Bool> {
         Binding(get: { model.alert != nil }, set: { if !$0 { model.alert = nil } })
     }
@@ -102,8 +110,11 @@ struct EditorView: View {
 /// The rendered canvas, fitted to the space (S6: rendered at that size, so it fills the editor sharply). The
 /// screenshot can be dragged, pinched and twisted in place; clicks reveal the matching inspector section.
 struct CanvasPreview: View {
-    /// Room around the canvas; the bottom leaves space for the floating Position / Crop bar.
-    static let insets = EdgeInsets(top: 36, leading: 36, bottom: 76, trailing: 36)
+    /// Room around the canvas; the bottom leaves space for the floating Position / Crop bar, the top for the
+    /// annotation bar when it shows.
+    static func insets(annotationBar: Bool) -> EdgeInsets {
+        EdgeInsets(top: annotationBar ? 72 : 36, leading: 36, bottom: 76, trailing: 36)
+    }
 
     let image: CGImage
     let accessibilityLabel: String
@@ -128,7 +139,7 @@ struct CanvasPreview: View {
             .accessibilityValue(model.previewAccessibilityValue)
             .accessibilityAddTraits(.isImage)
             .overlay { if model.annotate.isActive { AnnotationOverlay(model: model) } }
-            .padding(Self.insets)
+            .padding(Self.insets(annotationBar: model.showsAnnotationBar))
     }
 }
 

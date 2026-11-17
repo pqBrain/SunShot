@@ -4,9 +4,15 @@ public import UniformTypeIdentifiers
 
 /// Reads images from and writes PNGs to a pasteboard (the general one in the app, a private one in tests).
 public enum PasteboardIO {
-    /// Image bytes on the pasteboard: PNG, then TIFF, then the first image file URL.
+    /// S16: the unstyled capture Sunshot puts beside a styled copy, so pasting it into the studio doesn't add a
+    /// second backdrop around the first. Other apps only see the styled PNG.
+    public static let originalCaptureType = NSPasteboard.PasteboardType("app.sunshot.original-capture")
+
+    /// Image bytes on the pasteboard: Sunshot's original capture, then PNG, then TIFF, then the first image file.
     public static func imageData(from pasteboard: NSPasteboard) -> Data? {
-        if let data = pasteboard.data(forType: .png) ?? pasteboard.data(forType: .tiff) {
+        if let data = pasteboard.data(forType: originalCaptureType) ?? pasteboard.data(forType: .png)
+            ?? pasteboard.data(forType: .tiff)
+        {
             return data
         }
         guard let url = imageFileURL(on: pasteboard) else { return nil }
@@ -21,6 +27,15 @@ public enum PasteboardIO {
     public static func writePNG(_ data: Data, to pasteboard: NSPasteboard) {
         pasteboard.clearContents()
         pasteboard.setData(data, forType: .png)
+    }
+
+    /// S16: a styled copy: the styled PNG for every app, plus the original capture for Sunshot's own paste.
+    public static func writeStyled(_ styled: Data, original: Data, to pasteboard: NSPasteboard) {
+        pasteboard.clearContents()
+        let item = NSPasteboardItem()
+        item.setData(styled, forType: .png)
+        item.setData(original, forType: originalCaptureType)
+        pasteboard.writeObjects([item])
     }
 
     private static func imageFileURL(on pasteboard: NSPasteboard) -> URL? {

@@ -51,9 +51,9 @@ struct EffectButton<Content: View>: View {
         } label: {
             VStack(spacing: 3) {
                 Image(systemName: systemImage)
-                Text(title).font(.caption2)
+                Text(title).font(.caption2).lineLimit(1).minimumScaleFactor(0.7)
             }
-            .frame(maxWidth: .infinity)
+            .frame(minWidth: 0, maxWidth: .infinity)
             .padding(.vertical, 2)
             .overlay(alignment: .topTrailing) {
                 if isOn {
@@ -62,6 +62,8 @@ struct EffectButton<Content: View>: View {
             }
         }
         .buttonStyle(.glass)
+        .buttonBorderShape(.roundedRectangle(radius: 10))
+        .controlSize(.small)
         .help(title)
         .popover(isPresented: $isPresented, arrowEdge: .bottom) {
             content().padding(16).frame(width: 300)

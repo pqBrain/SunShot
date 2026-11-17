@@ -145,6 +145,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     lazy var bulk = BulkSession(editor: controller.model)
     /// S10: optional global Capture Area shortcut (off by default).
     let hotkey = GlobalCaptureHotkey()
+    /// S16: restyles macOS screenshots copied to the clipboard (Settings ▸ Style macOS screenshots).
+    lazy var screenshotStyler: SystemScreenshotStyler = {
+        let styler = SystemScreenshotStyler { [controller] in controller.effectiveQuickStyle }
+        styler.onStyled = { CaptureToast.show(UIStrings.systemScreenshotStyled) }
+        return styler
+    }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller.settings.appearance.apply(to: NSApplication.shared)
@@ -182,6 +188,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotkey.configure(settings.captureHotkeyEnabled ? settings.captureShortcut : nil) {
             AreaCapture.start(controller: controller, destination: controller.settings.globalCaptureDestination)
         }
+        screenshotStyler.setRunning(settings.styleSystemScreenshots)
         // Hiding the icon while the window is closed would leave no way back: bring the studio forward.
         if !settings.showsMenuBarIcon, !NSApp.windows.contains(where: Studio.isStudio),
             NSApp.activationPolicy() == .accessory

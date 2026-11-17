@@ -50,6 +50,10 @@ struct SettingsView: View {
                 }
                 GlobalCaptureSettings(controller: controller, hotkey: hotkey)
                 DefaultStyleSetting(controller: controller)
+                Toggle(isOn: $controller.settings.styleSystemScreenshots) {
+                    Text(UIStrings.styleSystemScreenshotsSetting)
+                    Text(UIStrings.styleSystemScreenshotsHint)
+                }
                 Toggle(isOn: $controller.settings.annotateOnOpen) {
                     Text(UIStrings.annotateOnOpenSetting)
                     Text(UIStrings.annotateOnOpenHint)

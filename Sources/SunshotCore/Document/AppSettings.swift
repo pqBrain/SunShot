@@ -32,6 +32,9 @@ public struct AppSettings: Equatable, Sendable {
     public var showsMenuBarIcon: Bool
     /// S16: a capture opened in the studio starts in Annotate mode.
     public var annotateOnOpen: Bool
+    /// S16: screenshots the macOS screenshot tool copies to the clipboard (⌃⌘⇧3/4, ⌘⇧5) are replaced there with
+    /// the default style's render, frame None.
+    public var styleSystemScreenshots: Bool
 
     public static let screenshotTemplate = "Screenshot"
     public static let defaults = AppSettings()
@@ -42,8 +45,9 @@ public struct AppSettings: Equatable, Sendable {
         captureHotkeyEnabled: Bool = true, captureShortcut: GlobalShortcut = .default,
         globalCaptureDestination: GlobalCaptureDestination = .styledClipboard, suggestDevice: Bool = true,
         autoBackdropOnImport: Bool = true, askToSaveOnClose: Bool = true, showsMenuBarIcon: Bool = true,
-        annotateOnOpen: Bool = true
+        annotateOnOpen: Bool = true, styleSystemScreenshots: Bool = true
     ) {
+        self.styleSystemScreenshots = styleSystemScreenshots
         self.showsMenuBarIcon = showsMenuBarIcon
         self.annotateOnOpen = annotateOnOpen
         self.askToSaveOnClose = askToSaveOnClose

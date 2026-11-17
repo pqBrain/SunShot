@@ -119,7 +119,8 @@ extension EditorSession {
     /// that runs off the canvas (`ContentTransform.bleedsOffCanvas`). One undo step either way.
     @discardableResult
     public mutating func addScreenshot(
-        _ image: CGImage, data: Data? = nil, replacingName actionName: String = EditorSession.importActionName
+        _ image: CGImage, data: Data? = nil, replacingName actionName: String = EditorSession.importActionName,
+        plainFrame: Bool = false
     ) -> AddScreenshotResult {
         guard document.canAddScreenshots else {
             let replacing = hasContent && actionName == Self.importActionName
@@ -128,6 +129,7 @@ extension EditorSession {
                 $0.snippet = nil
                 $0.crop = nil
                 $0.video = nil
+                if plainFrame { $0.project.frame.kind = .none }
             }
             return .main
         }

@@ -5,6 +5,9 @@ import SwiftUI
 
 /// Floating glass panel with the style controls.
 struct InspectorView: View {
+    /// The panel's width. Its content is held to it, so a control that would like more room (a row of buttons,
+    /// a long label) shrinks or wraps instead of widening the panel past the window edge.
+    static let width: CGFloat = 292
     @Bindable var model: EditorModel
     @State private var borderExpanded = true
     @State private var shadowExpanded = false
@@ -34,64 +37,95 @@ struct InspectorView: View {
     }
 
     private var sections: some View {
-        ScrollView {
-            VStack(spacing: 10) {
-                if model.isInspectorEnabled {
-                    if model.isSnippet {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 10) {
+                    if model.isInspectorEnabled {
+                        if model.isSnippet {
+                            InspectorSection(
+                                title: UIStrings.codeSection, isExpanded: $codeExpanded,
+                                reset: { model.perform { $0.resetCodeStyle() } }
+                            ) { CodeSnippetControls(model: model) }
+                        }
                         InspectorSection(
-                            title: UIStrings.codeSection, isExpanded: $codeExpanded,
-                            reset: { model.perform { $0.resetCodeStyle() } }
-                        ) { CodeSnippetControls(model: model) }
-                    }
-                    InspectorSection(
-                        title: UIStrings.canvasSection, isExpanded: $canvasExpanded,
-                        reset: { model.perform { $0.resetCanvas() } }
-                    ) { CanvasSizeControls(model: model) }
-                    InspectorSection(
-                        title: UIStrings.backdropSection, isExpanded: $backdropExpanded,
-                        reset: { model.perform { $0.resetBackdrop() } }
-                    ) { BackdropControls(model: model) }
-                    .id(InspectorSectionID.backdrop)
-                    InspectorSection(
-                        title: UIStrings.borderSection, isExpanded: $borderExpanded,
-                        reset: { model.perform { $0.resetBorder() } }
-                    ) { BorderControls(model: model) }
-                    .id(InspectorSectionID.border)
-                    InspectorSection(
-                        title: UIStrings.shadowSection, isExpanded: $shadowExpanded,
-                        reset: { model.perform { $0.resetShadow() } }
-                    ) { ShadowControls(model: model) }
-                    InspectorSection(
-                        title: UIStrings.frameSection, isExpanded: $frameExpanded,
-                        reset: { model.perform { $0.resetFrame() } }
-                    ) { FrameControls(model: model) }
-                    InspectorSection(
-                        title: UIStrings.deviceSection, isExpanded: $deviceExpanded,
-                        reset: { model.setDevice(nil) }
-                    ) { DeviceControls(model: model) }
-                    if !model.isSnippet {
+                            title: UIStrings.canvasSection, isExpanded: $canvasExpanded,
+                            reset: { model.perform { $0.resetCanvas() } }
+                        ) { CanvasSizeControls(model: model) }
                         InspectorSection(
-                            title: UIStrings.screenshotsSection, isExpanded: $screenshotsExpanded,
-                            reset: { model.setCollage(nil) }
-                        ) { ScreenshotsControls(model: model) }
+                            title: UIStrings.backdropSection, isExpanded: $backdropExpanded,
+                            reset: { model.perform { $0.resetBackdrop() } }
+                        ) { BackdropControls(model: model) }
+                        .id(InspectorSectionID.backdrop)
+                        InspectorSection(
+                            title: UIStrings.borderSection, isExpanded: $borderExpanded,
+                            reset: { model.perform { $0.resetBorder() } }
+                        ) { BorderControls(model: model) }
+                        .id(InspectorSectionID.border)
+                        InspectorSection(
+                            title: UIStrings.shadowSection, isExpanded: $shadowExpanded,
+                            reset: { model.perform { $0.resetShadow() } }
+                        ) { ShadowControls(model: model) }
+                        InspectorSection(
+                            title: UIStrings.frameSection, isExpanded: $frameExpanded,
+                            reset: { model.perform { $0.resetFrame() } }
+                        ) { FrameControls(model: model) }
+                        InspectorSection(
+                            title: UIStrings.deviceSection, isExpanded: $deviceExpanded,
+                            reset: { model.setDevice(nil) }
+                        ) { DeviceControls(model: model) }
+                        if !model.isSnippet {
+                            InspectorSection(
+                                title: UIStrings.screenshotsSection, isExpanded: $screenshotsExpanded,
+                                reset: { model.setCollage(nil) }
+                            ) { ScreenshotsControls(model: model) }
+                        }
+                        InspectorSection(
+                            title: UIStrings.colorsSection, isExpanded: $colorsExpanded,
+                            reset: { model.perform { $0.resetColors() } }
+                        ) { ColorTokenControls(model: model) }
+                    } else {
+                        Text(UIStrings.inspectorEmpty)
+                            .font(.callout)
+                            .foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
+                            .frame(maxWidth: .infinity, minHeight: 120)
                     }
-                    InspectorSection(
-                        title: UIStrings.colorsSection, isExpanded: $colorsExpanded,
-                        reset: { model.perform { $0.resetColors() } }
-                    ) { ColorTokenControls(model: model) }
-                } else {
-                    Text(UIStrings.inspectorEmpty)
-                        .font(.callout)
-                        .foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
-                        .frame(maxWidth: .infinity, minHeight: 120)
                 }
+                .padding(12)
+                .frame(width: Self.width)
             }
-            .padding(12)
+            .scrollIndicators(.never)
+            // S16: below the scrolling sections (not over them), so nothing scrolls underneath the button.
+            if model.isInspectorEnabled { DefaultStyleFooter() }
         }
-        .scrollIndicators(.never)
+        .frame(width: Self.width)
         .glassEffect(.regular, in: .rect(cornerRadius: 24))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(UIStrings.inspector)
+    }
+}
+
+/// S16: Set as Default, pinned under the inspector. Saves the current style and layout for shortcut captures (copied
+/// to the clipboard already styled) and new documents; shows as done while the document matches the saved default.
+struct DefaultStyleFooter: View {
+    @Environment(DocumentController.self) private var controller
+
+    var body: some View {
+        let isDefault = controller.isCurrentStyleDefault
+        Button {
+            controller.saveQuickStyle()
+        } label: {
+            Label(
+                isDefault ? UIStrings.isDefaultStyle : UIStrings.setAsDefault,
+                systemImage: isDefault ? "checkmark.seal.fill" : "pin"
+            )
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.glass)
+        .controlSize(.large)
+        .disabled(isDefault)
+        .help(isDefault ? UIStrings.isDefaultStyleHelp : UIStrings.setAsDefaultHelp)
+        .accessibilityLabel(isDefault ? UIStrings.isDefaultStyleHelp : UIStrings.saveDefaultStyleAccessibility)
+        .padding(12)
     }
 }
 

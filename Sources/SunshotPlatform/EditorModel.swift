@@ -102,7 +102,9 @@ public final class EditorModel {
         }
         do {
             let image = try await Task.detached(priority: .userInitiated) { try ImageLoader.load(data) }.value
-            session.setContent(image, data: data, autoBackdrop: autoBackdropOnImport)
+            session.setContent(
+                image, data: data, autoBackdrop: autoBackdropOnImport,
+                plainFrame: ImageLoader.isSystemScreenshot(data))
             await refreshPreview()
         } catch {
             let reason = (error as? ImageLoadError)?.reason ?? error.localizedDescription
@@ -143,7 +145,9 @@ public final class EditorModel {
         guard let data = PasteboardIO.imageData(from: pasteboard) else { return }
         do {
             let image = try await Task.detached(priority: .userInitiated) { try ImageLoader.load(data) }.value
-            await addScreenshot(image, data: data, replacingName: EditorSession.importActionName)
+            await addScreenshot(
+                image, data: data, replacingName: EditorSession.importActionName,
+                plainFrame: ImageLoader.isSystemScreenshot(data))
             await refreshPreview()
         } catch {
             alert = AlertContent(

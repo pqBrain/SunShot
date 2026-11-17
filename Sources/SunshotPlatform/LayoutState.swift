@@ -32,6 +32,8 @@ public final class LayoutLibrary {
 public final class LayoutState {
     /// Thumbnail per preset id for the current style and content (empty while none are rendered yet).
     public internal(set) var thumbnails: [String: CGImage] = [:]
+    /// S16: the screenshot of a screenshot layout picked on the canvas (its number; 0 = main), for Delete.
+    public internal(set) var selectedScreenshot: Int?
     /// Guides shown on the mini canvas during a position drag; cleared when the drag ends.
     public internal(set) var guides: [PositionGuide] = []
     /// The transform the preview shows mid-animation (nil when not animating).

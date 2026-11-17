@@ -2,7 +2,8 @@ import SunshotCore
 import SunshotPlatform
 import SwiftUI
 
-/// Annotate-mode tool palette: a glass bar at the bottom of the canvas.
+/// S16: the annotation bar, a glass bar at the top of the canvas that is always there for screenshots. Picking a
+/// tool enters Annotate mode; Done leaves it.
 struct AnnotationPalette: View {
     @Bindable var model: EditorModel
     @State private var showsColors = false
@@ -37,11 +38,14 @@ struct AnnotationPalette: View {
             Divider().frame(height: 22)
             Button(UIStrings.clearAnnotations) { model.clearAnnotations() }
                 .disabled(!model.hasAnnotations)
-            Button(UIStrings.doneAnnotating) { model.setAnnotateMode(false) }
-                .buttonStyle(.glassProminent)
-                .help(UIStrings.doneAnnotatingAccessibility)
-                .accessibilityLabel(UIStrings.doneAnnotatingAccessibility)
+            if editor.isActive {
+                Button(UIStrings.doneAnnotating) { model.setAnnotateMode(false) }
+                    .buttonStyle(.glassProminent)
+                    .help(UIStrings.doneAnnotatingAccessibility)
+                    .accessibilityLabel(UIStrings.doneAnnotatingAccessibility)
+            }
         }
+        .disabled(!model.isAnnotationBarEnabled)
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .glassEffect(.regular, in: .capsule)
@@ -51,27 +55,25 @@ struct AnnotationPalette: View {
 
     private func toolButton(_ tool: AnnotationTool) -> some View {
         Button {
-            if tool == .sticker {
-                model.annotate.showsStickerPicker.toggle()
-            } else {
-                model.selectTool(tool)
-            }
+            model.pickAnnotationTool(tool)
         } label: {
             Image(systemName: UIStrings.toolSymbol(tool))
                 .frame(width: 26, height: 26)
                 .background(
-                    editor.tool == tool ? Color.accentColor.opacity(0.22) : Color.clear, in: .rect(cornerRadius: 7))
+                    isCurrent(tool) ? Color.accentColor.opacity(0.22) : Color.clear, in: .rect(cornerRadius: 7))
         }
         .buttonStyle(.plain)
         .help(UIStrings.toolLabel(tool))
         .accessibilityLabel(UIStrings.toolLabel(tool))
-        .accessibilityAddTraits(editor.tool == tool ? .isSelected : [])
+        .accessibilityAddTraits(isCurrent(tool) ? .isSelected : [])
         .popover(
             isPresented: Binding(
                 get: { tool == .sticker && editor.showsStickerPicker },
                 set: { model.annotate.showsStickerPicker = $0 })
         ) { StickerPicker(model: model) }
     }
+
+    private func isCurrent(_ tool: AnnotationTool) -> Bool { editor.isActive && editor.tool == tool }
 
     private var colorButton: some View {
         Button {

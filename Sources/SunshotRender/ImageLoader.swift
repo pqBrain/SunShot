@@ -28,6 +28,20 @@ public enum ImageLoader {
     /// before decoding instead of exhausting memory.
     public static let maxPixelCount = 16384 * 16384
 
+    /// The EXIF user comment macOS writes into its own screenshots (⌘⇧3/4/5, to a file or the clipboard).
+    public static let systemScreenshotComment = "Screenshot"
+
+    /// S16: whether `data` is a screenshot taken with the macOS screenshot tool. Those already show the window's own
+    /// title bar (and its shadow), so Sunshot adds no frame chrome around them.
+    public static func isSystemScreenshot(_ data: Data) -> Bool {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+            let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+            let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any],
+            let comment = exif[kCGImagePropertyExifUserComment] as? String
+        else { return false }
+        return comment == systemScreenshotComment
+    }
+
     public static func load(_ data: Data) throws -> CGImage {
         guard !data.isEmpty else { throw ImageLoadError.empty }
         let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary

@@ -84,11 +84,13 @@ extension EditorModel {
     /// Paste and capture: the first image becomes the content, every later one is added as the next screenshot
     /// (the layout grows as needed). A solid-colour border (a copied canvas backdrop, a desktop strip) is trimmed
     /// off first; the trimmed image is stored as PNG. A short notice says where it went and whether it was trimmed.
-    func addScreenshot(_ image: CGImage, data: Data?, replacingName actionName: String, trims: Bool = true) async {
+    func addScreenshot(
+        _ image: CGImage, data: Data?, replacingName actionName: String, trims: Bool = true, plainFrame: Bool = false
+    ) async {
         let trimmed = trims ? await Task.detached(priority: .userInitiated) { ImageTrimmer.trimmed(image) }.value : nil
         finishContinuousEdit()
         let result = session.addScreenshot(
-            trimmed ?? image, data: trimmed == nil ? data : nil, replacingName: actionName)
+            trimmed ?? image, data: trimmed == nil ? data : nil, replacingName: actionName, plainFrame: plainFrame)
         switch result {
         case .main: notice = trimmed == nil ? nil : UIStrings.screenshotTrimmed
         case .added(let number):

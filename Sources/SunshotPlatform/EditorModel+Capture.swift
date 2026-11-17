@@ -83,13 +83,19 @@ extension EditorModel {
         defer { capture.isCapturingScreen = false }
         do {
             let image = try await capturedImage(source)
-            let data = try await Task.detached(priority: .userInitiated) {
+            let (data, original) = try await Task.detached(priority: .userInitiated) {
+                let original = try ImageCodec.pngData(image)
                 switch style {
-                case .raw: try ImageCodec.pngData(image)
-                case .styled(let quickStyle): try QuickStyleRenderer.pngData(image, style: quickStyle)
+                case .raw: return (original, Data?.none)
+                case .styled(let quickStyle):
+                    return (try QuickStyleRenderer.pngData(image, style: quickStyle), original)
                 }
             }.value
-            PasteboardIO.writePNG(data, to: pasteboard)
+            if let original {
+                PasteboardIO.writeStyled(data, original: original, to: pasteboard)
+            } else {
+                PasteboardIO.writePNG(data, to: pasteboard)
+            }
             return true
         } catch {
             report(error)

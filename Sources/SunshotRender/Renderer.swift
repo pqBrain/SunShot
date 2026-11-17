@@ -57,13 +57,36 @@ public enum Renderer {
         let collage = CollageLayout(
             project: project, boxWidth: frameBox.width + frameBox.insets.horizontal,
             boxHeight: frameBox.height + frameBox.insets.vertical)
+        // S16: on a flat, single screenshot the annotations are drawn on top of everything, unclipped, so they can
+        // reach out over the backdrop; elsewhere they stay on the content inside its silhouette.
+        let freeAnnotations = drawsAnnotationsOnCanvas(project: project, collage: collage)
+        var silhouetteProject = project
+        if freeAnnotations { silhouetteProject.annotations.items.removeAll { $0.kind != .redact } }
         drawContent(
-            content, slots: slots, collage: collage, layout: layout, project: project, scale: safeScale,
+            content, slots: slots, collage: collage, layout: layout, project: silhouetteProject, scale: safeScale,
             context: context)
         EffectsRenderer.drawAboveContent(project.backdropSettings.effects, size: layout.canvasSize, in: context)
+        if freeAnnotations { drawCanvasAnnotations(project.annotations, layout: layout, in: context) }
 
         guard let image = context.makeImage() else { throw RenderError.imageCreationFailed }
         return image
+    }
+
+    /// Whether annotations are drawn in canvas space (over the backdrop too): not through a moved, rotated or tilted
+    /// content transform, a device mockup or a screenshot layout, which keep them on their screenshot.
+    static func drawsAnnotationsOnCanvas(project: Project, collage: CollageLayout?) -> Bool {
+        project.placement.transform.isIdentity && project.frame.device == nil && collage == nil
+            && !project.annotations.isEmpty
+    }
+
+    /// The annotations in content pixels, placed where the content sits on the canvas and not clipped to it.
+    private static func drawCanvasAnnotations(_ layer: AnnotationLayer, layout: CanvasLayout, in context: CGContext) {
+        let style = layout.styleScale.isFinite && layout.styleScale > 0 ? layout.styleScale : 1
+        context.saveGState()
+        context.translateBy(x: layout.contentRect.x, y: layout.contentRect.y)
+        context.scaleBy(x: style, y: style)
+        AnnotationRenderer.draw(layer, in: context)
+        context.restoreGState()
     }
 
     static func makeContext(width: Int, height: Int) -> CGContext? {
