@@ -43,6 +43,21 @@ public struct UndoStack<State: Sendable>: Sendable {
         return true
     }
 
+    /// Applies `transform` to the current state and to every undo, redo and gesture-start state, recording
+    /// nothing. Used to swap a value that history must not track (S14: the batch item on the canvas).
+    public mutating func rewriteAll(_ transform: (inout State) -> Void) {
+        transform(&current)
+        undoEntries = undoEntries.map { Entry(name: $0.name, state: Self.transformed($0.state, transform)) }
+        redoEntries = redoEntries.map { Entry(name: $0.name, state: Self.transformed($0.state, transform)) }
+        gestureStart = gestureStart.map { Self.transformed($0, transform) }
+    }
+
+    private static func transformed(_ state: State, _ transform: (inout State) -> Void) -> State {
+        var copy = state
+        transform(&copy)
+        return copy
+    }
+
     // MARK: Continuous gestures
 
     public var isInGesture: Bool { gestureStart != nil }

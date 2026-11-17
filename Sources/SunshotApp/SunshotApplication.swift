@@ -4,15 +4,24 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SunshotApplication: App {
-    @State private var model = EditorModel()
+    @State private var model: EditorModel
+    @State private var bulk: BulkSession
+
+    init() {
+        let model = EditorModel()
+        _model = State(initialValue: model)
+        _bulk = State(initialValue: BulkSession(editor: model))
+    }
 
     var body: some Scene {
         Window("Sunshot", id: "main") {
             EditorView(model: model)
+                .safeAreaInset(edge: .bottom, spacing: 0) { BulkStripView(bulk: bulk) }
                 .frame(minWidth: 820, minHeight: 540)
         }
         .defaultSize(width: 1180, height: 760)
         .commands { SunshotCommands(model: model) }
+        .commands { BulkCommands(bulk: bulk) }
     }
 }
 
