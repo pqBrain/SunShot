@@ -59,6 +59,7 @@ extension EditorModel {
     ) -> String {
         let plan = exportPlan
         let context = FilenameContext(
+            templateName: session.document.snippet == nil ? SunshotDefaults.templateName : CodeSnippet.templateName,
             scale: plan?.isNativeSize == true ? .x1 : exportOptions.scale, date: now, width: plan?.width ?? 0,
             height: plan?.height ?? 0, format: exportOptions.format)
         return FilenameTemplate.fileName(template: template ?? filenameTemplate, context: context, random: random)
@@ -115,9 +116,9 @@ extension EditorModel {
 
     /// Canvas size at 1× that `preset` would give the current content (for tile labels).
     public func canvasSize(for preset: CanvasPreset) -> PixelSize? {
-        guard let content = session.document.content else { return preset.exactSize }
+        guard let contentSize = session.document.contentPixelSize else { return preset.exactSize }
         var project = self.project
         project.canvas = .preset(preset)
-        return CanvasLayout.compute(contentSize: content.pixelSize, project: project).canvasSize
+        return CanvasLayout.compute(contentSize: contentSize, project: project).canvasSize
     }
 }

@@ -63,3 +63,19 @@ struct DocumentEditingTests {
         #expect(session.document.theme == nil)
     }
 }
+
+@Suite("S7 × S11 documents")
+struct SnippetDocumentTests {
+    @Test("[S7-AC1] a code-snippet document saves and reopens with its snippet")
+    func snippetRoundTrip() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let url = folder.appendingPathComponent("Snippet.sunshot")
+        let document = EditorDocument(snippet: CodeSnippet(code: "let x = 1"))
+        try DocumentPackage.write(document, to: url)
+        let loaded = try DocumentPackage.read(from: url).document
+        #expect(loaded.snippet == document.snippet)
+        #expect(loaded.content == nil)
+    }
+}

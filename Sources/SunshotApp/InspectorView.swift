@@ -12,12 +12,19 @@ struct InspectorView: View {
     @State private var canvasExpanded = true
     @State private var frameExpanded = true
     @State private var colorsExpanded = false
+    @State private var codeExpanded = true
 
     var body: some View {
         ScrollView {
             VStack(spacing: 10) {
                 if model.isInspectorEnabled {
                     ThemeHeaderView()
+                    if model.isSnippet {
+                        InspectorSection(
+                            title: UIStrings.codeSection, isExpanded: $codeExpanded,
+                            reset: { model.perform { $0.resetCodeStyle() } }
+                        ) { CodeSnippetControls(model: model) }
+                    }
                     InspectorSection(
                         title: UIStrings.canvasSection, isExpanded: $canvasExpanded,
                         reset: { model.perform { $0.resetCanvas() } }

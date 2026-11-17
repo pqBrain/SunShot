@@ -13,6 +13,7 @@ struct SunshotCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
             item(.new) { Task { await DocumentFlows.newDocument(controller) } }
+            item(.newCodeSnippet) { model.newCodeSnippet() }
             item(.open) { Task { await DocumentFlows.open(controller) } }
             Menu(MenuCatalog.title(.openRecent)) {
                 ForEach(controller.recents.items) { recent in

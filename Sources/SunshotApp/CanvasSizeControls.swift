@@ -233,10 +233,10 @@ struct CanvasSizePopover: View {
     private var current: String? { cursor.flatMap { order.indices.contains($0) ? order[$0] : nil } }
 
     private var autoSize: PixelSize? {
-        guard let content = model.session.document.content else { return nil }
+        guard let contentSize = model.session.document.contentPixelSize else { return nil }
         var project = model.project
         project.canvas = .auto
-        return CanvasLayout.compute(contentSize: content.pixelSize, project: project).canvasSize
+        return CanvasLayout.compute(contentSize: contentSize, project: project).canvasSize
     }
 
     private var autoRatio: Double { autoSize?.aspectRatio ?? 1 }

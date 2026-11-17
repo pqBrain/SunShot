@@ -17,6 +17,11 @@ public enum Renderer {
         document: EditorDocument, scale: Double = 1, showsTransparencyGrid: Bool = false,
         grid: TransparencyGrid = .standard
     ) throws -> CGImage? {
+        if let snippet = document.snippet {
+            return try render(
+                project: document.project, snippet: snippet, media: document.media, scale: scale,
+                grid: showsTransparencyGrid ? grid : nil)
+        }
         guard let content = document.content else { return nil }
         return try render(
             project: document.project, content: content.image, media: document.media, scale: scale,
@@ -25,11 +30,13 @@ public enum Renderer {
 
     /// Renders `project` with `content` at `scale` (1 = canvas points map to pixels).
     /// `layoutSize` lays out a downsampled proxy as if it were the full-size image (S14 strip thumbnails).
+    /// `contentSize` is the content's size at 1× when the image is drawn at a higher density (code snippets).
+    /// Both nil means the image's pixel size.
     public static func render(
-        project: Project, content: CGImage, media: [String: MediaAsset] = [:], scale: Double = 1,
-        grid: TransparencyGrid? = nil, layoutSize: PixelSize? = nil
+        project: Project, content: CGImage, contentSize: PixelSize? = nil, media: [String: MediaAsset] = [:],
+        scale: Double = 1, grid: TransparencyGrid? = nil, layoutSize: PixelSize? = nil
     ) throws -> CGImage {
-        let contentSize = layoutSize ?? PixelSize(width: content.width, height: content.height)
+        let contentSize = layoutSize ?? contentSize ?? PixelSize(width: content.width, height: content.height)
         let layout = CanvasLayout.compute(contentSize: contentSize, project: project)
         let safeScale = scale.isFinite && scale > 0 ? scale : 1
         let pixelWidth = ExportPlan.scaled(layout.canvasSize.width, by: safeScale)

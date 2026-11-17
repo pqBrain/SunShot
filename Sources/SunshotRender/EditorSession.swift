@@ -21,21 +21,25 @@ public struct ContentImage: Equatable, Sendable {
 }
 
 /// Everything the user edits: style + content + media (user backdrop images, keyed by `MediaReference.id`).
+/// The content is an image or a code snippet, never both.
 public struct EditorDocument: Equatable, Sendable {
     public var project: Project
     public var content: ContentImage?
     public var media: [String: MediaAsset]
     /// The theme last applied ("No Theme" when nil); undo restores it with the style.
     public var theme: Theme?
+    /// Code-snippet content (S11); when set it is the content and `content` is nil.
+    public var snippet: CodeSnippet?
 
     public init(
         project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:],
-        theme: Theme? = nil
+        theme: Theme? = nil, snippet: CodeSnippet? = nil
     ) {
         self.project = project
         self.content = content
         self.media = media
         self.theme = theme
+        self.snippet = snippet
     }
 }
 
@@ -52,18 +56,21 @@ public struct EditorSession: Sendable {
     }
 
     public var document: EditorDocument { history.current }
-    public var hasContent: Bool { document.content != nil }
+    public var hasContent: Bool { document.content != nil || document.snippet != nil }
 
     /// Canvas size at 1×, or nil when empty.
     public var canvasSize: PixelSize? {
-        guard let content = document.content else { return nil }
-        return CanvasLayout.compute(contentSize: content.pixelSize, project: document.project).canvasSize
+        guard let contentSize = document.contentPixelSize else { return nil }
+        return CanvasLayout.compute(contentSize: contentSize, project: document.project).canvasSize
     }
 
     /// Sets (or replaces) the content image as one undoable step.
     public mutating func setContent(_ image: CGImage, data: Data? = nil) {
         let name = hasContent ? Self.replaceActionName : Self.importActionName
-        history.apply(name) { $0.content = ContentImage(image, data: data) }
+        history.apply(name) {
+            $0.content = ContentImage(image, data: data)
+            $0.snippet = nil
+        }
     }
 
     /// Decodes `data` and sets it as content. Throws without touching state if the data isn't a usable image.
@@ -74,7 +81,10 @@ public struct EditorSession: Sendable {
     /// Removes the content (undoable). No-op when already empty.
     public mutating func clearContent() {
         guard hasContent else { return }
-        history.apply(Self.clearActionName) { $0.content = nil }
+        history.apply(Self.clearActionName) {
+            $0.content = nil
+            $0.snippet = nil
+        }
     }
 
     public mutating func undo() { history.undo() }

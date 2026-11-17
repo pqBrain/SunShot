@@ -33,11 +33,22 @@ struct EditorView: View {
     }
 
     private var canvasArea: some View {
+        VStack(spacing: 0) {
+            previewArea
+            if model.isSnippet { CodeEditorPanel(model: model) }
+        }
+    }
+
+    private var previewArea: some View {
         ZStack {
             if let preview = model.preview, model.hasContent {
                 CanvasPreview(image: preview, accessibilityLabel: model.previewAccessibilityLabel, model: model)
             } else {
-                EmptyStateView(isTargeted: isDropTargeted) { Task { await Panels.openImage(into: model) } }
+                EmptyStateView(isTargeted: isDropTargeted) {
+                    Task { await Panels.openImage(into: model) }
+                } newSnippet: {
+                    model.newCodeSnippet()
+                }
             }
             if model.showsProgress {
                 ProgressView(UIStrings.importing)
@@ -89,6 +100,7 @@ struct CanvasPreview: View {
 struct EmptyStateView: View {
     let isTargeted: Bool
     let choose: () -> Void
+    let newSnippet: () -> Void
 
     var body: some View {
         VStack(spacing: 16) {
@@ -105,6 +117,9 @@ struct EmptyStateView: View {
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
                 .accessibilityLabel(UIStrings.chooseImageAccessibility)
+            Button(UIStrings.newCodeSnippet, action: newSnippet)
+                .buttonStyle(.glass)
+                .accessibilityLabel(UIStrings.newCodeSnippetAccessibility)
             Text(UIStrings.pasteHint)
                 .font(.callout)
                 .foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))

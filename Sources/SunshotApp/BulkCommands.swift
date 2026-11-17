@@ -9,11 +9,11 @@ struct BulkCommands: Commands {
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Button(UIStrings.importMultiple) { Task { await BulkPanels.importMultiple(into: bulk) } }
-                .keyboardShortcut("o", modifiers: [.command, .shift])
+                .keyboardShortcut(MenuCatalog.shortcut(.importMultiple).map(SunshotCommands.keyboardShortcut))
         }
         CommandGroup(after: .importExport) {
             Button(UIStrings.exportAll) { Task { await BulkPanels.exportAll(from: bulk) } }
-                .keyboardShortcut("e", modifiers: [.command, .option, .shift])
+                .keyboardShortcut(MenuCatalog.shortcut(.exportAll).map(SunshotCommands.keyboardShortcut))
                 .disabled(!bulk.canExportAll)
             Button(UIStrings.closeBatch) { bulk.close() }
                 .disabled(!bulk.isActive || bulk.isExporting)

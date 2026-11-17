@@ -2,7 +2,7 @@
 /// defined (and unit-tested for clashes) in one place.
 public enum MenuCommand: String, CaseIterable, Sendable {
     case settings, hide, hideOthers, quit
-    case new, open, openRecent, close, save, saveAs, exportImage, startOver
+    case new, newCodeSnippet, open, importMultiple, openRecent, close, save, saveAs, exportImage, exportAll, startOver
     case undo, redo, cut, copy, paste, selectAll, clearContent
     case toggleInspector, enterFullScreen
     case minimize, zoom
@@ -75,12 +75,15 @@ public enum MenuCatalog {
             title: "File",
             items: [
                 MenuItemSpec(.new, "New", KeyShortcut("n")),
+                MenuItemSpec(.newCodeSnippet, "New Code Snippet", KeyShortcut("n", [.command, .option])),
                 MenuItemSpec(.open, "Open…", KeyShortcut("o")),
+                MenuItemSpec(.importMultiple, "Import Multiple…", KeyShortcut("o", [.command, .shift])),
                 MenuItemSpec(.openRecent, "Open Recent"),
                 MenuItemSpec(.close, "Close", KeyShortcut("w")),
                 MenuItemSpec(.save, "Save", KeyShortcut("s")),
                 MenuItemSpec(.saveAs, "Save As…", KeyShortcut("s", [.command, .shift])),
                 MenuItemSpec(.exportImage, "Export Image…", KeyShortcut("e", [.command, .shift])),
+                MenuItemSpec(.exportAll, "Export All…", KeyShortcut("e", [.command, .option, .shift])),
                 MenuItemSpec(.startOver, "Start Over"),
             ]),
         MenuSpec(
