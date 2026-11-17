@@ -24,11 +24,12 @@ public enum Renderer {
     }
 
     /// Renders `project` with `content` at `scale` (1 = canvas points map to pixels).
+    /// `layoutSize` lays out a downsampled proxy as if it were the full-size image (S14 strip thumbnails).
     public static func render(
         project: Project, content: CGImage, media: [String: MediaAsset] = [:], scale: Double = 1,
-        grid: TransparencyGrid? = nil
+        grid: TransparencyGrid? = nil, layoutSize: PixelSize? = nil
     ) throws -> CGImage {
-        let contentSize = PixelSize(width: content.width, height: content.height)
+        let contentSize = layoutSize ?? PixelSize(width: content.width, height: content.height)
         let layout = CanvasLayout.compute(contentSize: contentSize, project: project)
         let safeScale = scale.isFinite && scale > 0 ? scale : 1
         let pixelWidth = ExportPlan.scaled(layout.canvasSize.width, by: safeScale)

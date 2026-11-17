@@ -9,12 +9,14 @@ struct SunshotApplication: App {
     var body: some Scene {
         Window("Sunshot", id: "main") {
             EditorView(model: appDelegate.controller.model)
+                .safeAreaInset(edge: .bottom, spacing: 0) { BulkStripView(bulk: appDelegate.bulk) }
                 .environment(appDelegate.controller)
                 .navigationTitle(appDelegate.controller.displayName)
                 .frame(minWidth: 820, minHeight: 540)
         }
         .defaultSize(width: 1180, height: 760)
         .commands { SunshotCommands(controller: appDelegate.controller) }
+        .commands { BulkCommands(bulk: appDelegate.bulk) }
         Settings {
             SettingsView(controller: appDelegate.controller)
         }

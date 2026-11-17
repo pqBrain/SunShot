@@ -48,7 +48,7 @@ struct EditorView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
         .dropDestination(for: URL.self) { urls, _ in
-            guard urls.contains(where: isSupportedImageFile) else { return false }
+            guard model.canAcceptDrop(urls) else { return false }
             Task { await model.importDroppedFiles(urls) }
             return true
         } isTargeted: {

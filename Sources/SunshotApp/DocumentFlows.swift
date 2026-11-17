@@ -133,6 +133,8 @@ enum DocumentFlows {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let controller = DocumentController()
+    /// S14 batch: shares the editor's style; lives as long as the app.
+    lazy var bulk = BulkSession(editor: controller.model)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller.settings.appearance.apply(to: NSApplication.shared)

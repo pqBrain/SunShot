@@ -257,3 +257,47 @@ Decisions made by the delivery lead within scope. Each one names what it settled
 - **Measured (release, M-series, machine loaded by parallel agent builds):** 4K image backdrop + every effect
   (blur 24) 229 ms median (budget 500); the S3 4K gradient read 186 ms in the same run (72 ms when idle), so the
   effects cost roughly 40–150 ms.
+
+## S14 implementation notes (2026-11-17)
+- **A batch is a list of file references sharing the one `Project`.** `BulkBatch` (Core) holds `BulkItem`s
+  (URL + security-scope URL) and the selection; nothing is decoded until needed. Every style control keeps working
+  on the document exactly as before, so a style edit applies to every item and stays one ordinary undo step.
+  Fields other slices add to `Project` pass through untouched (export builds each item's document from the
+  current project and media).
+- **Switching items is navigation, not an edit.** `EditorSession.showBulkContent` swaps the content in every
+  undo/redo state (`UndoStack.rewriteAll`, new), so undo/redo only ever change the style and never which image is
+  on the canvas. Consequence: once a batch is open, undo can't bring back an image that was on the canvas before.
+- **Drops:** two or more supported images, or any folder, go to the batch (`EditorModel.bulkDropHandler`, set by
+  `BulkSession`); a single image keeps the S1 flow. Without a handler (tests, other windows) S1 behaviour is
+  unchanged. File ▸ Import Multiple… (⇧⌘O) takes files and folders. Folders are read top-level only, hidden files
+  and subfolders ignored, Finder (numeric-aware) name order. Duplicates (same standardized path) are ignored; the
+  batch holds at most 500 items. Skips/duplicates/limit are reported in the notice banner, never an alert.
+- **Thumbnails use the one renderer.** `Renderer.render` gained an optional `layoutSize`: the strip renders a
+  downsampled proxy (ImageIO thumbnail straight from the file, long edge ≤ 256 px, EXIF orientation applied) laid
+  out as if it were the full-size image, so a thumbnail is the export scaled down (SSIM ≥ 0.9 vs a downscaled
+  full render in the test) with no second drawing path. Proxies are cached per item (worst case 500 × 256² × 4 ≈
+  130 MB), thumbnails (200 px long edge) re-render from them on every style change, one at a time, a newer
+  refresh superseding an older one.
+- **Export All** writes to a chosen folder (no zip: Finder's Compress does that) with the S4 options per item
+  (each item gets its own export size; store/exact sizes are their own size). Items are processed strictly one
+  after another off the main actor (decode → render → encode → atomic write). A failing item (corrupt, missing,
+  too large) is recorded with its reason and the batch goes on; Cancel stops before the next item, so written
+  files stay and no partial file is left (writes are atomic).
+- **File names:** the S4 template plus `_{INDEX}` when the template has no `{INDEX}` (1-based, zero-padded to the
+  batch size's digit count, list order — so reordering the strip is reordering the files); `{NAME}` is the source
+  file name. `{DATE}` is fixed for the whole run. Names that already exist in the folder, or would repeat, get
+  `-2`, `-3`… before the extension (case-insensitive like APFS); nothing is ever overwritten.
+- **Selection decodes the item at full size** (`ImageLoader`, S1 rules) for the canvas; an unreadable item gets an
+  error badge in the strip and a notice, and the canvas is emptied rather than showing a different image.
+  Removing the last item closes the batch and empties the canvas; Close Batch keeps the current image.
+- **Memory (measured, release, M-series, this machine busy with parallel agents):** exporting 40 images of
+  3000×2000 at 2× grows the footprint to ~1.09 GB after ~16 items and then stays flat (+0 MB over the last 20).
+  The climb is not the batch: rendering an image that came through ImageIO leaves a CoreGraphics-internal,
+  count-limited (~16 entries) cache of render-sized buffers (56 MB each at this size; rendering the same pixels
+  from a bitmap-context image doesn't). It is bounded, and S1/S4 single exports hit the same cache. The perf
+  budget therefore checks the plateau (last 20 items add ≤ 64 MB) and an absolute 1.5 GB cap. Follow-up: find
+  which CG cache this is; for much larger images the plateau scales with image size.
+- **Shared files touched (small):** `Renderer.swift` (optional `layoutSize`), `UndoStack.swift` (`rewriteAll`),
+  `EditorModel.swift` (`bulkDropHandler` property + one line in `importDroppedFiles`), `EditorView.swift` (drop
+  guard accepts folders via `canAcceptDrop`), `SunshotApplication.swift` (creates the `BulkSession`, adds the strip
+  as a bottom inset and `BulkCommands`).

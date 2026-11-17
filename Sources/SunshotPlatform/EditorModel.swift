@@ -41,6 +41,8 @@ public final class EditorModel {
     private let progressDelay: Duration
     /// An open colour-panel edit: merged into one undo step once the colour stops changing.
     var pendingContinuousEdit: (name: String, task: Task<Void, Never>)?
+    /// Set by the batch (S14): drops of several images or a folder go there instead of the single-image flow.
+    public var bulkDropHandler: (@MainActor ([URL]) async -> Bool)?
 
     public init(progressDelay: Duration = EditorModel.defaultProgressDelay) {
         self.progressDelay = progressDelay
@@ -99,6 +101,7 @@ public final class EditorModel {
     /// Drop handler: imports the first supported file. Returns false (drop refused) when none is supported.
     @discardableResult
     public func importDroppedFiles(_ urls: [URL]) async -> Bool {
+        if let bulkDropHandler, isBatchDrop(urls) { return await bulkDropHandler(urls) }
         guard let first = urls.first(where: isSupportedImageFile) else { return false }
         if urls.count > 1 { notice = Self.multipleFilesNotice }
         await importFile(at: first)
