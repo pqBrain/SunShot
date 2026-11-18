@@ -12,18 +12,13 @@ struct BackdropControls: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Picker(
-                UIStrings.backdropType,
-                selection: Binding(get: { settings.kind }, set: { kind in model.perform { $0.setBackdropKind(kind) } })
-            ) {
-                ForEach(BackdropKind.allCases, id: \.self) { Text(UIStrings.backdropKindName($0)).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            // Regular size needs ~249 pt for four segments; the inspector column has 240, and an over-wide row
-            // widens the whole inspector past the window edge.
-            .controlSize(.small)
-            .accessibilityLabel(UIStrings.backdropType)
+            // S17: the system segmented control needs ~262 pt for four segments (even at small size) and widened the
+            // whole Backdrop card past the 240 pt column; this one shares the column's width.
+            CompactSegmentedPicker(
+                title: UIStrings.backdropType, options: BackdropKind.allCases,
+                selection: Binding(get: { settings.kind }, set: { kind in model.perform { $0.setBackdropKind(kind) } }),
+                label: UIStrings.backdropKindName
+            )
             .accessibilityValue(UIStrings.backdropKindName(settings.kind))
 
             switch settings.kind {

@@ -10,6 +10,7 @@ public struct SettingsStore {
         case captureHotkey, captureShortcut, captureDestination
         case suggestDevice, autoBackdropOnImport, askToSaveOnClose, showsMenuBarIcon, annotateOnOpen
         case styleSystemScreenshots, revision
+        case windowHotkey, windowShortcut, studioHotkey, studioShortcut
         var name: String { SettingsStore.prefix + rawValue }
     }
 
@@ -40,6 +41,9 @@ public struct SettingsStore {
         {
             settings.captureShortcut = shortcut
         }
+        // S17: Capture Area keeps its S10 keys, so the shortcut a user already chose carries over unchanged.
+        loadShortcut(.captureWindow, enabled: .windowHotkey, keys: .windowShortcut, into: &settings)
+        loadShortcut(.openStudio, enabled: .studioHotkey, keys: .studioShortcut, into: &settings)
         if let raw = defaults.string(forKey: Key.captureDestination.name),
             let destination = GlobalCaptureDestination(rawValue: raw)
         {
@@ -72,6 +76,19 @@ public struct SettingsStore {
         return settings
     }
 
+    private func loadShortcut(
+        _ action: GlobalShortcutAction, enabled: Key, keys: Key, into settings: inout AppSettings
+    ) {
+        if defaults.object(forKey: enabled.name) != nil {
+            settings.setShortcutEnabled(defaults.bool(forKey: enabled.name), for: action)
+        }
+        if let data = defaults.data(forKey: keys.name),
+            let shortcut = try? JSONDecoder().decode(GlobalShortcut.self, from: data), shortcut.isValid
+        {
+            settings.setShortcut(shortcut, for: action)
+        }
+    }
+
     public func save(_ settings: AppSettings) {
         defaults.set(settings.appearance.rawValue, forKey: Key.appearance.name)
         defaults.set(settings.filenameTemplate, forKey: Key.filenameTemplate.name)
@@ -79,6 +96,10 @@ public struct SettingsStore {
         defaults.set(settings.defaultTemplate, forKey: Key.defaultTemplate.name)
         defaults.set(settings.captureHotkeyEnabled, forKey: Key.captureHotkey.name)
         defaults.set(try? JSONEncoder().encode(settings.captureShortcut), forKey: Key.captureShortcut.name)
+        defaults.set(settings.windowHotkeyEnabled, forKey: Key.windowHotkey.name)
+        defaults.set(try? JSONEncoder().encode(settings.windowShortcut), forKey: Key.windowShortcut.name)
+        defaults.set(settings.studioHotkeyEnabled, forKey: Key.studioHotkey.name)
+        defaults.set(try? JSONEncoder().encode(settings.studioShortcut), forKey: Key.studioShortcut.name)
         defaults.set(settings.globalCaptureDestination.rawValue, forKey: Key.captureDestination.name)
         defaults.set(settings.suggestDevice, forKey: Key.suggestDevice.name)
         defaults.set(settings.autoBackdropOnImport, forKey: Key.autoBackdropOnImport.name)

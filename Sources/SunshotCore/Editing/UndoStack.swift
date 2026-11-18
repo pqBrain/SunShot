@@ -6,15 +6,25 @@ public struct UndoStack<State: Sendable>: Sendable {
     private let limit: Int
     /// State when a continuous gesture (e.g. a slider drag) began; the whole gesture becomes one undo entry.
     private var gestureStart: State?
+    /// The large resources (images) a state holds, by identity. Shared between states, each counts once.
+    public typealias Resources = @Sendable (State) -> [(id: String, bytes: Int)]
+    private let resources: Resources?
+    private let byteBudget: Int
 
     private struct Entry: Sendable {
         let name: String
         let state: State
     }
 
-    public init(_ initial: State, limit: Int = SunshotDefaults.undoLimit) {
+    /// `resources` + `byteBudget`: besides the `limit` on steps, the oldest steps are dropped while the distinct
+    /// resources the whole history holds weigh more than `byteBudget` (the current state's are always kept).
+    public init(
+        _ initial: State, limit: Int = SunshotDefaults.undoLimit, byteBudget: Int = .max, resources: Resources? = nil
+    ) {
         current = initial
         self.limit = max(1, limit)
+        self.byteBudget = byteBudget
+        self.resources = resources
     }
 
     /// Applies a named change. If `change` throws, nothing is recorded and state is unchanged.
@@ -25,6 +35,7 @@ public struct UndoStack<State: Sendable>: Sendable {
         if undoEntries.count > limit { undoEntries.removeFirst(undoEntries.count - limit) }
         redoEntries.removeAll()
         current = next
+        trimToByteBudget()
     }
 
     @discardableResult
@@ -80,6 +91,26 @@ public struct UndoStack<State: Sendable>: Sendable {
         undoEntries.append(Entry(name: name, state: start))
         if undoEntries.count > limit { undoEntries.removeFirst(undoEntries.count - limit) }
         redoEntries.removeAll()
+        trimToByteBudget()
+    }
+
+    /// Keeps the newest undo steps whose resources, together with the current state's, fit `byteBudget`; the
+    /// first older step that would bring in more is dropped with everything before it.
+    private mutating func trimToByteBudget() {
+        guard let resources, !undoEntries.isEmpty else { return }
+        var seen = Set<String>()
+        var total = 0
+        for resource in resources(current) where seen.insert(resource.id).inserted { total += resource.bytes }
+        var kept = 0
+        for entry in undoEntries.reversed() {
+            var added = 0
+            for resource in resources(entry.state) where !seen.contains(resource.id) { added += resource.bytes }
+            if added > 0, total + added > byteBudget { break }
+            for resource in resources(entry.state) { seen.insert(resource.id) }
+            total += added
+            kept += 1
+        }
+        if kept < undoEntries.count { undoEntries.removeFirst(undoEntries.count - kept) }
     }
 
     public var canUndo: Bool { !undoEntries.isEmpty }

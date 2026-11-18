@@ -36,8 +36,10 @@ struct AnnotationPalette: View {
             .accessibilityLabel(UIStrings.fill)
             contextualControls
             Divider().frame(height: 22)
-            Button(UIStrings.clearAnnotations) { model.clearAnnotations() }
+            Button(UIStrings.clearAnnotationsShort) { model.clearAnnotations() }
                 .disabled(!model.hasAnnotations)
+                .help(UIStrings.clearAnnotations)
+                .accessibilityLabel(UIStrings.clearAnnotations)
             if editor.isActive {
                 Button(UIStrings.doneAnnotating) { model.setAnnotateMode(false) }
                     .buttonStyle(.glassProminent)

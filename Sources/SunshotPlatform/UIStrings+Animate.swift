@@ -3,7 +3,6 @@ public import SunshotCore
 /// S13: Animate mode, timeline and video export copy and accessibility labels.
 extension UIStrings {
     public static let animate = "Animate"
-    public static let doneAnimating = "Done"
     public static let animateAccessibility = "Animate: keyframe timeline and video export, ⇧⌘M"
     public static let exitAnimate = "Exit Animate"
     public static let addAnimation = "Add Animation"

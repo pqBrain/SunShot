@@ -3,14 +3,15 @@ import SwiftUI
 
 /// S7: a short toolbar — Add image, Capture, Annotate, Animate, Export and the inspector. Clear Content (⌘⌫),
 /// Start Over (File menu) and Copy (⌘C) live in the menu bar; Copy PNG and Export Options are in Export's menu;
-/// templates and themes are in the left sidebar.
+/// layouts and templates are in the left sidebar.
 struct EditorToolbar: ToolbarContent {
     let model: EditorModel
     let controller: DocumentController
 
     var body: some ToolbarContent {
         // S16: one switch between the screenshot and the code snippet; each side is kept while the other shows.
-        ToolbarItem(placement: .navigation) {
+        // S17-AC2: centred in the toolbar.
+        ToolbarItem(placement: .principal) {
             ContentKindPicker(model: model)
         }
         ToolbarSpacer(.flexible, placement: .primaryAction)
@@ -27,14 +28,15 @@ struct EditorToolbar: ToolbarContent {
         }
         ToolbarSpacer(.fixed, placement: .primaryAction)
         ToolbarItem(placement: .primaryAction) {
+            // S17-AC3: shows or hides the annotation bar (shown by default).
             Button {
-                model.toggleAnnotateMode()
+                model.toggleAnnotationBar()
             } label: {
                 Label(UIStrings.annotate, systemImage: "pencil.tip.crop.circle")
             }
-            .help(UIStrings.annotateAccessibility)
-            .accessibilityLabel(UIStrings.annotateAccessibility)
-            .disabled(!model.canAnnotate)
+            .help(model.annotationBarToggleTitle)
+            .accessibilityLabel(model.annotationBarToggleTitle)
+            .disabled(!model.canToggleAnnotationBar)
             Button {
                 model.toggleAnimateMode()
             } label: {

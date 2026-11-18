@@ -81,12 +81,15 @@ struct CanvasGesturesTests {
         #expect(CanvasTwist(startRotation: 170).rotation(angle: 12) == 180)
     }
 
-    @Test("[S6-AC24] the preview renders at the displayed size, never below 1×, never above the max side")
+    @Test("[S6-AC24] the preview renders at the displayed size (128 px steps), never above the max side")
     func previewSizing() {
         let canvas = PixelSize(width: 800, height: 600)
         #expect(PreviewSizing.scale(canvas: canvas, displayPixels: nil) == 1)
-        // Display smaller than the canvas: unchanged 1×.
-        #expect(PreviewSizing.scale(canvas: canvas, displayPixels: (400, 300)) == 1)
+        // Display smaller than the canvas: rendered at the displayed size (long side 400 → 512 after quantising),
+        // not at full canvas resolution.
+        #expect(PreviewSizing.scale(canvas: canvas, displayPixels: (400, 300)) == 512 / 800.0)
+        // Never below one 128 px step on the long side, however small the display.
+        #expect(PreviewSizing.scale(canvas: canvas, displayPixels: (1, 1)) == 128 / 800.0)
         // Display 2000 × 1200: fits by height (2×), quantised up to a 128 px step on the long side.
         let scale = PreviewSizing.scale(canvas: canvas, displayPixels: (2000, 1200))
         #expect(scale >= 2 && scale < 2 + 128 / 800.0)

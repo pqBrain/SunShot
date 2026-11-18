@@ -1,7 +1,7 @@
 public import Foundation
 
-/// `document.json` inside a `.sunshot` package: the whole `Project`, the applied theme and where each media file
-/// lives. Media bytes are never stored in the JSON.
+/// `document.json` inside a `.sunshot` package: the whole `Project` and where each media file lives. Media bytes
+/// are never stored in the JSON. (Documents saved before S17 may also hold a `theme` record; it is ignored.)
 ///
 /// Decoding is tolerant: the stored JSON is laid over the JSON of a default document, so fields added by later
 /// versions (or other slices) take their defaults when missing, and unknown keys are ignored.
@@ -17,8 +17,6 @@ public struct DocumentManifest: Codable, Hashable, Sendable {
     public var content: ContentEntry?
     /// Every media file in the package (content and user backdrop images), keyed by id.
     public var media: [MediaEntry]
-    /// The theme last applied (nil = "No Theme").
-    public var theme: Theme?
     /// Code-snippet content (S11), stored inline; nil for image or empty documents.
     public var snippet: CodeSnippet?
     /// Non-destructive crop of the content image (S10), in its pixels; nil (or missing) = the whole image.
@@ -30,7 +28,7 @@ public struct DocumentManifest: Codable, Hashable, Sendable {
 
     public init(
         schemaVersion: Int = DocumentManifest.currentSchemaVersion, project: Project = Project(),
-        content: ContentEntry? = nil, media: [MediaEntry] = [], theme: Theme? = nil, snippet: CodeSnippet? = nil,
+        content: ContentEntry? = nil, media: [MediaEntry] = [], snippet: CodeSnippet? = nil,
         crop: CropRect? = nil, video: VideoEntry? = nil, slots: [SlotEntry]? = nil
     ) {
         self.slots = slots
@@ -41,7 +39,6 @@ public struct DocumentManifest: Codable, Hashable, Sendable {
         self.project = project
         self.content = content
         self.media = media
-        self.theme = theme
     }
 }
 

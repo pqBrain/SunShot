@@ -153,7 +153,8 @@ extension FrameGeometry {
             let screen = device.screenSize(for: contentSize)
             return (screen.width, screen.height, device.insets(screenWidth: screen.width))
         }
-        return (Double(contentSize.width), Double(contentSize.height), insets(for: frame))
+        let width = Double(contentSize.width)
+        return (width, Double(contentSize.height), insets(for: frame, contentWidth: width))
     }
 
     /// Like `layoutBox(for:contentSize:)`, plus the S15 screenshot layout of `project` around the frame box: the

@@ -3,10 +3,14 @@ public import SunshotCore
 /// Annotate mode copy (S9).
 extension UIStrings {
     public static let annotate = "Annotate"
-    public static let annotateAccessibility = "Annotate, ⇧⌘A"
+    /// S17-AC3: the toolbar's Annotate button.
+    public static let hideAnnotationBar = "Hide the annotation bar"
+    public static let showAnnotationBar = "Show the annotation bar"
     public static let doneAnnotating = "Done"
     public static let doneAnnotatingAccessibility = "Leave Annotate mode, Esc"
     public static let clearAnnotations = "Clear Annotations"
+    /// S17-AC8: the annotation bar's short label (the menu keeps "Clear Annotations").
+    public static let clearAnnotationsShort = "Clear"
     public static let deleteSelection = "Delete"
     public static let annotationColor = "Colour"
     public static let customAnnotationColor = "Custom colour"
@@ -14,7 +18,6 @@ extension UIStrings {
     public static let lineStyle = "Line style"
     public static let fill = "Fill"
     public static let stickers = "Stickers…"
-    public static let stickersAccessibility = "Stickers, ⌥⌘S"
     public static let redactionMode = "Redaction"
     public static let stepFormat = "Step labels"
     public static let textPlaceholder = "Type text"

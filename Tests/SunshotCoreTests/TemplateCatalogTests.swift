@@ -101,17 +101,4 @@ struct TemplateCatalogTests {
         #expect(TemplateCatalogError.missingResource != .invalid("x"))
     }
 
-    @Test("[S12-AC20] themes carry the device; a theme without it removes the device")
-    func themeCarriesDevice() throws {
-        var project = Project()
-        project.frame.device = DeviceSelection(model: "laptop", finish: "sage", arrangement: "laptop-phone")
-        let theme = try Theme.extract(from: project, name: "Desk")
-        #expect(theme.style["frameDevice"] != nil)
-        #expect(try theme.apply(to: Project()).frame.device == project.frame.device)
-        var legacy = theme
-        legacy.style["frameDevice"] = nil
-        #expect(try legacy.apply(to: project).frame.device == nil)
-        let plain = try Theme.extract(from: Project(), name: "Plain")
-        #expect(try plain.apply(to: project).frame.device == nil)
-    }
 }

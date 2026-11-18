@@ -6,18 +6,22 @@ public import SunshotCore
 /// placement removed, since each thumbnail replaces it), the content and the backdrop media.
 public struct LayoutThumbnailKey: Hashable, Sendable {
     public let project: Project
-    public let contentID: UUID
+    /// The image content's id (nil for a code snippet).
+    public let contentID: UUID?
+    /// S17: a code snippet is content too, so editing the code refreshes the thumbnails.
+    public let snippet: CodeSnippet?
     public let mediaIDs: [String]
     /// S15: slot images by index (their ids), so a new slot image refreshes the thumbnails.
     public let slotIDs: [Int: UUID]
     public let maxSide: Int
 
     public init?(document: EditorDocument, maxSide: Int) {
-        guard let content = document.content else { return nil }
+        guard document.content != nil || document.snippet != nil else { return nil }
         var project = document.project
         project.placement = ContentPlacement()
         self.project = project
-        contentID = content.id
+        contentID = document.content?.id
+        snippet = document.snippet
         mediaIDs = document.media.keys.sorted()
         slotIDs = document.slots.mapValues(\.id)
         self.maxSide = maxSide
@@ -32,7 +36,7 @@ public enum LayoutThumbnails {
 
     /// Render scale that fits the document's canvas into `maxSide`, or nil when there's no content.
     public static func scale(for document: EditorDocument, maxSide: Int) -> Double? {
-        guard let size = document.imageContentSize else { return nil }
+        guard let size = document.contentPixelSize else { return nil }
         let canvas = CanvasLayout.compute(contentSize: size, project: document.project).canvasSize
         return Double(max(maxSide, 1)) / Double(max(canvas.width, canvas.height))
     }

@@ -76,7 +76,7 @@ struct SunshotCommands: Commands {
 
     private var isEditingText: Bool { NSApp.keyWindow?.firstResponder is NSText }
 
-    /// Standard edit actions go to a focused text field (Settings, theme name); returns false when there is none.
+    /// Standard edit actions go to a focused text field (Settings, the frame title); returns false when there is none.
     @discardableResult
     private func sendToTextField(_ action: Selector) -> Bool {
         guard isEditingText else { return false }

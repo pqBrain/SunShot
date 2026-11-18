@@ -2,17 +2,22 @@ import CoreGraphics
 import Foundation
 import SunshotCore
 
-/// Keeps the last few rendered backdrops (backdrop + below-content effects + preview grid) as raw pixels.
+/// Keeps the last few rendered preview backdrops (backdrop + below-content effects + preview grid) as raw pixels.
 ///
 /// Most edits (corners, shadow, position, frame, annotations) leave the backdrop unchanged, yet it is the
 /// costliest part of a render (per-pixel gradients, wallpapers and effects). A hit copies the stored bytes into
 /// the fresh context, so the result is byte-identical to drawing it again.
+///
+/// Only preview renders (those drawing a transparency grid) are stored: exports, copies and quick captures are
+/// one-offs, and caching them would pin hundreds of MB (an 8K export) for as long as the app runs.
 final class BackdropCache: Sendable {
     static let shared = BackdropCache()
 
     /// Renders smaller than this (thumbnails) are cheap; caching them would only evict the preview's entry.
     static let minimumPixels = 1_000_000
     static let capacity = 2
+    /// Larger renders are not stored (a full-screen 5K preview is ~60 MB; the preview max side is 6144 px).
+    static let maximumBytes = 96 << 20
 
     struct Key: Equatable, Sendable {
         let settings: BackdropSettings
@@ -38,11 +43,13 @@ final class BackdropCache: Sendable {
         _ settings: BackdropSettings, size: PixelSize, media: [String: MediaAsset], grid: TransparencyGrid?,
         in context: CGContext
     ) {
-        guard context.width * context.height >= Self.minimumPixels, let data = context.data else {
+        let byteCount = context.bytesPerRow * context.height
+        guard grid != nil, context.width * context.height >= Self.minimumPixels, byteCount <= Self.maximumBytes,
+            let data = context.data
+        else {
             EffectsRenderer.drawBackdrop(settings, size: size, media: media, grid: grid, in: context)
             return
         }
-        let byteCount = context.bytesPerRow * context.height
         // Only the media the backdrop draws matters; other media (slots, video) must not miss the cache.
         let usedID = settings.mediaReference?.id
         let used = media.filter { $0.key == usedID }

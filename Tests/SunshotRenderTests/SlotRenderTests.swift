@@ -116,7 +116,7 @@ struct SlotRenderTests {
         #expect(CollageRenderer.fitFactor(.zero, in: CGSize(width: 1, height: 1)) == 1)
         var window = Frame()
         window.kind = .macWindow
-        let chrome = FrameGeometry.insets(for: window)
+        let chrome = FrameGeometry.insets(for: window, contentWidth: 2000)  // S17-AC10: grows with width
         let framed = CollageRenderer.naturalBox(for: wide, contentHeight: 250, frame: window)
         #expect(framed.width == 2000 + chrome.horizontal && framed.height == 250 + chrome.vertical)
 

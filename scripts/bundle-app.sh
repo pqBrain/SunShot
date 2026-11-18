@@ -11,14 +11,19 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp "$BIN_DIR/Sunshot" "$APP/Contents/MacOS/Sunshot"
 # SwiftPM resource bundles (Bundle.module) live next to the executable's resources.
-find "$BIN_DIR" -maxdepth 1 -name 'Sunshot_*.bundle' -exec cp -R {} "$APP/Contents/Resources/" \;
+# Test-target bundles (Sunshot_*Tests.bundle) share the bin dir after `swift test -c release`; never ship them.
+find "$BIN_DIR" -maxdepth 1 -name 'Sunshot_*.bundle' ! -name '*Tests.bundle' -exec cp -R {} "$APP/Contents/Resources/" \;
+# S17: the app icon is drawn by Sunshot's own code at build time (no artwork is checked in).
+scripts/make-app-icon.sh "$APP/Contents/Resources/AppIcon.icns"
 
 VERSION="$(cat VERSION)"
 BUILD="$(git rev-list --count HEAD 2>/dev/null || echo 0)"
 sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD/" Support/Info.plist > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 
-strip -x "$APP/Contents/MacOS/Sunshot" 2>/dev/null || true
+# Full strip (not -x): an executable needs no local or global symbol table at runtime; Swift metadata lives in its
+# own sections. Saves ~0.6 MB. Crash logs then show addresses only; keep the unstripped .build binary to symbolicate.
+strip "$APP/Contents/MacOS/Sunshot"
 # Signing identity: an ad-hoc signature's designated requirement is the binary's cdhash, so macOS privacy grants
 # (Screen Recording) are lost on every rebuild. A real certificate keeps the requirement stable across builds.
 # Order: $SUNSHOT_SIGN_IDENTITY, then an "Apple Development" or "Sunshot Local Signing" certificate, else ad-hoc.

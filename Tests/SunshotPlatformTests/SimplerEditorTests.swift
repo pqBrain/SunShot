@@ -31,14 +31,12 @@ struct SimplerEditorTests {
         #expect(UIStrings.copyPNG == "Copy PNG" && UIStrings.exportOptionsMenu == "Export Options…")
     }
 
-    @Test("[S7-AC24] the sidebar picker offers Layouts, Templates and Themes in that order")
+    @Test("[S7-AC24] [S17-AC1] the sidebar picker offers Layouts and Templates in that order, no Themes")
     func sidebarPanes() {
-        #expect(SidebarPane.allCases.map(\.title) == ["Layouts", "Templates", "Themes"])
-        #expect(SidebarPane.allCases.map(\.id) == ["layouts", "templates", "themes"])
+        #expect(SidebarPane.allCases.map(\.title) == ["Layouts", "Templates"])
+        #expect(SidebarPane.allCases.map(\.id) == ["layouts", "templates"])
         #expect(UIStrings.layoutsEmpty == "Add an image to try layouts.")
-        #expect(UIStrings.themeRow("Ocean", applied: true) == "Theme: Ocean, applied")
-        #expect(UIStrings.themeRow("Ocean", applied: false) == "Theme: Ocean")
-        #expect(UIStrings.saveCurrentTheme == "Save current style as theme")
+        #expect(UIStrings.sidebarPickerAccessibility == "Show layouts or templates")
     }
 
     @Test("[S7-AC25] the setting (on by default) styles the first image's backdrop; off keeps it; it persists")

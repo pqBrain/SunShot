@@ -8,9 +8,9 @@ struct GlobalShortcutTests {
         GlobalShortcut(keyCode: code, modifiers: modifiers, keyLabel: label)
     }
 
-    @Test("[S10-AC19] [S16-AC1] the default is ⌥⇧⌘4, copying with the default style")
+    @Test("[S10-AC19] [S16-AC1] the default is ⇧⌘S, copying with the default style")
     func defaults() {
-        #expect(GlobalShortcut.default.description == "⌥⇧⌘4")
+        #expect(GlobalShortcut.default.description == "⇧⌘S")
         #expect(GlobalShortcut.default.isValid)
         #expect(AppSettings().captureShortcut == .default)
         #expect(AppSettings().globalCaptureDestination == .styledClipboard)

@@ -10,7 +10,6 @@ extension UIStrings {
     public static let cropReset = "Reset"
     public static let cropResetAccessibility = "Reset the crop to the whole image"
     public static let cropApply = "Apply"
-    public static let removeCrop = "Remove Crop"
     public static let cropArea = "Crop area"
     public static let cropHint = "Drag the corners or edges to crop. Drag inside to move. The original image is kept."
 
@@ -34,9 +33,6 @@ extension UIStrings {
     public static let captureArea = "Capture Area…"
     public static let captureWindow = "Capture Window…"
     public static let captureWebsite = "Capture Website…"
-    public static let captureAreaHint = "Drag to choose an area. Press Esc to cancel."
-    public static let windowPickerTitle = "Capture a Window"
-    public static let windowPickerEmpty = "No windows to capture."
     public static let captureButton = "Capture"
     public static let websiteTitle = "Capture a Website"
     public static let websiteAddress = "Website address"
@@ -52,6 +48,32 @@ extension UIStrings {
         "Lets \(shortcut) start an area capture even when Sunshot is in the background."
     }
     public static let captureShortcutLabel = "Shortcut"
+    /// S17: the Settings row title of each global shortcut.
+    public static func globalShortcutTitle(_ action: GlobalShortcutAction) -> String {
+        switch action {
+        case .captureArea: globalCaptureShortcut
+        case .captureWindow: "Capture Window from anywhere"
+        case .openStudio: "Open Studio from anywhere"
+        }
+    }
+    public static func globalShortcutHint(_ action: GlobalShortcutAction, _ shortcut: GlobalShortcut) -> String {
+        switch action {
+        case .captureArea: globalCaptureShortcutHint(shortcut)
+        case .captureWindow: "Lets \(shortcut) start a window capture even when Sunshot is in the background."
+        case .openStudio: "Lets \(shortcut) bring the studio forward from any app."
+        }
+    }
+    public static func globalShortcutName(_ action: GlobalShortcutAction) -> String {
+        switch action {
+        case .captureArea: "Capture Area"
+        case .captureWindow: "Capture Window"
+        case .openStudio: "Open Studio"
+        }
+    }
+    /// S17: the recorded keys already belong to another of Sunshot's global shortcuts.
+    public static func shortcutInUse(by action: GlobalShortcutAction) -> String {
+        "\(globalShortcutName(action)) already uses these keys."
+    }
     public static let recordShortcutPrompt = "Type shortcut…"
     public static let recordShortcutHelp = "Click, then press the new keys. Esc cancels."
     public static let restoreDefaultShortcut = "Restore Default"
@@ -85,9 +107,4 @@ extension UIStrings {
 
     /// "2 s".
     public static func delayLabel(_ seconds: Double) -> String { "\(Int(seconds.rounded())) s" }
-
-    /// "Safari — Start Page, 1440 × 900".
-    public static func windowLabel(_ window: CapturableWindow) -> String {
-        "\(window.displayName), \(pixelSize(width: window.width, height: window.height))"
-    }
 }

@@ -6,7 +6,7 @@ import Testing
 @testable import SunshotRender
 
 /// The backdrop cache must be invisible: a render served from it is byte-identical to one drawn from scratch.
-@Suite("Backdrop cache")
+@Suite("Backdrop cache", .serialized)
 struct BackdropCacheTests {
     static let canvas = CanvasSpec.exact(PixelSize(width: 1400, height: 1000))
 
@@ -25,12 +25,26 @@ struct BackdropCacheTests {
     func hitMatchesFreshRender() throws {
         let content = try SampleContent.image()
         let gradient = Backdrop.gradient(SunshotDefaults.gradient)
-        // Prime the cache, then change only the corners: the backdrop is served from the cache.
-        _ = try Self.render(Self.project(radius: 10, backdrop: gradient), content: content)
-        let cached = try Self.render(Self.project(radius: 60, backdrop: gradient), content: content)
+        // Prime the cache with a preview render, then change only the corners: the backdrop comes from the cache.
+        _ = try Self.render(Self.project(radius: 10, backdrop: gradient), content: content, grid: .standard)
+        #expect(BackdropCache.shared.contains(width: 1400, height: 1000))
+        let cached = try Self.render(Self.project(radius: 60, backdrop: gradient), content: content, grid: .standard)
         BackdropCache.shared.removeAll()
-        let fresh = try Self.render(Self.project(radius: 60, backdrop: gradient), content: content)
+        let fresh = try Self.render(Self.project(radius: 60, backdrop: gradient), content: content, grid: .standard)
         #expect(cached == fresh)
+    }
+
+    @Test("exports (no transparency grid) are never cached, and purgeCaches empties the cache")
+    func exportsBypassAndPurge() throws {
+        let content = try SampleContent.image()
+        let gradient = Backdrop.gradient(SunshotDefaults.gradient)
+        BackdropCache.shared.removeAll()
+        _ = try Self.render(Self.project(radius: 10, backdrop: gradient), content: content)
+        #expect(!BackdropCache.shared.contains(width: 1400, height: 1000))
+        _ = try Self.render(Self.project(radius: 10, backdrop: gradient), content: content, grid: .standard)
+        #expect(BackdropCache.shared.contains(width: 1400, height: 1000))
+        Renderer.purgeCaches()
+        #expect(!BackdropCache.shared.contains(width: 1400, height: 1000))
     }
 
     @Test("a backdrop or grid change misses the cache")
@@ -52,7 +66,8 @@ struct BackdropCacheTests {
         BackdropCache.shared.removeAll()
         var project = Project.plain(canvas: .exact(PixelSize(width: 200, height: 120)), backdrop: .none, padding: 10)
         project.border = Border(style: .sharp)
-        let image = try Renderer.render(project: project, content: SampleContent.image(width: 100, height: 60))
+        let image = try Renderer.render(
+            project: project, content: SampleContent.image(width: 100, height: 60), grid: .standard)
         #expect(image.width == 200)
         #expect(!BackdropCache.shared.contains(width: 200, height: 120))
     }

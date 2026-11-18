@@ -622,3 +622,12 @@ S5, S6, S7, S8, S9, S11 and S14 were built in parallel and merged on main. What 
 - Menu shortcuts added in wave 2 (all in `MenuCatalog`, unique-checked): Capture Area ⌥⇧⌘4, Capture Window ⌥⇧⌘5,
   Capture Website ⌥⇧⌘L, Crop ⌥⌘C, Templates ⇧⌘T, Animate ⇧⌘M, Import Video ⌥⌘I, Export Video ⌃⌘E.
 - Annotate mode stays disabled for transformed content, snippets and device mockups (pointer mapping follow-up).
+
+## Global shortcut defaults (2026-11-18)
+- Default global shortcuts are now Capture Area ⇧⌘S, Capture Window ⇧⌘W and Open Studio ⇧⌘0 (were ⌥⇧⌘4/5/0).
+  File ▸ Capture Area… / Capture Window… use the same keys, as before.
+- A registered global hot key wins over every app's menus, so these keys no longer reach Save As / Duplicate (⇧⌘S)
+  or Close Window / Close All (⇧⌘W) in other apps while the shortcut is on. Users can turn each off or re-record it.
+- Sunshot's own Save As… moves to ⌥⇧⌘S (the macOS convention when ⇧⌘S is taken).
+- Stored settings keep their keys: an install that already saved the old defaults keeps ⌥⇧⌘4/5/0 until Restore
+  Default.

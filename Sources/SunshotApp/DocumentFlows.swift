@@ -152,9 +152,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return styler
     }()
 
+    /// Drops re-renderable images when the system runs short of memory.
+    private var memoryMonitor: MemoryPressureMonitor?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller.settings.appearance.apply(to: NSApplication.shared)
-        Task { await controller.recoverDraft() }
+        memoryMonitor = MemoryPressureMonitor { [controller] in controller.model.releaseCachedImages() }
+        // `--no-draft-recovery` (the launch check): start empty, so the measured idle footprint doesn't depend on
+        // whichever untitled draft this Mac happens to hold.
+        if !CommandLine.arguments.contains("--no-draft-recovery") { Task { await controller.recoverDraft() } }
         observeSettings()
         NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification, object: nil, queue: .main
@@ -174,9 +180,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             controller.settings.showsMenuBarIcon
         else { return }
         NSApp.setActivationPolicy(.accessory)
+        // Sunshot stays in the menu bar: keep the document, drop what the closed studio can render again.
+        controller.model.releaseCachedImages()
     }
 
-    /// The global shortcut lives here, not on the window, so it works while the window is closed. Re-registered
+    /// The global shortcuts live here, not on the window, so they work while the window is closed. Re-registered
     /// whenever Settings change.
     private func observeSettings() {
         let settings = withObservationTracking {
@@ -185,8 +193,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in self?.observeSettings() }
         }
         let controller = controller
-        hotkey.configure(settings.captureHotkeyEnabled ? settings.captureShortcut : nil) {
-            AreaCapture.start(controller: controller, destination: controller.settings.globalCaptureDestination)
+        hotkey.configure(settings.activeShortcuts) { action in
+            let destination = controller.settings.globalCaptureDestination
+            switch action {
+            case .captureArea: AreaCapture.start(controller: controller, destination: destination)
+            case .captureWindow: WindowCapture.start(controller: controller, destination: destination)
+            case .openStudio: Studio.show(controller)
+            }
         }
         screenshotStyler.setRunning(settings.styleSystemScreenshots)
         // Hiding the icon while the window is closed would leave no way back: bring the studio forward.

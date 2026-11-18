@@ -53,6 +53,7 @@ private struct StudioWindowContent: View {
             .frame(minWidth: 820, minHeight: 540)
             .onAppear {
                 Studio.openWindow = openWindow
+                appDelegate.controller.model.studioWillShow()
                 // Outside the scene update: changing the policy mid-update re-enters SwiftUI's scene graph.
                 Task { @MainActor in
                     if NSApp.activationPolicy() != .regular { NSApp.setActivationPolicy(.regular) }

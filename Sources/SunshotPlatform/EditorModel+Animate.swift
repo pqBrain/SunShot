@@ -58,6 +58,8 @@ extension EditorModel {
             animate.frame = nil
             animate.frameDocument = nil
             animate.selectedClipID = nil
+            // The decoder holds an AVAssetReader and two decoded frames; reopened on the next Animate.
+            animate.videoSource = nil
         }
     }
 

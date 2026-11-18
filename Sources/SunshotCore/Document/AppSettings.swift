@@ -15,11 +15,17 @@ public struct AppSettings: Equatable, Sendable {
     public var confirmReset: Bool
     /// Template opened for new documents and Start Over: a template id (S12), or the name saved by S7.
     public var defaultTemplate: String
-    /// S10: the global Capture Area shortcut (⌥⇧⌘4 unless changed) works while Sunshot is in the background.
+    /// S10: the global Capture Area shortcut (⇧⌘S unless changed) works while Sunshot is in the background.
     /// S16: on by default, since Sunshot keeps running in the menu bar for quick captures.
     public var captureHotkeyEnabled: Bool
     /// S10: the keys of the global Capture Area shortcut (Settings ▸ Shortcut).
     public var captureShortcut: GlobalShortcut
+    /// S17: the global Capture Window shortcut (⇧⌘W unless changed) and whether it is on.
+    public var windowHotkeyEnabled: Bool
+    public var windowShortcut: GlobalShortcut
+    /// S17: the global Open Studio shortcut (⇧⌘0 unless changed) and whether it is on.
+    public var studioHotkeyEnabled: Bool
+    public var studioShortcut: GlobalShortcut
     /// S10: what a global-shortcut capture does: open in the editor, or copy to the clipboard (S16: styled, by default).
     public var globalCaptureDestination: GlobalCaptureDestination
     /// S12: offer the device that matches imported media (Settings ▸ Device Mockups).
@@ -45,8 +51,15 @@ public struct AppSettings: Equatable, Sendable {
         captureHotkeyEnabled: Bool = true, captureShortcut: GlobalShortcut = .default,
         globalCaptureDestination: GlobalCaptureDestination = .styledClipboard, suggestDevice: Bool = true,
         autoBackdropOnImport: Bool = true, askToSaveOnClose: Bool = true, showsMenuBarIcon: Bool = true,
-        annotateOnOpen: Bool = true, styleSystemScreenshots: Bool = true
+        annotateOnOpen: Bool = true, styleSystemScreenshots: Bool = true, windowHotkeyEnabled: Bool = true,
+        windowShortcut: GlobalShortcut = GlobalShortcutAction.captureWindow.defaultShortcut,
+        studioHotkeyEnabled: Bool = true,
+        studioShortcut: GlobalShortcut = GlobalShortcutAction.openStudio.defaultShortcut
     ) {
+        self.windowHotkeyEnabled = windowHotkeyEnabled
+        self.windowShortcut = windowShortcut
+        self.studioHotkeyEnabled = studioHotkeyEnabled
+        self.studioShortcut = studioShortcut
         self.styleSystemScreenshots = styleSystemScreenshots
         self.showsMenuBarIcon = showsMenuBarIcon
         self.annotateOnOpen = annotateOnOpen

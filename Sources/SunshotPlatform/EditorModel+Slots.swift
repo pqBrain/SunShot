@@ -59,7 +59,13 @@ extension EditorModel {
         let accessing = url.startAccessingSecurityScopedResource()
         defer { if accessing { url.stopAccessingSecurityScopedResource() } }
         do {
-            try importSlotData(try Data(contentsOf: url), number: number)
+            // Read and decode off the main actor: a large or network-mounted file must not freeze the studio.
+            let (data, image) = try await Task.detached(priority: .userInitiated) {
+                let data = try Data(contentsOf: url)
+                return (data, try ImageLoader.load(data))
+            }.value
+            finishContinuousEdit()
+            session.setSlotImage(image, data: data, at: number)
         } catch {
             alert = AlertContent(
                 title: UIStrings.screenshotFailedTitle,
@@ -74,11 +80,6 @@ extension EditorModel {
         guard let first = urls.first(where: isSupportedImageFile) else { return false }
         await importSlotFile(at: first, number: number)
         return true
-    }
-
-    func importSlotData(_ data: Data, number: Int) throws {
-        finishContinuousEdit()
-        try session.importSlotImage(data: data, at: number)
     }
 
     /// Paste and capture: the first image becomes the content, every later one is added as the next screenshot

@@ -36,14 +36,6 @@ public struct AnnotationPoint: Codable, Hashable, Sendable {
 public enum AnnotationKind: String, Codable, CaseIterable, Sendable {
     case pen, highlighter, arrow, rectangle, text, step, redact, sticker
 
-    /// Kinds whose geometry is a rectangle given by two corner points.
-    public var isBoxed: Bool {
-        switch self {
-        case .rectangle, .text, .step, .redact, .sticker: true
-        case .pen, .highlighter, .arrow: false
-        }
-    }
-
     /// Kinds that resize uniformly (their aspect ratio is fixed).
     public var keepsAspect: Bool { self == .text || self == .step || self == .sticker }
 }

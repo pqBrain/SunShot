@@ -34,7 +34,7 @@ extension RenderPerformanceTests {
         #expect(median <= .milliseconds(500), "median \(median)")
     }
 
-    @Test("[S5-AC17] 8000×8000 with a mac window frame exports 8128×8156 at 1× with ≤ 1.5 GB peak growth")
+    @Test("[S5-AC17] 8000×8000 with a mac window frame exports 8128×8284 at 1× with ≤ 1.5 GB peak growth")
     func hugeFramed() throws {
         var session = EditorSession()
         session.setContent(try SampleContent.image(width: 8000, height: 8000))
@@ -44,7 +44,8 @@ extension RenderPerformanceTests {
         let data = try session.exportImageData()
         let peak = MemoryProbe.peakFootprint()
         let image = try ImageCodec.decode(data)
-        #expect((image.width, image.height) == (8128, 8156))
+        // S17-AC10: the 28 px bar grows to 155.6 px for 8000 px content.
+        #expect((image.width, image.height) == (8128, 8284))
         let growth = Double(peak - min(before, peak)) / 1_073_741_824
         print("perf.export8k_framed.peak_growth_gb=\(growth)")
         #expect(growth <= 1.5, "peak growth \(growth) GB")

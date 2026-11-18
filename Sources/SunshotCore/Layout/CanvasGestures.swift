@@ -92,14 +92,16 @@ public struct CanvasTwist: Hashable, Sendable {
     }
 }
 
-/// S6: the preview renders at the size it is displayed (sharp when it fills the editor), never above
-/// `SunshotDefaults.previewMaxSide`.
+/// S6: the preview renders at the size it is displayed (sharp when it fills the editor, no larger than shown when
+/// the canvas is bigger than the editor), never above `SunshotDefaults.previewMaxSide`.
 public enum PreviewSizing {
     /// Displayed longest side is quantised to this many pixels so a window resize doesn't re-render every point.
     public static let quantum: Double = 128
 
     /// The render scale for a canvas of `canvas` px shown in a box whose longest side fits `displayPixels`
     /// device pixels. Without a display size it is 1 (one canvas pixel per preview pixel), capped by the max side.
+    /// A canvas larger than the display renders at the display size: a 5K screenshot shown in a 2K area costs a
+    /// 2K render per edit, not a 5K one (and a quarter of the memory).
     public static func scale(canvas: PixelSize, displayPixels: (width: Double, height: Double)?) -> Double {
         let width = Double(max(canvas.width, 1))
         let height = Double(max(canvas.height, 1))
@@ -109,6 +111,6 @@ public enum PreviewSizing {
         else { return min(1, cap) }
         let fit = min(display.width / width, display.height / height)
         let quantised = max((fit * max(width, height) / quantum).rounded(.up), 1) * quantum / max(width, height)
-        return min(max(quantised, 1), cap)
+        return min(quantised, cap)
     }
 }

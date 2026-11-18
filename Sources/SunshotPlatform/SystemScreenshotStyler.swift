@@ -11,7 +11,9 @@ import os
 /// shows its window's own title bar); the original stays beside it for the studio's paste.
 @MainActor
 public final class SystemScreenshotStyler {
-    public static let pollInterval: Duration = .milliseconds(400)
+    public static let pollInterval: Duration = .milliseconds(500)
+    /// Lets the system coalesce the poll with other wakeups (it runs for as long as Sunshot sits in the menu bar).
+    static let pollTolerance: Duration = .milliseconds(250)
     private static let log = Logger(subsystem: "app.sunshot", category: "clipboard-styler")
 
     private let pasteboard: NSPasteboard
@@ -36,8 +38,9 @@ public final class SystemScreenshotStyler {
             seenChangeCount = pasteboard.changeCount
             polling = Task { [weak self] in
                 while !Task.isCancelled {
-                    try? await Task.sleep(for: Self.pollInterval)
-                    await self?.check()
+                    try? await Task.sleep(for: Self.pollInterval, tolerance: Self.pollTolerance)
+                    guard let self else { return }
+                    await self.check()
                 }
             }
         } else {

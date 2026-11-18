@@ -72,16 +72,19 @@ struct EditorView: View {
             updatePreviewDisplay()
         }
         .onChange(of: model.showsAnnotationBar) { updatePreviewDisplay() }
-        .overlay(alignment: .bottom) { NoticeBanner(model: model) }
         .overlay(alignment: .top) {
             if model.showsAnnotationBar { AnnotationPalette(model: model).padding(.top, 10) }
         }
         .overlay(alignment: .bottom) {
-            if model.hasContent, !model.annotate.isActive {
-                if model.animate.isActive {
-                    AnimateTimelineView(model: model)
-                } else {
-                    BottomToolbar(model: model)
+            // S17-AC4: messages stack above the bottom bar instead of sitting under it.
+            VStack(spacing: 0) {
+                NoticeBanner(model: model)
+                if model.showsBottomBar {
+                    if model.animate.isActive {
+                        AnimateTimelineView(model: model)
+                    } else {
+                        BottomToolbar(model: model)
+                    }
                 }
             }
         }
@@ -195,7 +198,7 @@ struct NoticeBanner: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .glassEffect(.regular, in: .capsule)
-                .padding(.bottom, 20)
+                .padding(.bottom, model.showsBottomBar ? 8 : 20)
                 .task(id: notice) {
                     try? await Task.sleep(for: .seconds(3))
                     if model.notice == notice { model.notice = nil }

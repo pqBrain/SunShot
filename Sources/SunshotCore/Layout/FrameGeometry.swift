@@ -41,9 +41,12 @@ public struct FrameGeometry: Hashable, Sendable {
     /// Card and thick-border frames are concentric: their outer radius is the S2 radius plus this.
     public let outerRadiusExtra: Double
 
-    /// Chrome around the content for `frame`.
-    public static func insets(for frame: Frame) -> FrameInsets {
-        let scale = frame.scaleFactor
+    /// Chrome around content `contentWidth` pixels wide for `frame` (S17: it grows with wide content; 0 = 1×).
+    public static func insets(for frame: Frame, contentWidth: Double = 0) -> FrameInsets {
+        insets(for: frame, scale: frame.chromeScale(contentWidth: contentWidth))
+    }
+
+    private static func insets(for frame: Frame, scale: Double) -> FrameInsets {
         switch frame.kind {
         case .none:
             return .zero
@@ -63,6 +66,15 @@ public struct FrameGeometry: Hashable, Sendable {
         }
     }
 
+    /// The content width inside a frame box `boxWidth` wide: the inverse of `content + insets(for:contentWidth:)`
+    /// (the side chrome itself grows with the content, so it is solved for, not subtracted).
+    public static func contentWidth(boxWidth: Double, frame: Frame) -> Double {
+        let side = insets(for: frame, scale: frame.scaleFactor).horizontal
+        let reference = FrameMetrics.referenceContentWidth
+        if boxWidth - side <= reference { return max(0, boxWidth - side) }
+        return boxWidth / (1 + side / reference)
+    }
+
     static func backCardCount(_ kind: FrameKind) -> Int {
         switch kind {
         case .stack: 1
@@ -73,8 +85,8 @@ public struct FrameGeometry: Hashable, Sendable {
 
     /// Geometry for a frame box of `boxWidth` × `boxHeight` (content size + `insets(for:)`).
     public init(frame: Frame, boxWidth: Double, boxHeight: Double) {
-        let scale = frame.scaleFactor
-        let insets = Self.insets(for: frame)
+        let scale = frame.chromeScale(contentWidth: Self.contentWidth(boxWidth: boxWidth, frame: frame))
+        let insets = Self.insets(for: frame, scale: scale)
         kind = frame.kind
         self.scale = scale
         content = LayoutRect(

@@ -219,7 +219,7 @@ struct CaptureFlowTests {
     @Test("[S10-AC17] capture and crop menu items have unique shortcuts; the global shortcut setting persists")
     func menusAndSettings() {
         let expected: [(MenuCommand, String, String)] = [
-            (.captureArea, "Capture Area…", "⌥⇧⌘4"), (.captureWindow, "Capture Window…", "⌥⇧⌘5"),
+            (.captureArea, "Capture Area…", "⇧⌘S"), (.captureWindow, "Capture Window…", "⇧⌘W"),
             (.captureWebsite, "Capture Website…", "⌥⇧⌘L"), (.crop, "Crop…", "⌥⌘C"),
         ]
         for (command, title, shortcut) in expected {

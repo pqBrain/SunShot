@@ -38,6 +38,15 @@ public enum FrameMetrics {
     /// Title font size in the mac and Windows bars, and in the browser address field.
     public static let titleFontSize: Double = 13
     public static let addressFontSize: Double = 12
+    /// S17: chrome is sized for content this wide; wider content scales it up in proportion (a Retina capture of
+    /// a window is twice as wide in pixels, so its title bar is drawn twice as tall). Narrower content keeps 1×.
+    public static let referenceContentWidth: Double = 1440
+
+    /// How much wider than `referenceContentWidth` the content is (never below 1).
+    public static func widthScale(contentWidth: Double) -> Double {
+        guard contentWidth.isFinite, contentWidth > referenceContentWidth else { return 1 }
+        return contentWidth / referenceContentWidth
+    }
 }
 
 /// The frame around the content: kind, title and chrome scale.
@@ -81,6 +90,11 @@ public struct Frame: Codable, Hashable, Sendable {
 
     /// UI scale as a factor (1 = 100 %).
     public var scaleFactor: Double { uiScale / 100 }
+
+    /// S17: the chrome scale for content `contentWidth` pixels wide: the UI scale times the width scale.
+    public func chromeScale(contentWidth: Double) -> Double {
+        scaleFactor * FrameMetrics.widthScale(contentWidth: contentWidth)
+    }
 
     /// The title as drawn: empty when it is only whitespace.
     public var displayTitle: String {

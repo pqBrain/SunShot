@@ -26,8 +26,6 @@ public struct EditorDocument: Equatable, Sendable {
     public var project: Project
     public var content: ContentImage?
     public var media: [String: MediaAsset]
-    /// The theme last applied ("No Theme" when nil); undo restores it with the style.
-    public var theme: Theme?
     /// Code-snippet content (S11); when set it is the content and `content` is nil.
     public var snippet: CodeSnippet?
     /// Non-destructive crop of the content image (S10), in its pixels; nil shows the whole image.
@@ -40,17 +38,29 @@ public struct EditorDocument: Equatable, Sendable {
 
     public init(
         project: Project = Project(), content: ContentImage? = nil, media: [String: MediaAsset] = [:],
-        theme: Theme? = nil, snippet: CodeSnippet? = nil, crop: CropRect? = nil, video: VideoContent? = nil,
+        snippet: CodeSnippet? = nil, crop: CropRect? = nil, video: VideoContent? = nil,
         slots: [Int: ContentImage] = [:]
     ) {
         self.slots = slots
         self.project = project
         self.content = content
         self.media = media
-        self.theme = theme
         self.snippet = snippet
         self.crop = crop
         self.video = video
+    }
+}
+
+extension EditorDocument {
+    /// The images a document holds (content, screenshot slots, backdrop media), for the undo history's memory
+    /// budget: decoded pixels plus the original file bytes.
+    @Sendable static func historyResources(_ document: EditorDocument) -> [(id: String, bytes: Int)] {
+        func weight(_ image: CGImage, _ data: Data?) -> Int { image.bytesPerRow * image.height + (data?.count ?? 0) }
+        var list: [(id: String, bytes: Int)] = []
+        if let content = document.content { list.append((content.id.uuidString, weight(content.image, content.data))) }
+        for slot in document.slots.values { list.append((slot.id.uuidString, weight(slot.image, slot.data))) }
+        for (key, asset) in document.media { list.append(("media:" + key, weight(asset.image, asset.data))) }
+        return list
     }
 }
 
@@ -63,7 +73,8 @@ public struct EditorSession: Sendable {
     public internal(set) var history: UndoStack<EditorDocument>
 
     public init(document: EditorDocument = EditorDocument()) {
-        history = UndoStack(document)
+        history = UndoStack(
+            document, byteBudget: SunshotDefaults.undoImageBudgetBytes, resources: EditorDocument.historyResources)
     }
 
     public var document: EditorDocument { history.current }

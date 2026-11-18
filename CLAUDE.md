@@ -43,4 +43,5 @@ test; re-run to pass. `make snapshots-record` re-records all — review the PNG 
 records. On mismatch, `<name>.failure.png` and `<name>.diff.png` are written next to the reference.
 
 ## Commands
-`make help` · `make gate` · `make gate-fast` · `make gate-selftest` · `make format` · `make test` · `make run`
+`make help` · `make gate` · `make gate-fast` · `make gate-selftest` · `make format` · `make test` · `make run` ·
+`make monitor` (live CPU/memory of the running app; budgets `idle*` in `scripts/quality.json`, enforced by `make smoke`)

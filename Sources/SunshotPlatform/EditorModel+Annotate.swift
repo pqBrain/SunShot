@@ -31,6 +31,7 @@ extension EditorModel {
         guard active != annotate.isActive else { return }
         if active {
             guard canAnnotate else { return }
+            hidesAnnotationBar = false  // S17-AC3: Annotate mode (⇧⌘A, captures) always brings the bar back.
             annotate.isActive = true
         } else {
             commitTextEditing()
