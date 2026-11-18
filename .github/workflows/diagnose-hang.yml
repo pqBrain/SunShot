@@ -1,0 +1,17 @@
+# Temporary: find which tests hang on the CI runner. Remove with scripts/ci/diagnose-hang.sh.
+name: Diagnose test hang
+on:
+  pull_request:
+    paths: [".github/workflows/diagnose-hang.yml", "scripts/ci/diagnose-hang.sh"]
+jobs:
+  diagnose:
+    runs-on: macos-latest
+    timeout-minutes: 55
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: sw_vers && swift --version && sysctl -n hw.ncpu hw.memsize
+      - name: Each suspect test alone, 120 s limit
+        run: scripts/ci/diagnose-hang.sh 'VideoExportTests|VideoContentTests|WebKitCaptureTests|AnimateModelTests' 120
