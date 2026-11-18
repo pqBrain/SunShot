@@ -61,7 +61,8 @@ struct AnnotationRenderTests {
                 kind: .pen, points: wave.map { $0 + point(0, Double(index) * 70) }, color: Self.red, lineWidth: 6,
                 lineStyle: style)
         }
-        try assertSnapshot(try render(items), named: "s9-pen-styles")
+        // Dash and dot caps antialias differently on macOS 26 (CI) and 27: ~0.3% of pixels, edges only.
+        try assertSnapshot(try render(items), named: "s9-pen-styles", maxDifferingFraction: 0.005)
         let dot = try render([Annotation(kind: .pen, points: [point(50, 50)], color: .black, lineWidth: 10)])
         #expect(try PixelBuffer(dot).pixel(x: 70, y: 70) == [0, 0, 0, 255])
     }
