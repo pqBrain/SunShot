@@ -41,6 +41,8 @@ public struct AppSettings: Equatable, Sendable {
     /// S16: screenshots the macOS screenshot tool copies to the clipboard (⌃⌘⇧3/4, ⌘⇧5) are replaced there with
     /// the default style's render, frame None.
     public var styleSystemScreenshots: Bool
+    /// S18: look for a new Sunshot release once a day (Sunshot ▸ Check for Updates… works either way).
+    public var checkForUpdatesAutomatically: Bool
 
     public static let screenshotTemplate = "Screenshot"
     public static let defaults = AppSettings()
@@ -54,8 +56,10 @@ public struct AppSettings: Equatable, Sendable {
         annotateOnOpen: Bool = true, styleSystemScreenshots: Bool = true, windowHotkeyEnabled: Bool = true,
         windowShortcut: GlobalShortcut = GlobalShortcutAction.captureWindow.defaultShortcut,
         studioHotkeyEnabled: Bool = true,
-        studioShortcut: GlobalShortcut = GlobalShortcutAction.openStudio.defaultShortcut
+        studioShortcut: GlobalShortcut = GlobalShortcutAction.openStudio.defaultShortcut,
+        checkForUpdatesAutomatically: Bool = true
     ) {
+        self.checkForUpdatesAutomatically = checkForUpdatesAutomatically
         self.windowHotkeyEnabled = windowHotkeyEnabled
         self.windowShortcut = windowShortcut
         self.studioHotkeyEnabled = studioHotkeyEnabled

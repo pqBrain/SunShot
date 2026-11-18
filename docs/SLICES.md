@@ -34,6 +34,7 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 | S15 | Multiple screenshots | In progress | — |
 | S16 | Menu bar quick capture, default style & studio journey | In progress | — |
 | S17 | Studio polish, app icon & global shortcuts | In progress | — |
+| S18 | Check for updates & release 0.1.0 | In progress | — |
 
 **MVP = S1–S7** (a complete, saveable, still-image beautifier).
 
@@ -139,10 +140,18 @@ Screenshot | Code pickers; the Annotate button shows / hides the annotation bar;
 messages sit above the bottom bar; Sunshot app icon; customizable global
 shortcuts for Capture Window and Open Studio.
 
+### S18 — Check for updates & release 0.1.0
+Sunshot ▸ Check for Updates… (also in the menu bar menu and Settings ▸ About) asks
+the GitHub release feed for the newest version; an automatic check runs at most
+once a day (on by default, can be turned off). A new version opens an alert with
+its notes: Download (release page), Later, Skip This Version. Nothing is
+downloaded or installed by Sunshot. `make release` packages the app for the
+first public release, 0.1.0.
+
 ## Deferred — needs a product decision
 - Social post templates (X / Bluesky): need network fetching of third-party content.
 - Stock photo search (Unsplash): needs an API key and attribution rules.
 - Cloud storage & share links, accounts/sign-in.
 - Paid tiers / StoreKit paywall (the spec's [Pro] markers are ignored for now — everything is free).
-- Auto-update (Sparkle), signing & notarisation, App Store packaging.
+- Automatic download & install (Sparkle-style), signing & notarisation, App Store packaging (S18 only checks and links to the release page).
 - Share extension / Services menu / VS Code bridge.

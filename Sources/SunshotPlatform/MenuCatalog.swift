@@ -1,7 +1,7 @@
 /// Every menu-bar command. The app builds its menus from `MenuCatalog`, so titles and key equivalents are
 /// defined (and unit-tested for clashes) in one place.
 public enum MenuCommand: String, CaseIterable, Sendable {
-    case settings, hide, hideOthers, quit
+    case settings, checkForUpdates, hide, hideOthers, quit
     case new, newCodeSnippet, open, importMultiple, openRecent, close, save, saveAs, exportImage, exportAll, startOver
     case captureArea, captureWindow, captureWebsite, templateGallery
     case undo, redo, cut, copy, paste, selectAll, clearContent, crop
@@ -69,6 +69,8 @@ public enum MenuCatalog {
             title: "Sunshot",
             items: [
                 MenuItemSpec(.settings, "Settings…", KeyShortcut(","), system: true),
+                // S18: no key equivalent, like other Mac apps.
+                MenuItemSpec(.checkForUpdates, "Check for Updates…"),
                 MenuItemSpec(.hide, "Hide Sunshot", KeyShortcut("h"), system: true),
                 MenuItemSpec(.hideOthers, "Hide Others", KeyShortcut("h", [.command, .option]), system: true),
                 MenuItemSpec(.quit, "Quit Sunshot", KeyShortcut("q"), system: true),

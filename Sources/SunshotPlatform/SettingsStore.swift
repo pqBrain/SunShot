@@ -11,6 +11,7 @@ public struct SettingsStore {
         case suggestDevice, autoBackdropOnImport, askToSaveOnClose, showsMenuBarIcon, annotateOnOpen
         case styleSystemScreenshots, revision
         case windowHotkey, windowShortcut, studioHotkey, studioShortcut
+        case checkForUpdates
         var name: String { SettingsStore.prefix + rawValue }
     }
 
@@ -70,6 +71,9 @@ public struct SettingsStore {
         if defaults.object(forKey: Key.styleSystemScreenshots.name) != nil {
             settings.styleSystemScreenshots = defaults.bool(forKey: Key.styleSystemScreenshots.name)
         }
+        if defaults.object(forKey: Key.checkForUpdates.name) != nil {
+            settings.checkForUpdatesAutomatically = defaults.bool(forKey: Key.checkForUpdates.name)
+        }
         settings.exportFolder = BookmarkedURL.resolve(
             bookmark: defaults.data(forKey: Key.exportFolderBookmark.name),
             path: defaults.string(forKey: Key.exportFolderPath.name))
@@ -107,6 +111,7 @@ public struct SettingsStore {
         defaults.set(settings.showsMenuBarIcon, forKey: Key.showsMenuBarIcon.name)
         defaults.set(settings.annotateOnOpen, forKey: Key.annotateOnOpen.name)
         defaults.set(settings.styleSystemScreenshots, forKey: Key.styleSystemScreenshots.name)
+        defaults.set(settings.checkForUpdatesAutomatically, forKey: Key.checkForUpdates.name)
         defaults.set(Self.revision, forKey: Key.revision.name)
         if let folder = settings.exportFolder {
             if defaults.string(forKey: Key.exportFolderPath.name) != folder.path {

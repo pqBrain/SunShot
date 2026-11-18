@@ -7,6 +7,7 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var controller: DocumentController
     let hotkey: GlobalCaptureHotkey
+    let updates: UpdateChecker
 
     var body: some View {
         TabView {
@@ -14,7 +15,7 @@ struct SettingsView: View {
                 GeneralSettingsView(controller: controller, hotkey: hotkey)
             }
             Tab(UIStrings.aboutTab, systemImage: "info.circle") {
-                AboutSettingsView()
+                AboutSettingsView(controller: controller, updates: updates)
             }
         }
         // A fixed height that fits small screens: the General form scrolls inside it.

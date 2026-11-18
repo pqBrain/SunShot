@@ -13,14 +13,15 @@ struct SunshotApplication: App {
         }
         .defaultSize(width: 1180, height: 760)
         .commands { SunshotCommands(controller: appDelegate.controller) }
+        .commands { UpdateCommands(updates: appDelegate.updates) }
         .commands { BulkCommands(bulk: appDelegate.bulk) }
         .commands { AnnotateCommands(model: appDelegate.controller.model) }
         Settings {
-            SettingsView(controller: appDelegate.controller, hotkey: appDelegate.hotkey)
+            SettingsView(controller: appDelegate.controller, hotkey: appDelegate.hotkey, updates: appDelegate.updates)
         }
         // S16: Sunshot lives in the menu bar too, so the capture shortcut keeps working with no window open.
         MenuBarExtra(isInserted: menuBarIconShown) {
-            MenuBarContent(controller: appDelegate.controller)
+            MenuBarContent(controller: appDelegate.controller, updates: appDelegate.updates)
         } label: {
             Label(UIStrings.menuBarTitle, systemImage: "camera.aperture")
         }

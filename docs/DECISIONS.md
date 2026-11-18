@@ -640,3 +640,16 @@ S5, S6, S7, S8, S9, S11 and S14 were built in parallel and merged on main. What 
   to macOS 26 + Xcode 26.6 (the oldest supported macOS). It catches clean-checkout and older-compiler breaks.
 - The full gate (rendering, snapshots, video, WebKit, coverage, bundle, smoke, perf, self-test) runs in the
   pre-push hook on the developer's Mac. The pen-styles snapshot is back to the default 0.1% budget.
+
+## S18 implementation notes (2026-11-18)
+- **Update source:** GitHub's "latest release" API for `pqBrain/SunShot` (no server of our own, no third-party
+  framework). Drafts and pre-releases are never offered. A 404 (nothing published, or the repository is private)
+  reads as "No releases yet", not as an error.
+- **Check, don't install:** Download opens the release page; replacing the app is the user's step. Automatic
+  install (a Sparkle-style updater) needs Developer ID signing and notarisation first, so it stays deferred.
+- **Automatic check on by default,** at most once a day, silent unless a new version is found; the request carries
+  only `Sunshot/<version>` as user agent. The About ▸ Privacy copy says so. Failed checks aren't recorded, so they
+  retry within the hour while Sunshot runs.
+- **Launch check:** `--no-update-check` keeps the smoke launch (idle CPU/memory budget) off the network.
+- **Release 0.1.0:** `VERSION` already read 0.1.0 during development; S18 makes it the first published release
+  (tag `v0.1.0`, `make release`, CHANGELOG).
