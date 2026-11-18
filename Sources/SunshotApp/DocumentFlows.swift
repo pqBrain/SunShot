@@ -187,8 +187,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// The global shortcuts live here, not on the window, so they work while the window is closed. Re-registered
     /// whenever Settings change.
     private func observeSettings() {
+        // `self.` keeps Swift 6.3 from reading this as the local `controller` declared below.
         let settings = withObservationTracking {
-            controller.settings
+            self.controller.settings
         } onChange: { [weak self] in
             Task { @MainActor in self?.observeSettings() }
         }

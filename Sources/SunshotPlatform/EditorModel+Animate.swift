@@ -1,7 +1,7 @@
 public import CoreGraphics
 public import Foundation
 public import SunshotCore
-public import SunshotRender
+import SunshotRender
 
 /// What the Animate canvas shows: re-rendered whenever any part changes (the view keys a task on it).
 public struct AnimationFrameRequest: Equatable, Sendable {

@@ -104,7 +104,7 @@ struct ValueSlider: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.callout).foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
             HStack(spacing: 8) {
-                Slider(value: Binding(get: { value }, set: set), in: range) {
+                Slider(value: Binding(get: { value }, set: { set($0) }), in: range) {
                     Text(title)
                 } onEditingChanged: { editing in
                     editing ? model.beginGesture() : model.endGesture(actionName)
@@ -315,7 +315,7 @@ struct TiltControls: View {
     private func tiltSlider(_ title: String, value: Double, set: @escaping @MainActor (Double) -> Void) -> some View {
         HStack {
             Text(title).font(.callout).frame(width: 48, alignment: .leading)
-            Slider(value: Binding(get: { value }, set: set), in: ContentTransform.tiltRange) {
+            Slider(value: Binding(get: { value }, set: { set($0) }), in: ContentTransform.tiltRange) {
                 Text(title)
             } onEditingChanged: { editing in
                 editing ? model.beginGesture() : model.endGesture(EditorSession.tiltActionName)
