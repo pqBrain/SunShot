@@ -67,3 +67,4 @@ while IFS= read -r test; do
     [ $status -ne 0 ] && grep -E '✘|↳|error' "$out/run.log" | head -8
   fi
 done < "$out/tests.txt"
+exit 0
