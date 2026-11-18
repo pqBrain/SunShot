@@ -84,15 +84,15 @@ public enum MenuCatalog {
                 MenuItemSpec(.openRecent, "Open Recent"),
                 MenuItemSpec(.close, "Close", KeyShortcut("w")),
                 MenuItemSpec(.save, "Save", KeyShortcut("s")),
-                MenuItemSpec(.saveAs, "Save As…", KeyShortcut("s", [.command, .shift])),
+                MenuItemSpec(.saveAs, "Save As…", KeyShortcut("s", [.command, .option, .shift])),
                 MenuItemSpec(.exportImage, "Export Image…", KeyShortcut("e", [.command, .shift])),
                 MenuItemSpec(.exportAll, "Export All…", KeyShortcut("e", [.command, .option, .shift])),
                 MenuItemSpec(.importVideo, "Import Video…", KeyShortcut("i", [.command, .option])),
                 MenuItemSpec(.exportVideo, "Export Video…", KeyShortcut("e", [.command, .control])),
                 MenuItemSpec(.startOver, "Start Over"),
-                // S10: ⌥⇧⌘4 is also the optional global capture shortcut (Settings), off by default.
-                MenuItemSpec(.captureArea, "Capture Area…", KeyShortcut("4", [.command, .option, .shift])),
-                MenuItemSpec(.captureWindow, "Capture Window…", KeyShortcut("5", [.command, .option, .shift])),
+                // S10/S17: the same keys as the global Capture Area and Capture Window shortcuts (Settings).
+                MenuItemSpec(.captureArea, "Capture Area…", KeyShortcut("s", [.command, .shift])),
+                MenuItemSpec(.captureWindow, "Capture Window…", KeyShortcut("w", [.command, .shift])),
                 MenuItemSpec(.captureWebsite, "Capture Website…", KeyShortcut("l", [.command, .option, .shift])),
             ]),
         MenuSpec(

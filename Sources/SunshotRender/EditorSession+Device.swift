@@ -82,12 +82,11 @@ extension EditorSession {
         return project
     }
 
-    /// Applies `template` to the open document as one undo step; the content is kept and no theme is applied.
+    /// Applies `template` to the open document as one undo step; the content is kept .
     public mutating func applyTemplate(_ template: DocumentTemplate) {
         let project = Self.project(template, keeping: document.project)
         history.applyIfChanged(Self.applyTemplateActionName(template.name)) { document in
             document.project = project
-            document.theme = nil
         }
     }
 

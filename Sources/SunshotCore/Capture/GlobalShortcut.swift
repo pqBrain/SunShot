@@ -30,10 +30,10 @@ public struct GlobalShortcut: Codable, Hashable, Sendable, CustomStringConvertib
         self.keyLabel = keyLabel
     }
 
-    /// ⌥⇧⌘4, the same keys as File ▸ Capture Area….
-    public static let `default` = GlobalShortcut(keyCode: 21, modifiers: [.option, .shift, .command], keyLabel: "4")
+    /// ⇧⌘S, the same keys as File ▸ Capture Area….
+    public static let `default` = GlobalShortcut(keyCode: 1, modifiers: [.shift, .command], keyLabel: "S")
 
-    /// `⌥⇧⌘4` (modifiers in the standard macOS order).
+    /// `⇧⌘S` (modifiers in the standard macOS order).
     public var description: String {
         let symbols: [(Modifiers, String)] = [(.control, "⌃"), (.option, "⌥"), (.shift, "⇧"), (.command, "⌘")]
         return symbols.filter { modifiers.contains($0.0) }.map(\.1).joined() + keyLabel

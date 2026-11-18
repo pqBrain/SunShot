@@ -45,10 +45,13 @@ run: app ## Build and open the app
 smoke: app ## Headless smoke test + GUI launch check
 	@scripts/smoke-test.sh --launch
 
+monitor: ## Watch the running Sunshot's CPU and memory (every 5 s)
+	@scripts/measure-resources.sh --watch
+
 perf: ## Release-mode performance budgets
 	@scripts/gate.sh perf
 
 clean: ## Remove build outputs
 	rm -rf .build dist
 
-.PHONY: help setup gate gate-fast gate-selftest format lint build test coverage snapshots-record app run smoke perf clean
+.PHONY: help setup gate gate-fast gate-selftest format lint build test coverage snapshots-record app run smoke monitor perf clean

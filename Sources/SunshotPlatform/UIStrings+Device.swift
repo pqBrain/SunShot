@@ -11,7 +11,6 @@ extension UIStrings {
     public static let deviceArrangement = "Layout"
     public static let deviceSuggestionUse = "Use"
     public static let suggestDeviceSetting = "Suggest the device that matches imported images"
-    public static let deviceMockupsSetting = "Device mockups"
     public static let templatesTitle = "Templates"
     public static let templatesScreens = "Screens"
     public static let templatesDevices = "Devices"

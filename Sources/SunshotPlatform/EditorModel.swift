@@ -32,6 +32,8 @@ public final class EditorModel {
     public var alert: AlertContent?
     /// Whether the style inspector panel is visible.
     public var showsInspector = true
+    /// S17-AC3: the toolbar's Annotate button hid the annotation bar. Not saved: the bar shows again at launch.
+    public internal(set) var hidesAnnotationBar = false
     public var notice: String?
     /// S6: the inspector section the canvas last asked to bring into view (click on backdrop / screenshot).
     public internal(set) var inspectorFocus: InspectorFocusRequest?
@@ -117,7 +119,9 @@ public final class EditorModel {
         let accessing = url.startAccessingSecurityScopedResource()
         defer { if accessing { url.stopAccessingSecurityScopedResource() } }
         do {
-            await importData(try Data(contentsOf: url), fileName: url.lastPathComponent)
+            // Read off the main actor (a large or network-mounted file); importData decodes off it too.
+            let data = try await Task.detached(priority: .userInitiated) { try Data(contentsOf: url) }.value
+            await importData(data, fileName: url.lastPathComponent)
         } catch {
             alert = AlertContent(
                 title: Self.openFailedTitle, message: "\(url.lastPathComponent): \(error.localizedDescription)")
@@ -182,6 +186,10 @@ public final class EditorModel {
 
     /// Inspector controls are only enabled (and only show values) when there is content.
     public var isInspectorEnabled: Bool { hasContent }
+
+    /// Whether the bottom of the canvas has a bar (Position / Crop, or the Animate timeline). S17-AC4: messages are
+    /// stacked above it, never under it.
+    public var showsBottomBar: Bool { hasContent && !annotate.isActive }
 
     /// Applies an edit synchronously (so controls stay in step) and re-renders the preview in the background.
     /// Await the returned task to wait for the new preview.
@@ -256,15 +264,10 @@ public final class EditorModel {
         var rendered = -1
         while rendered != previewRequests {
             rendered = previewRequests
-            let document = session.document
-            let grid = SunshotPalette.transparencyGrid(dark: isDarkAppearance)
-            let scale = previewScale
-            let image = try? await Task.detached(priority: .userInitiated) {
-                try Renderer.render(document: document, scale: scale, showsTransparencyGrid: true, grid: grid)
-            }.value
+            let image = await renderPreviewImage(session.document)
             // Shown even if newer edits are queued (it is newer than what is on screen), unless a preset
             // animation has taken over the preview since the latest request.
-            if renderGeneration == refreshGeneration { preview = image ?? nil }
+            if renderGeneration == refreshGeneration { preview = image }
         }
         previewLoop = nil
     }

@@ -3,8 +3,28 @@ import SunshotCore
 import SunshotPlatform
 import SwiftUI
 
-/// Sunshot ▸ Settings… (⌘,). Values are written to UserDefaults as they change.
+/// Sunshot ▸ Settings… (⌘,): General and About tabs. Values are written to UserDefaults as they change.
 struct SettingsView: View {
+    @Bindable var controller: DocumentController
+    let hotkey: GlobalCaptureHotkey
+
+    var body: some View {
+        TabView {
+            Tab(UIStrings.generalTab, systemImage: "gearshape") {
+                GeneralSettingsView(controller: controller, hotkey: hotkey)
+            }
+            Tab(UIStrings.aboutTab, systemImage: "info.circle") {
+                AboutSettingsView()
+            }
+        }
+        // A fixed height that fits small screens: the General form scrolls inside it.
+        .frame(width: 560, height: 640)
+        .navigationTitle(UIStrings.settingsTitle)
+    }
+}
+
+/// Settings ▸ General.
+struct GeneralSettingsView: View {
     @Bindable var controller: DocumentController
     let hotkey: GlobalCaptureHotkey
 
@@ -70,9 +90,6 @@ struct SettingsView: View {
             Toggle(UIStrings.autoBackdropSetting, isOn: $controller.settings.autoBackdropOnImport)
         }
         .formStyle(.grouped)
-        .frame(width: 520)
-        .fixedSize(horizontal: false, vertical: true)
-        .navigationTitle(UIStrings.settingsTitle)
     }
 
     private func chooseFolder() {

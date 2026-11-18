@@ -115,85 +115,13 @@ struct SettingsThemeMenuTests {
         #expect(UIStrings.startOverTitle == "Start over?" && UIStrings.startOverButton == "Start Over")
     }
 
-    // MARK: Themes
-
-    @Test("[S7-AC9] Save Theme writes Themes/ocean.json and the header shows the name; bad names are refused")
-    func saveTheme() async throws {
-        let fixture = try ControllerFixture()
-        defer { fixture.cleanUp() }
-        let controller = fixture.controller
-        await controller.model.importData(try TestImages.png())
-        controller.model.perform { $0.setBackdropColor(.black) }
-        #expect(controller.themeHeaderTitle == "No Theme")
-        let ocean = try controller.saveTheme(named: " Ocean ")
-        let file = fixture.folder.file("Themes/ocean.json")
-        #expect(FileManager.default.fileExists(atPath: file.path))
-        #expect(controller.themeHeaderTitle == "Ocean" && ocean.name == "Ocean")
-        #expect(throws: ThemeName.Problem.duplicate(existingID: ocean.id)) { try controller.saveTheme(named: "OCEAN") }
-        #expect(throws: ThemeName.Problem.empty) { try controller.saveTheme(named: "  ") }
-        controller.model.perform { $0.setCornerRadius(99) }
-        #expect(controller.themeHeaderTitle == "Ocean (modified)")
-        let replaced = try controller.saveTheme(named: "ocean", replacing: true)
-        #expect(replaced.id == ocean.id && controller.themes.count == 1)
-        #expect(controller.themeHeaderTitle == "ocean")
-        let odd = try controller.saveTheme(named: "A/B: Night")
-        #expect(FileManager.default.fileExists(atPath: fixture.folder.file("Themes/ab night.json").path))
-        #expect(controller.themes.contains { $0.id == odd.id && $0.name == "A/B: Night" })
-    }
-
-    @Test("[S7-AC10] applying a theme from the menu is one undo step; undo restores the previous header")
-    func applyTheme() async throws {
-        let fixture = try ControllerFixture()
-        defer { fixture.cleanUp() }
-        let controller = fixture.controller
-        await controller.model.importData(try TestImages.png())
-        controller.model.perform { $0.setBackdropColor(.white) }
-        let ocean = try controller.saveTheme(named: "Ocean")
-        controller.model.perform { $0.setCornerStyle(.sharp) }
-        let paper = try controller.saveTheme(named: "Paper")
-        controller.applyTheme(ocean)
-        #expect(controller.model.undoTitle == "Undo Apply Theme Ocean" && controller.themeHeaderTitle == "Ocean")
-        controller.applyTheme(paper)
-        #expect(controller.themeHeaderTitle == "Paper" && controller.model.project.border.style == .sharp)
-        await controller.model.undo()
-        #expect(controller.themeHeaderTitle == "Ocean" && controller.model.project.border.style != .sharp)
-    }
-
-    @Test("[S7-AC11] rename, duplicate, delete; deleting the applied theme keeps the style; corrupt files skipped")
-    func manageThemes() async throws {
-        let fixture = try ControllerFixture()
-        defer { fixture.cleanUp() }
-        let controller = fixture.controller
-        await controller.model.importData(try TestImages.png())
-        let ocean = try controller.saveTheme(named: "Ocean")
-        try controller.renameTheme(id: ocean.id, to: "Sea")
-        #expect(controller.themes.map(\.name) == ["Sea"] && controller.themeHeaderTitle == "Sea")
-        #expect(FileManager.default.fileExists(atPath: fixture.folder.file("Themes/sea.json").path))
-        #expect(!FileManager.default.fileExists(atPath: fixture.folder.file("Themes/ocean.json").path))
-        let copy = try #require(try controller.duplicateTheme(id: ocean.id))
-        #expect(copy.name == "Sea copy" && controller.themes.count == 2)
-        #expect(throws: ThemeName.Problem.duplicate(existingID: copy.id)) {
-            try controller.renameTheme(id: ocean.id, to: "sea COPY")
-        }
-        try Data("{broken".utf8).write(to: fixture.folder.file("Themes/broken.json"))
-        try Data(#"{"schemaVersion":1,"id":"x","name":"Bad","style":{"border":"nope"}}"#.utf8)
-            .write(to: fixture.folder.file("Themes/bad.json"))
-        controller.reloadThemes()
-        #expect(controller.themes.map(\.name) == ["Sea", "Sea copy"])
-        let style = controller.model.project
-        try controller.deleteTheme(id: ocean.id)
-        #expect(controller.themes.map(\.name) == ["Sea copy"])
-        #expect(controller.model.project == style && controller.themeHeaderTitle == "No Theme")
-        #expect(try controller.duplicateTheme(id: "missing") == nil)
-    }
-
     // MARK: Menus
 
     @Test("[S7-AC17] the menu bar lists every required item with its shortcut and no clashes")
     func menuCatalog() {
         let expected: [(MenuCommand, String, String?)] = [
             (.new, "New", "⌘N"), (.open, "Open…", "⌘O"), (.openRecent, "Open Recent", nil), (.close, "Close", "⌘W"),
-            (.save, "Save", "⌘S"), (.saveAs, "Save As…", "⇧⌘S"), (.exportImage, "Export Image…", "⇧⌘E"),
+            (.save, "Save", "⌘S"), (.saveAs, "Save As…", "⌥⇧⌘S"), (.exportImage, "Export Image…", "⇧⌘E"),
             (.startOver, "Start Over", nil), (.undo, "Undo", "⌘Z"), (.redo, "Redo", "⇧⌘Z"), (.cut, "Cut", "⌘X"),
             (.copy, "Copy", "⌘C"), (.paste, "Paste", "⌘V"), (.selectAll, "Select All", "⌘A"),
             (.clearContent, "Clear Content", "⌘⌫"), (.toggleInspector, "Show/Hide Inspector", "⌥⌘E"),
@@ -235,14 +163,12 @@ struct SettingsThemeMenuTests {
         #expect(controller.menuTitle(.exportImage) == "Export Image…")
     }
 
-    @Test("[S7-AC22] settings, theme header and dialogs carry spoken labels; the theme reads \"Theme: Ocean\"")
+    @Test("[S7-AC22] settings and dialogs carry spoken labels")
     func accessibilityLabels() async throws {
         let fixture = try ControllerFixture()
         defer { fixture.cleanUp() }
         let controller = fixture.controller
         await controller.model.importData(try TestImages.png())
-        _ = try controller.saveTheme(named: "Ocean")
-        #expect(UIStrings.themeAccessibility(controller.themeHeaderTitle) == "Theme: Ocean")
         let settingsLabels = [
             UIStrings.appearance, UIStrings.filenameFormat, UIStrings.exportFolder, UIStrings.confirmReset,
             UIStrings.defaultTemplate, UIStrings.choose, UIStrings.clear,
@@ -252,6 +178,5 @@ struct SettingsThemeMenuTests {
         let dialogButtons = [UIStrings.save, UIStrings.dontSave, UIStrings.cancel, UIStrings.startOverButton]
         #expect(dialogButtons.allSatisfy { !$0.isEmpty } && Set(dialogButtons).count == dialogButtons.count)
         #expect(UIStrings.saveChangesTitle(UIStrings.untitled) == "Save changes to Untitled?")
-        #expect(!UIStrings.saveThemeAccessibility.isEmpty && !UIStrings.themeNamePrompt.isEmpty)
     }
 }

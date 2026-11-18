@@ -3,7 +3,8 @@ import SunshotPlatform
 import SunshotRender
 import SwiftUI
 
-/// Left sidebar: one picker for Layouts, Templates and Themes (S7), so the toolbar and inspector stay short.
+/// Left sidebar: one picker for Layouts and Templates (S7; S17 dropped Themes), so the toolbar and inspector stay
+/// short. The picker is centred (S17-AC2).
 struct LayoutSidebar: View {
     let model: EditorModel
     @State private var pane: SidebarPane = .layouts
@@ -20,6 +21,8 @@ struct LayoutSidebar: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .fixedSize()
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, 10)
             .padding(.top, 12)
             Text(pane.title)
@@ -30,7 +33,6 @@ struct LayoutSidebar: View {
             switch pane {
             case .layouts: LayoutList(model: model)
             case .templates: SidebarTemplates(model: model)
-            case .themes: SidebarThemes(model: model)
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
@@ -43,7 +45,6 @@ struct LayoutSidebar: View {
         switch pane {
         case .layouts: "rectangle.3.group"
         case .templates: "square.grid.2x2"
-        case .themes: "paintpalette"
         }
     }
 }

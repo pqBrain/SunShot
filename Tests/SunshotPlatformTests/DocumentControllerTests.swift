@@ -6,7 +6,7 @@ import Testing
 
 @testable import SunshotPlatform
 
-/// A controller with its own Drafts/Themes folders and UserDefaults domain.
+/// A controller with its own Drafts folder and UserDefaults domain.
 @MainActor
 struct ControllerFixture {
     let folder: TempDirectory
@@ -25,7 +25,7 @@ struct ControllerFixture {
         folder: TempDirectory, defaults: UserDefaults, delay: Duration = .seconds(60)
     ) -> DocumentController {
         DocumentController(
-            locations: DocumentLocations(drafts: folder.file("Drafts"), themes: folder.file("Themes")),
+            locations: DocumentLocations(drafts: folder.file("Drafts")),
             defaults: defaults, autosaveDelay: delay)
     }
 

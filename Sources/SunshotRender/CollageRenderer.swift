@@ -41,9 +41,9 @@ enum CollageRenderer {
 
     /// The frame box `image` gets when its content is `contentHeight` tall at its own aspect.
     static func naturalBox(for image: CGImage, contentHeight: Double, frame: Frame) -> CGSize {
-        let insets = FrameGeometry.insets(for: frame)
         let aspect = image.height > 0 ? Double(image.width) / Double(image.height) : 1
         let height = max(contentHeight, 1)
+        let insets = FrameGeometry.insets(for: frame, contentWidth: height * aspect)
         return CGSize(width: height * aspect + insets.horizontal, height: height + insets.vertical)
     }
 

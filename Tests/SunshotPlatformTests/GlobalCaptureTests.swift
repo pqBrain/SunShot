@@ -42,6 +42,40 @@ struct GlobalCaptureTests {
         #expect(settings.globalCaptureDestination == .styledClipboard)
     }
 
+    @Test("[S17-AC6] Capture Window and Open Studio keys and switches survive relaunch")
+    func perActionPersistence() {
+        let (store, cleanUp) = store()
+        defer { cleanUp() }
+        var settings = store.load()
+        #expect(settings.windowShortcut.description == "⇧⌘W" && settings.studioShortcut.description == "⇧⌘0")
+        #expect(settings.windowHotkeyEnabled && settings.studioHotkeyEnabled)
+        settings.setShortcut(
+            GlobalShortcut(keyCode: 40, modifiers: [.control, .option], keyLabel: "K"), for: .openStudio)
+        settings.setShortcutEnabled(false, for: .captureWindow)
+        store.save(settings)
+        let loaded = store.load()
+        #expect(loaded.studioShortcut.description == "⌃⌥K")
+        #expect(!loaded.windowHotkeyEnabled && loaded.studioHotkeyEnabled && loaded.captureHotkeyEnabled)
+        #expect(loaded == settings)
+    }
+
+    @Test("[S17-AC6] a Capture Area shortcut saved before S17 carries over; invalid new keys fall back")
+    func migration() throws {
+        let suite = "app.sunshot.tests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let mine = GlobalShortcut(keyCode: 40, modifiers: [.control, .option], keyLabel: "K")
+        defaults.set(try JSONEncoder().encode(mine), forKey: SettingsStore.prefix + "captureShortcut")
+        defaults.set(false, forKey: SettingsStore.prefix + "captureHotkey")
+        let bad = GlobalShortcut(keyCode: 23, modifiers: [.shift, .command], keyLabel: "5")
+        defaults.set(try JSONEncoder().encode(bad), forKey: SettingsStore.prefix + "windowShortcut")
+        let settings = SettingsStore(defaults: defaults).load()
+        #expect(settings.captureShortcut == mine && !settings.captureHotkeyEnabled)
+        #expect(settings.windowShortcut == GlobalShortcutAction.captureWindow.defaultShortcut)
+        #expect(settings.studioShortcut == GlobalShortcutAction.openStudio.defaultShortcut)
+        #expect(settings.windowHotkeyEnabled && settings.studioHotkeyEnabled)
+    }
+
     @Test("[S10-AC20] copy-to-clipboard puts the captured PNG on the pasteboard and leaves the document alone")
     func copyToClipboard() async throws {
         let model = EditorModel()

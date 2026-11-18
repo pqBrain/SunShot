@@ -82,7 +82,7 @@ struct CanvasInteractionTests {
         #expect(model.inspectorFocus?.section == .border)
     }
 
-    @Test("[S6-AC24] a larger display renders a sharper preview; a smaller one keeps 1×")
+    @Test("[S6-AC24] a larger display renders a sharper preview; a smaller one a smaller, cheaper one")
     func displaySizedPreview() async throws {
         let model = try await loadedModel()
         let size = try #require(model.session.canvasSize)
@@ -92,8 +92,12 @@ struct CanvasInteractionTests {
         await model.refreshPreview()
         let preview = try #require(model.preview)
         #expect(Double(preview.width) >= Double(size.width) * 3 - 1)
+        // Smaller than the canvas: rendered at the shown size (one 128 px step on the long side here).
         model.setPreviewDisplay(width: 10, height: 10)
-        #expect(model.previewScale == 1)
+        #expect(model.previewScale < 1)
+        #expect(model.previewScale * Double(max(size.width, size.height)) == PreviewSizing.quantum)
+        await model.refreshPreview()
+        #expect(try #require(model.preview).width < size.width)
         model.setPreviewDisplay(width: 0, height: 0)
         #expect(model.previewDisplayPixels == nil)
     }

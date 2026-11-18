@@ -9,6 +9,12 @@ public enum RenderError: Error, Equatable {
 
 /// The single render path shared by on-screen preview and export (guarantees preview/export parity).
 public enum Renderer {
+    /// Drops the renderer's cached preview backdrops (studio closed, memory pressure). The next preview render
+    /// draws its backdrop again and re-fills the cache.
+    public static func purgeCaches() {
+        BackdropCache.shared.removeAll()
+    }
+
     /// Preview and export both call this. Returns nil for an empty document.
     ///
     /// `showsTransparencyGrid` is set by the preview only: it draws `grid` behind a backdrop that isn't fully

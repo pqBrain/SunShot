@@ -38,16 +38,18 @@ struct MenuBarContent: View {
         let destination = controller.settings.globalCaptureDestination
         Group {
             Button(UIStrings.menuCaptureArea) { AreaCapture.start(controller: controller, destination: destination) }
-                .keyboardShortcut(shortcut)
+                .keyboardShortcut(shortcut(.captureArea))
             Button(UIStrings.menuCaptureWindow) {
                 WindowCapture.start(controller: controller, destination: destination)
             }
+            .keyboardShortcut(shortcut(.captureWindow))
             Text(UIStrings.menuDestination(destination))
             Divider()
             Button(UIStrings.menuCaptureAreaToStudio) { AreaCapture.start(controller: controller) }
             Button(UIStrings.menuCaptureWindowToStudio) { WindowCapture.start(controller: controller) }
             Divider()
             Button(UIStrings.menuOpenStudio) { Studio.show(controller) }
+                .keyboardShortcut(shortcut(.openStudio))
             Text(defaultStyleStatus)
             Divider()
             Button(UIStrings.menuSettings) {
@@ -65,10 +67,9 @@ struct MenuBarContent: View {
         return UIStrings.defaultStyleSaved(style.savedAt.formatted(date: .abbreviated, time: .shortened))
     }
 
-    /// The global shortcut, shown next to Capture Area (it works from anywhere, not just this menu).
-    private var shortcut: KeyboardShortcut? {
-        guard controller.settings.captureHotkeyEnabled else { return nil }
-        let keys = controller.settings.captureShortcut
+    /// An action's global shortcut, shown next to its item (it works from anywhere, not just this menu).
+    private func shortcut(_ action: GlobalShortcutAction) -> KeyboardShortcut? {
+        guard let keys = controller.settings.activeShortcuts[action] else { return nil }
         guard let character = keys.keyLabel.lowercased().first, keys.keyLabel.count == 1 else { return nil }
         var modifiers: EventModifiers = []
         if keys.modifiers.contains(.command) { modifiers.insert(.command) }

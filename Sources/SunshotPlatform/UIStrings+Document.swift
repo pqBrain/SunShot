@@ -1,6 +1,6 @@
 public import SunshotCore
 
-/// S7 copy: documents, themes, settings and menus.
+/// S7 copy: documents, settings and menus.
 extension UIStrings {
     public static let untitled = "Untitled"
     public static let documentOpenFailed = "Can't open this document"
@@ -31,19 +31,8 @@ extension UIStrings {
     public static let askToSaveSetting = "Ask to save untitled documents when closing"
     public static let askToSaveSettingHint = "When off, closing an unsaved document discards it."
 
-    // Themes
-    public static let saveTheme = "Save…"
-    public static let saveThemeTitle = "Save Theme"
-    public static let saveThemeAccessibility = "Save current style as a theme"
-    public static let themeNamePrompt = "Theme name"
-    public static let replace = "Replace"
-    public static let rename = "Rename…"
+    // Editing
     public static let duplicate = "Duplicate"
-    public static let delete = "Delete"
-    public static let renameThemeTitle = "Rename Theme"
-    public static let noSavedThemes = "No saved themes"
-    public static let manageThemes = "Manage"
-    public static func themeAccessibility(_ title: String) -> String { "Theme: \(title)" }
 
     // Settings
     public static let settingsTitle = "Settings"

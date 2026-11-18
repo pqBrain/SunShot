@@ -42,5 +42,8 @@
       "SunshotCore",
       "SunshotRender"
     ]
-  }
+  },
+  "idleSampleSeconds": 5,
+  "idleCpuBudgetPercent": 0.5,
+  "idleFootprintBudgetMB": 90
 }

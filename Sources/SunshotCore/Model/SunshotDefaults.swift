@@ -27,6 +27,9 @@ public enum SunshotDefaults {
     public static let previewMaxSide = 6144
     /// How many undo steps are kept.
     public static let undoLimit = 100
+    /// Undo also stops keeping older steps once the distinct images the history holds (decoded pixels plus file
+    /// bytes) pass this many bytes: ten 5K screenshots pasted in a row must not keep ~600 MB alive.
+    public static let undoImageBudgetBytes = 384 << 20
     /// Gradient offered when the backdrop type is first switched to Gradient ("Sunrise Drift" in the presets).
     public static let gradient = GradientSpec(
         kind: .linear, angle: 135,

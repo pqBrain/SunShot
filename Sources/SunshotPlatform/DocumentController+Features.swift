@@ -1,6 +1,6 @@
 public import Foundation
 import Observation
-public import SunshotCore
+import SunshotCore
 import SunshotRender
 import os
 
@@ -63,72 +63,6 @@ extension DocumentController {
     public func startOver() {
         let start = defaultTemplateDocument
         model.perform { $0.startOver(to: start) }
-    }
-}
-
-// MARK: Themes
-
-extension DocumentController {
-    public var appliedTheme: Theme? { model.session.document.theme }
-
-    public var themeHeaderTitle: String {
-        Theme.headerTitle(applied: appliedTheme, project: model.project, library: themes)
-    }
-
-    public func reloadThemes() { themes = themeStore.load() }
-
-    public func validateThemeName(_ name: String, excluding: String? = nil) -> Result<String, ThemeName.Problem> {
-        ThemeName.validate(name, existing: themes, excluding: excluding)
-    }
-
-    /// Saves the current style as `name`. With `replacing`, a theme of the same name is overwritten.
-    @discardableResult
-    public func saveTheme(named name: String, replacing: Bool = false) throws -> Theme {
-        var id = UUID().uuidString
-        switch validateThemeName(name) {
-        case .success: break
-        case .failure(.duplicate(let existing)) where replacing: id = existing
-        case .failure(let problem): throw problem
-        }
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let theme = try Theme.extract(from: model.project, name: trimmed, id: id)
-        try themeStore.save(theme)
-        reloadThemes()
-        model.perform { $0.markThemeSaved(theme) }
-        return theme
-    }
-
-    /// Applies a saved theme's style (one undo step "Apply Theme <name>").
-    public func applyTheme(_ theme: Theme) {
-        model.perform { session in
-            do {
-                try session.applyTheme(theme)
-            } catch {
-                DocumentController.log.error("Theme \(theme.name, privacy: .public) can't be applied")
-            }
-        }
-    }
-
-    public func renameTheme(id: String, to name: String) throws {
-        guard var theme = themes.first(where: { $0.id == id }) else { return }
-        theme.name = try validateThemeName(name, excluding: id).get()
-        try themeStore.save(theme)
-        reloadThemes()
-    }
-
-    @discardableResult
-    public func duplicateTheme(id: String) throws -> Theme? {
-        guard let source = themes.first(where: { $0.id == id }) else { return nil }
-        let copy = Theme(name: ThemeName.copyName(of: source.name, existing: themes), style: source.style)
-        try themeStore.save(copy)
-        reloadThemes()
-        return copy
-    }
-
-    /// Deletes the theme file. A document using it keeps its style; its header becomes "No Theme".
-    public func deleteTheme(id: String) throws {
-        try themeStore.delete(id: id)
-        reloadThemes()
     }
 }
 

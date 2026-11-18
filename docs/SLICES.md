@@ -33,6 +33,7 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 | S14 | Bulk edit & batch export | In progress | §11 |
 | S15 | Multiple screenshots | In progress | — |
 | S16 | Menu bar quick capture, default style & studio journey | In progress | — |
+| S17 | Studio polish, app icon & global shortcuts | In progress | — |
 
 **MVP = S1–S7** (a complete, saveable, still-image beautifier).
 
@@ -84,7 +85,7 @@ rendered as live thumbnails; applying is animated and undoable.
 
 ### S7 — Documents, themes, settings & menus
 `.sunshot` package document (JSON + media), autosave, Open Recent, Start Over
-(with optional confirmation). Save / apply named themes. Settings window:
+(with optional confirmation). Save / apply named themes (retired in S17). Settings window:
 appearance, filename format, default export folder, confirm reset, default
 template. Full menu bar mirroring every shortcut.
 
@@ -131,6 +132,12 @@ Several images in one document. Staged: (a) each device of a multi-device
 arrangement shows its own image; (b) Sunshot screenshot layouts — 2–4 framed
 screenshots arranged side by side, overlapping, cascaded or fanned. One shared
 slot model; empty slots show the main image. Screenshots inspector section.
+
+### S17 — Studio polish, app icon & global shortcuts
+One saved style (default style) instead of a theme library; centred sidebar and
+Screenshot | Code pickers; the Annotate button shows / hides the annotation bar;
+messages sit above the bottom bar; Sunshot app icon; customizable global
+shortcuts for Capture Window and Open Studio.
 
 ## Deferred — needs a product decision
 - Social post templates (X / Bluesky): need network fetching of third-party content.

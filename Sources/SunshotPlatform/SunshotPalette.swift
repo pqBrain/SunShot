@@ -15,7 +15,6 @@ public enum SunshotPalette {
     public static let workspaceBackground = NSColor.windowBackgroundColor
     /// Fill of the empty-state drop zone.
     public static let dropZoneFill = NSColor.controlBackgroundColor
-    public static let dropZoneStroke = NSColor.separatorColor
     public static let dropZoneHighlight = NSColor.controlAccentColor
     /// Outlines of custom controls (light-source pad, crosshair). WCAG non-text contrast ≥ 3:1.
     public static let controlStroke = NSColor(name: "SunshotControlStroke") { appearance in

@@ -1,6 +1,6 @@
 import Foundation
 
-/// A JSON tree. Used to decode documents and themes tolerantly: the stored JSON is laid over the JSON of the
+/// A JSON tree. Used to decode documents and saved styles tolerantly: the stored JSON is laid over the JSON of the
 /// current defaults, so a key missing from an older file takes its default and unknown keys are ignored.
 public enum JSONValue: Codable, Hashable, Sendable {
     case null

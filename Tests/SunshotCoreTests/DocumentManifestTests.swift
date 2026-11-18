@@ -32,9 +32,8 @@ struct DocumentManifestTests {
         let id = "3C1B5E2A-0000-4000-8000-000000000002"
         #expect(manifest.content == ContentEntry(mediaID: id, pixelSize: PixelSize(width: 1000, height: 600)))
         #expect(manifest.media == [MediaEntry(id: id, path: "media/\(id).png", fileName: "window.png")])
-        let theme = try #require(manifest.theme)
-        #expect(theme.name == "Ocean" && theme.id == "6F1E0C1A-0000-4000-8000-000000000001")
-        #expect(Set(theme.style.keys) == ["border"])
+        // Its pre-S17 `theme` record is ignored (S17-AC1): the style lives in the project.
+        #expect(try JSONDecoder().decode(JSONValue.self, from: fixture("v1/document.json"))["theme"] != nil)
     }
 
     @Test("[S7-AC2] unknown keys are ignored and missing keys take their defaults")
@@ -44,7 +43,7 @@ struct DocumentManifestTests {
         var expected = Project(padding: 10)
         expected.border.style = .sharp
         #expect(decoded.manifest.project == expected)
-        #expect(decoded.manifest.content == nil && decoded.manifest.media.isEmpty && decoded.manifest.theme == nil)
+        #expect(decoded.manifest.content == nil && decoded.manifest.media.isEmpty)
         // An empty project and no media at all is a valid, default document.
         #expect(try DocumentManifestCodec.decode(json(#"{"schemaVersion":1}"#)).manifest.project == Project())
     }
@@ -73,8 +72,7 @@ struct DocumentManifestTests {
     func migrationAndRoundTrip() throws {
         let manifest = DocumentManifest(
             project: Self.goldenProject, content: ContentEntry(mediaID: "c", pixelSize: PixelSize(width: 3, height: 2)),
-            media: [MediaEntry(id: "c", path: "media/c.png")],
-            theme: try Theme.extract(from: Self.goldenProject, name: "Paper"))
+            media: [MediaEntry(id: "c", path: "media/c.png")])
         let data = try DocumentManifestCodec.encode(manifest)
         #expect(try DocumentManifestCodec.decode(data).manifest == manifest)
         let tree = try JSONDecoder().decode(JSONValue.self, from: data)

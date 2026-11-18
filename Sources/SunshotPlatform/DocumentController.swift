@@ -8,26 +8,22 @@ import os
 /// Where Sunshot keeps its own files (inside the sandbox container when sandboxed).
 public struct DocumentLocations: Sendable {
     public var drafts: URL
-    public var themes: URL
-    /// S16: the default style file (`DefaultStyle.json`).
+    /// S16: the default style file (`DefaultStyle.json`, next to the drafts folder).
     public var quickStyle: URL
 
-    public init(drafts: URL, themes: URL, quickStyle: URL? = nil) {
+    public init(drafts: URL, quickStyle: URL? = nil) {
         self.drafts = drafts
-        self.themes = themes
         self.quickStyle =
-            quickStyle ?? themes.deletingLastPathComponent().appendingPathComponent("DefaultStyle.json")
+            quickStyle ?? drafts.deletingLastPathComponent().appendingPathComponent("DefaultStyle.json")
     }
 
-    /// `~/Library/Application Support/Sunshot/{Drafts,Themes}`.
+    /// `~/Library/Application Support/Sunshot/Drafts` (and `DefaultStyle.json` beside it).
     public static func standard() -> DocumentLocations {
         let support =
             FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         let root = support.appendingPathComponent("Sunshot", isDirectory: true)
-        return DocumentLocations(
-            drafts: root.appendingPathComponent("Drafts", isDirectory: true),
-            themes: root.appendingPathComponent("Themes", isDirectory: true))
+        return DocumentLocations(drafts: root.appendingPathComponent("Drafts", isDirectory: true))
     }
 }
 
@@ -51,7 +47,7 @@ actor DocumentWriter {
     }
 }
 
-/// The open document's file, autosave, drafts, Open Recent, themes and settings. The document itself lives in
+/// The open document's file, autosave, drafts, Open Recent, the default style and settings. The document itself lives in
 /// `model.session` (the single undoable store); this class only decides where and when it is written.
 @MainActor
 @Observable
@@ -65,7 +61,6 @@ public final class DocumentController {
     public private(set) var isReadOnly = false
     /// The document as last written (or opened); changes since then make it dirty.
     public internal(set) var savedDocument: EditorDocument
-    public internal(set) var themes: [Theme] = []
     /// S16: the saved default style (quick captures and new documents), nil until one is saved.
     public internal(set) var quickStyle: QuickStyle?
     public private(set) var recents: RecentList<RecentDocument>
@@ -78,7 +73,6 @@ public final class DocumentController {
     let writer = DocumentWriter()
     let settingsStore: SettingsStore
     let recentsStore: RecentDocumentsStore
-    let themeStore: ThemeStore
     @ObservationIgnored var autosaveTask: Task<Void, Never>?
     @ObservationIgnored private var accessedURL: URL?
     static let log = Logger(subsystem: "app.sunshot", category: "documents")
@@ -92,12 +86,10 @@ public final class DocumentController {
         self.autosaveDelay = autosaveDelay
         settingsStore = SettingsStore(defaults: defaults)
         recentsStore = RecentDocumentsStore(defaults: defaults)
-        themeStore = ThemeStore(directory: locations.themes)
         settings = settingsStore.load()
         recents = recentsStore.load()
         draftURL = Self.newDraftURL(in: locations.drafts)
         savedDocument = model.session.document
-        themes = themeStore.load()
         quickStyle = QuickStyleStore(file: locations.quickStyle).load()
         model.filenameTemplate = settings.effectiveFilenameTemplate
         model.autoBackdropOnImport = settings.autoBackdropOnImport
@@ -229,7 +221,17 @@ public final class DocumentController {
             try DocumentPackage.read(from: newest, allowPlaceholders: true)
         }.value
         guard let loaded else {
-            try? FileManager.default.removeItem(at: newest)
+            // Unreadable (damaged, or from a newer Sunshot): set it aside rather than deleting the only copy of the
+            // user's unsaved work, so the next launch doesn't trip over it again.
+            Self.log.error("Couldn't recover the draft \(newest.lastPathComponent, privacy: .public)")
+            let aside = locations.drafts.appendingPathComponent("Unreadable", isDirectory: true)
+            try? FileManager.default.createDirectory(at: aside, withIntermediateDirectories: true)
+            if (try? FileManager.default.moveItem(
+                at: newest, to: aside.appendingPathComponent(newest.lastPathComponent)))
+                == nil
+            {
+                try? FileManager.default.removeItem(at: newest)
+            }
             return false
         }
         // The user started working (pasted, opened a file) while the draft was decoding: keep their work and
@@ -249,6 +251,7 @@ public final class DocumentController {
             self.accessedURL = nil
         }
         savedDocument = document
+        model.releaseCachedImages()
         model.session = EditorSession(document: document)
         self.fileURL = fileURL
         isReadOnly = readOnly

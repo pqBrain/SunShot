@@ -78,8 +78,6 @@ struct DeviceEditingTests {
         session.addAnnotation(
             Annotation(kind: .pen, points: [AnnotationPoint(x: 1, y: 1), AnnotationPoint(x: 9, y: 9)]))
         session.setExportScale(.k4)
-        let theme = try Theme.extract(from: session.project, name: "Mine")
-        try session.applyTheme(theme)
         let before = session.document
         let template = try #require(try TemplateCatalog.load().template(matching: "desk-and-pocket"))
         session.applyTemplate(template)
@@ -89,7 +87,6 @@ struct DeviceEditingTests {
         #expect(project.backdrop == template.project.backdrop && project.padding == template.project.padding)
         #expect(project.frame.title == "Kept" && project.annotations == before.project.annotations)
         #expect(project.export == before.project.export && session.document.content == before.content)
-        #expect(session.document.theme == nil)
         let count = session.history.undoCount
         session.applyTemplate(template)
         #expect(session.history.undoCount == count)

@@ -8,8 +8,11 @@ extension EditorModel {
     public static let frameThumbnailSize = PixelSize(width: 192, height: 128)
 
     /// Thumbnail of `kind` with this document's tokens, corners and UI scale, from the shared renderer.
+    /// During a slider drag (corners, tokens) the last thumbnail of `kind` is reused: re-rendering all eight on the
+    /// main actor for every tick of the drag would stutter it. The drag's end renders the final look.
     public func frameThumbnail(_ kind: FrameKind) -> CGImage? {
-        FrameThumbnailCache.shared.thumbnail(kind, project: project, size: Self.frameThumbnailSize)
+        FrameThumbnailCache.shared.thumbnail(
+            kind, project: project, size: Self.frameThumbnailSize, reuseLast: session.history.isInGesture)
     }
 
     /// Typed HEX for a colour token. Returns false (nothing changes, no undo entry) when invalid.
@@ -81,16 +84,25 @@ final class FrameThumbnailCache {
     }
 
     private var images: [Key: CGImage] = [:]
+    /// The newest thumbnail of each kind, whatever its style.
+    private var latest: [FrameKind: CGImage] = [:]
     /// The sample window content, generated once instead of per thumbnail.
     private lazy var sample: CGImage? = try? SampleContent.image(width: 320, height: 200)
 
-    func thumbnail(_ kind: FrameKind, project: Project, size: PixelSize) -> CGImage? {
+    func thumbnail(_ kind: FrameKind, project: Project, size: PixelSize, reuseLast: Bool = false) -> CGImage? {
         let key = Key(kind: kind, border: project.border, tokens: project.tokens, uiScale: project.frame.uiScale)
         if let image = images[key] { return image }
+        if reuseLast, let image = latest[kind] { return image }
         guard let image = try? Renderer.renderFrameThumbnail(kind, project: project, size: size, content: sample)
         else { return nil }
         if images.count > 64 { images.removeAll() }
         images[key] = image
+        latest[kind] = image
         return image
+    }
+
+    func removeAll() {
+        images.removeAll()
+        latest.removeAll()
     }
 }

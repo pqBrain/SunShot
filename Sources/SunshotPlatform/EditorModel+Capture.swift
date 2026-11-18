@@ -88,7 +88,12 @@ extension EditorModel {
                 switch style {
                 case .raw: return (original, Data?.none)
                 case .styled(let quickStyle):
-                    return (try QuickStyleRenderer.pngData(image, style: quickStyle), original)
+                    do {
+                        return (try QuickStyleRenderer.pngData(image, style: quickStyle), original)
+                    } catch ExportError.tooLarge {
+                        // Too big to style (over the maximum side): copy the capture itself rather than nothing.
+                        return (original, Data?.none)
+                    }
                 }
             }.value
             if let original {
