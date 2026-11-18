@@ -1,6 +1,7 @@
 # Quality gate
 
-`make gate` (= `scripts/gate.sh`) is the single definition of "shippable". Pre-push and CI run exactly this.
+`make gate` (= `scripts/gate.sh`) is the single definition of "shippable". The pre-push hook runs exactly this;
+CI runs a subset (see below).
 Logs per stage: `.build/gate/<stage>.log`; summary: `.build/gate/report.md` / `report.json`.
 
 | # | Stage | Checks | Fails when |
@@ -19,12 +20,24 @@ Logs per stage: `.build/gate/<stage>.log`; summary: `.build/gate/report.md` / `r
 
 `make gate-fast` (pre-commit) runs stages 1–6.
 
+## CI runs a subset
+`make gate-ci` (= `scripts/gate.sh --ci`) is what GitHub Actions runs, on macOS 26 with Xcode 26.6: Sunshot's
+oldest supported macOS and the newest toolchain GitHub offers. Stages: toolchain, format, hygiene, architecture,
+build, **coretest** (the Foundation-only `SunshotCoreTests`), traceability and **release** (an optimised build of
+the app, which can fail where the debug build compiles).
+
+Rendering, snapshot, video, WebKit, coverage, bundle, smoke and perf stay local: GitHub's macOS runners are 3-core
+VMs with no GPU or hardware video encoder. Every one of those tests passes there when run alone, but the parallel
+run never finishes, and snapshots drift with the OS's antialiasing. CI catches what only works on your machine
+(uncommitted files, a newer compiler, the macOS 26 SDK); the pre-push hook catches the rest. Never push with
+`--no-verify`: nothing else runs the full gate.
+
 ## The gate is tested too
 `make gate-selftest` copies the repo to a scratch dir, plants 18 known defects one at a time (bad format, `try!`,
 `print`, slice-less TODO, competitor brand, AppKit in Core, compiler warning, failing test, visual regression,
 coverage drop, untested `Done` AC, second drawing path, view-held document copy, unknown AC id, oversized app,
 shipped image in Resources, malformed canvas preset JSON, unknown token in the default file-name template) and asserts each is caught **for the right
-reason**. CI runs it weekly. Add a case whenever you add a rule.
+reason**. Run it locally after changing the gate. Add a case whenever you add a rule.
 
 ## Changing thresholds
 All budgets live in `scripts/quality.json`. Lowering coverage or raising size/perf budgets needs a reason in the

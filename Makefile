@@ -8,11 +8,14 @@ setup: ## One-time: install git hooks
 	git config core.hooksPath .githooks
 	@echo "hooks installed (.githooks): pre-commit = fast gate, pre-push = full gate"
 
-gate: ## Full quality gate (CI / pre-push)
+gate: ## Full quality gate (pre-push)
 	@scripts/gate.sh
 
 gate-fast: ## Fast gate (pre-commit): format, hygiene, architecture, build, test
 	@scripts/gate.sh --fast
+
+gate-ci: ## CI subset: static checks, builds, Core tests, traceability (no GPU/video)
+	@scripts/gate.sh --ci
 
 gate-selftest: ## Prove the gate catches planted defects
 	@scripts/gate-selftest.sh
@@ -54,4 +57,4 @@ perf: ## Release-mode performance budgets
 clean: ## Remove build outputs
 	rm -rf .build dist
 
-.PHONY: help setup gate gate-fast gate-selftest format lint build test coverage snapshots-record app run smoke monitor perf clean
+.PHONY: help setup gate gate-fast gate-ci gate-selftest format lint build test coverage snapshots-record app run smoke monitor perf clean
