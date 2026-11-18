@@ -2,8 +2,10 @@ import AppKit
 import SunshotPlatform
 import SwiftUI
 
-/// Settings ▸ About: icon, name and version, author and system, Copy Diagnostics, privacy and credits.
+/// Settings ▸ About: icon, name and version, updates (S18), author and system, Copy Diagnostics, privacy and credits.
 struct AboutSettingsView: View {
+    @Bindable var controller: DocumentController
+    let updates: UpdateChecker
     private let info = AboutInfo.current()
     @State private var copied = false
 
@@ -11,6 +13,7 @@ struct AboutSettingsView: View {
         ScrollView {
             VStack(spacing: 20) {
                 header
+                UpdatesCard(controller: controller, updates: updates)
                 detailsCard
                 privacyCard
                 credits

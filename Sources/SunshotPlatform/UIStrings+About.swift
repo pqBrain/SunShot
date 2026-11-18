@@ -14,8 +14,9 @@ extension UIStrings {
     public static let diagnosticsCopied = "Copied"
     public static let aboutPrivacyTitle = "Privacy"
     public static let aboutPrivacyBody =
-        "Sunshot works on your Mac. Your screenshots and documents stay here, and nothing is sent anywhere. "
-        + "Only Capture Website goes online, to load the page you ask for."
+        "Sunshot works on your Mac. Your screenshots and documents stay here and are never sent anywhere. "
+        + "Sunshot goes online only to load a page for Capture Website and to ask GitHub for the latest version "
+        + "number (Check for Updates)."
     public static let aboutCreditsTitle = "Credits"
     public static let aboutCreditsBody =
         "Built with SwiftUI, Core Image, ScreenCaptureKit and AVFoundation. No third-party code."

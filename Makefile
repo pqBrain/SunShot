@@ -42,6 +42,9 @@ snapshots-record: ## Re-record snapshot references (review the diff before commi
 app: ## Build dist/Sunshot.app (release, ad-hoc signed)
 	@scripts/bundle-app.sh
 
+release: ## Package dist/Sunshot-<VERSION>.zip (+ SHA-256) for a GitHub release
+	@scripts/package-release.sh
+
 run: app ## Build and open the app
 	open dist/Sunshot.app
 
@@ -57,4 +60,4 @@ perf: ## Release-mode performance budgets
 clean: ## Remove build outputs
 	rm -rf .build dist
 
-.PHONY: help setup gate gate-fast gate-ci gate-selftest format lint build test coverage snapshots-record app run smoke monitor perf clean
+.PHONY: help setup gate gate-fast gate-ci gate-selftest format lint build test coverage snapshots-record app release run smoke monitor perf clean

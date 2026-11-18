@@ -24,7 +24,7 @@ echo "smoke: headless render ok ($actual)"
 
 if [[ "${1:-}" == "--launch" ]]; then
   secs="$(q .launchCheckSeconds)"
-  "$EXE" --no-draft-recovery >"$GATE_DIR/launch.log" 2>&1 &
+  "$EXE" --no-draft-recovery --no-update-check >"$GATE_DIR/launch.log" 2>&1 &
   pid=$!
   sleep "$secs"
   if kill -0 "$pid" 2>/dev/null; then

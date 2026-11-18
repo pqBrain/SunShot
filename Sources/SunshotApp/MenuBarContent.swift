@@ -31,6 +31,7 @@ enum Studio {
 /// style); the "into Studio" items always open the capture in the editor.
 struct MenuBarContent: View {
     let controller: DocumentController
+    let updates: UpdateChecker
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
 
@@ -56,6 +57,8 @@ struct MenuBarContent: View {
                 NSApp.activate()
                 openSettings()
             }
+            Button(UIStrings.checkForUpdates) { UpdateCommands.checkNow(updates) }
+                .disabled(updates.state == .checking)
             Button(UIStrings.menuHideIcon) { controller.settings.showsMenuBarIcon = false }
             Button(UIStrings.menuQuit) { NSApp.terminate(nil) }
         }

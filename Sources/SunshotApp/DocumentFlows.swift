@@ -145,6 +145,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     lazy var bulk = BulkSession(editor: controller.model)
     /// S10: optional global Capture Area shortcut (off by default).
     let hotkey = GlobalCaptureHotkey()
+    /// S18: Check for Updates… and the daily automatic check.
+    let updates = UpdateChecker()
     /// S16: restyles macOS screenshots copied to the clipboard (Settings ▸ Style macOS screenshots).
     lazy var screenshotStyler: SystemScreenshotStyler = {
         let styler = SystemScreenshotStyler { [controller] in controller.effectiveQuickStyle }
@@ -162,12 +164,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // whichever untitled draft this Mac happens to hold.
         if !CommandLine.arguments.contains("--no-draft-recovery") { Task { await controller.recoverDraft() } }
         observeSettings()
+        startUpdateChecks()
         NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification, object: nil, queue: .main
         ) { [weak self] note in
             let closing = note.object as? NSWindow
             MainActor.assumeIsolated { self?.windowWillClose(closing) }
         }
+    }
+
+    /// S18: the daily check, unless `--no-update-check` (the launch check measures an idle app with no network).
+    private func startUpdateChecks() {
+        let updates = updates
+        updates.onAnnounce = { outcome, userInitiated in
+            UpdateAlerts.show(outcome, userInitiated: userInitiated, checker: updates)
+        }
+        guard !CommandLine.arguments.contains("--no-update-check") else { return }
+        updates.startAutomaticChecks { [controller] in controller.settings.checkForUpdatesAutomatically }
     }
 
     /// S16: with the menu bar icon shown, closing the window leaves Sunshot running there (no Dock icon).
