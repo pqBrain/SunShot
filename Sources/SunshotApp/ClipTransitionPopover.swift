@@ -96,7 +96,7 @@ struct ClipTransitionPopover: View {
     ) -> some View {
         HStack {
             Text(title).font(.callout).frame(width: 64, alignment: .leading)
-            Slider(value: Binding(get: { value }, set: set), in: range) {
+            Slider(value: Binding(get: { value }, set: { set($0) }), in: range) {
                 Text(title)
             } onEditingChanged: { editing in
                 editing ? model.beginGesture() : model.endGesture(EditorSession.clipTargetActionName)
