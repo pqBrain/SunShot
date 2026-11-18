@@ -12,3 +12,8 @@ Tests/**/__Snapshots__/**/*.diff.png
 /ref/
 /postspark-macos-spec.md
 *.profraw
+
+# Local AI-assistant instructions and state — never published.
+/CLAUDE.md
+/AGENTS.md
+/.claude/
