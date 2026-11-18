@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Sunshot quality gate. One command, every check, a clear verdict.
 #
-#   scripts/gate.sh             full gate (what CI and pre-push run)
+#   scripts/gate.sh             full gate (what pre-push runs)
 #   scripts/gate.sh --fast      pre-commit subset: toolchain, format, hygiene, architecture, build, test
+#   scripts/gate.sh --ci        CI subset for GitHub's macOS 26 runners: static checks, debug and release builds,
+#                               Core tests and traceability. No GPU, video, WebKit, snapshot, smoke or perf work:
+#                               those runners are small VMs without a GPU or video encoder, so they stay local.
 #   scripts/gate.sh <stage>...  run named stages only
 #
 # Stages run in order; a stage whose prerequisite failed is skipped. Logs: .build/gate/<stage>.log
@@ -12,8 +15,9 @@ cd "$ROOT"
 
 ALL_STAGES=(toolchain format hygiene architecture build test coverage traceability bundle smoke perf)
 FAST_STAGES=(toolchain format hygiene architecture build test)
+CI_STAGES=(toolchain format hygiene architecture build coretest traceability release)
 # Prerequisites (bash 3.2 compatible — no associative arrays on stock macOS).
-needs() { case "$1" in test) echo build ;; coverage) echo test ;; smoke) echo bundle ;; perf) echo build ;; *) echo "" ;; esac; }
+needs() { case "$1" in test | coretest) echo build ;; coverage) echo test ;; smoke) echo bundle ;; perf) echo build ;; *) echo "" ;; esac; }
 set_result() { echo "$2" >"$GATE_DIR/.result.$1"; echo "$3" >"$GATE_DIR/.seconds.$1"; }
 result_of() { cat "$GATE_DIR/.result.$1" 2>/dev/null || echo ""; }
 seconds_of() { cat "$GATE_DIR/.seconds.$1" 2>/dev/null || echo 0; }
@@ -45,6 +49,16 @@ stage_test() {
   # swift test's exit status is lost in the pipe; derive it from the output instead.
   ! grep -qE '✘|error:' "$GATE_DIR/test-output.log" && grep -q 'Test run with' "$GATE_DIR/test-output.log"
 }
+
+# CI: the Foundation-only Core tests (no rendering), same flags as the build stage so nothing rebuilds.
+stage_coretest() {
+  swift test --enable-code-coverage --parallel -Xswiftc -warnings-as-errors --filter SunshotCoreTests 2>&1 \
+    | tee "$GATE_DIR/coretest-output.log" | grep -E '✘|↳|Test run with|error:' || true
+  ! grep -qE '✘|error:' "$GATE_DIR/coretest-output.log" && grep -q 'Test run with' "$GATE_DIR/coretest-output.log"
+}
+
+# CI: the optimised build can fail where the debug one compiles (e.g. unused public imports).
+stage_release() { swift build -c release --product Sunshot -Xswiftc -warnings-as-errors; }
 
 stage_coverage() {
   local bin profdata args="" bundle
@@ -83,6 +97,7 @@ stages=()
 case "${1:-}" in
   "") stages=("${ALL_STAGES[@]}") ;;
   --fast) stages=("${FAST_STAGES[@]}") ;;
+  --ci) stages=("${CI_STAGES[@]}") ;;
   *) stages=("$@") ;;
 esac
 

@@ -1,11 +1,14 @@
 name: CI
 
+# A small check on macOS 26, Sunshot's oldest supported macOS: static checks, debug and release builds, Core tests
+# and AC traceability (`scripts/gate.sh --ci`). The full gate (rendering, snapshots, video, WebKit, coverage, app
+# bundle, smoke, perf) runs locally in the pre-push hook: GitHub's macOS runners are 3-core VMs with no GPU or video
+# encoder, where those tests hang. See docs/QUALITY_GATE.md.
+
 on:
   push:
     branches: [main]
   pull_request:
-  schedule:
-    - cron: "0 3 * * 1" # weekly gate self-test
   workflow_dispatch:
 
 concurrency:
@@ -14,17 +17,16 @@ concurrency:
 
 jobs:
   gate:
-    name: Quality gate
-    runs-on: macos-latest
-    timeout-minutes: 30
+    name: Quality gate (CI subset)
+    runs-on: macos-26
+    timeout-minutes: 20
     env:
       CI: "true"
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # build number = commit count
       - name: Toolchain
         run: |
+          sudo xcode-select -s /Applications/Xcode_26.6.app
           sw_vers
           xcodebuild -version
           swift --version
@@ -32,18 +34,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .build
-          key: spm-${{ runner.os }}-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
-          restore-keys: spm-${{ runner.os }}-${{ hashFiles('Package.swift', 'Package.resolved') }}-
-      - name: Gate
-        run: scripts/gate.sh
-      - name: Gate self-test
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        run: scripts/gate-selftest.sh
+          key: spm-${{ runner.os }}-xcode26.6-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ github.sha }}
+          restore-keys: spm-${{ runner.os }}-xcode26.6-${{ hashFiles('Package.swift', 'Package.resolved') }}-
+      - name: Gate (CI subset)
+        run: scripts/gate.sh --ci
       - name: Job summary
         if: always()
         run: cat .build/gate/report.md >> "$GITHUB_STEP_SUMMARY" || true
-      - name: Upload gate artifacts
-        if: always()
+      - name: Upload gate logs
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: gate-report
@@ -51,13 +50,4 @@ jobs:
             .build/gate/*.md
             .build/gate/*.json
             .build/gate/*.log
-            .build/gate/smoke.png
-            Tests/**/__Snapshots__/*.failure.png
-            Tests/**/__Snapshots__/*.diff.png
           if-no-files-found: ignore
-      - name: Upload app
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Sunshot.app
-          path: dist/Sunshot.app

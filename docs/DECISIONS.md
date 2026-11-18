@@ -631,3 +631,12 @@ S5, S6, S7, S8, S9, S11 and S14 were built in parallel and merged on main. What 
 - Sunshot's own Save As… moves to ⌥⇧⌘S (the macOS convention when ⇧⌘S is taken).
 - Stored settings keep their keys: an install that already saved the old defaults keeps ⌥⇧⌘4/5/0 until Restore
   Default.
+
+## CI is a macOS 26 subset; the full gate is local (2026-11-18)
+- GitHub's macOS runners top out at macOS 26 / Xcode 26.6 (Swift 6.3); Sunshot is built with Xcode 27 (Swift 6.4).
+  They are 3-core VMs with no GPU or hardware video encoder. Each rendering, video and WebKit test passes there on
+  its own, but the parallel run never finished within 30 minutes, and snapshots drift with macOS 26 antialiasing.
+- CI now runs `scripts/gate.sh --ci`: static checks, debug and release builds, Core tests and traceability, pinned
+  to macOS 26 + Xcode 26.6 (the oldest supported macOS). It catches clean-checkout and older-compiler breaks.
+- The full gate (rendering, snapshots, video, WebKit, coverage, bundle, smoke, perf, self-test) runs in the
+  pre-push hook on the developer's Mac. The pen-styles snapshot is back to the default 0.1% budget.

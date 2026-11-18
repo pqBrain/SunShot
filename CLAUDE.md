@@ -23,7 +23,8 @@ bans competitor names in `Sources/`, `Tests/`, `Support/`.
 1. Slice → `In progress` in `docs/SLICES.md`; ACs exist in `docs/acceptance/S<n>.md`.
 2. Build model → renderer → UI, test-first where practical. Name tests with the AC they prove:
    `@Test("[S1-AC3] export PNG matches canvas size × scale")`.
-3. `make gate` green (it runs on pre-push and CI anyway; `make setup` installs hooks).
+3. `make gate` green (the pre-push hook runs it; `make setup` installs hooks). CI only runs `make gate-ci`, a
+   macOS 26 subset without rendering, video or snapshots, so the local gate is the one that counts.
 4. Principal Tester verifies, ticks manual ACs in `docs/qa/S<n>-manual.md`.
 5. Slice → `Done` (the gate now enforces full AC traceability for it).
 
