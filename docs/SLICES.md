@@ -35,6 +35,7 @@ Status values: `Planned` · `In progress` · `Done` · `Deferred`.
 | S16 | Menu bar quick capture, default style & studio journey | In progress | — |
 | S17 | Studio polish, app icon & global shortcuts | In progress | — |
 | S18 | Check for updates & release 0.1.0 | In progress | — |
+| S19 | Stack 3 & 4, dark cards, freeze capture | In progress | §5 (stack), §3.2 |
 
 **MVP = S1–S7** (a complete, saveable, still-image beautifier).
 
@@ -147,6 +148,11 @@ once a day (on by default, can be turned off). A new version opens an alert with
 its notes: Download (release page), Later, Skip This Version. Nothing is
 downloaded or installed by Sunshot. `make release` packages the app for the
 first public release, 0.1.0.
+
+### S19 — Stack 3 & 4, dark cards, freeze capture
+Two more stack frames (three and four cards behind the content); card and stack frames follow dark chrome. The
+capture shortcut freezes the screen the moment it is pressed; on the frozen picture the user can draw arrows,
+rectangles, pen and highlighter marks, then drag the area to capture. Marks are burned into the captured image.
 
 ## Deferred — needs a product decision
 - Social post templates (X / Bluesky): need network fetching of third-party content.

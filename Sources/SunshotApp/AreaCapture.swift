@@ -9,31 +9,47 @@ import SwiftUI
 @MainActor
 enum AreaCapture {
     private static var panel: NSPanel?
+    /// True from the shortcut until the overlay is up (the screen is being frozen), so a second press is ignored.
+    private static var freezing = false
 
     /// `destination` is where the capture goes: the studio for File ▸ Capture Area…, the shortcut's choice (S16:
     /// copied with the default style unless changed) for the global shortcut and the menu bar.
     static func start(controller: DocumentController, destination: GlobalCaptureDestination = .editor) {
-        guard panel == nil, !WindowCapture.isActive, controller.model.ensureScreenCapturePermission() else {
+        guard panel == nil, !freezing, !WindowCapture.isActive, controller.model.ensureScreenCapturePermission() else {
             NSApp.activate()
             return
         }
         guard let screen = ScreenDisplays.screenUnderPointer, let displayID = ScreenDisplays.displayID(of: screen)
         else { return }
-        let overlay = CapturePanel.make(frame: screen.frame)
-        overlay.contentView = NSHostingView(
-            rootView: AreaSelectionView(size: screen.frame.size) { rect in
-                finish(rect, displayID: displayID, controller: controller, destination: destination)
-            } switchToWindow: {
-                close()
-                WindowCapture.start(controller: controller, destination: destination)
-            })
-        overlay.setFrame(screen.frame, display: true)
-        panel = overlay
-        overlay.makeKeyAndOrderFront(nil)
-        NSCursor.crosshair.push()
+        let size = screen.frame.size
+        freezing = true
+        Task {
+            defer { freezing = false }
+            // Freeze first: the picture is taken the moment the shortcut fires, before any overlay is drawn.
+            guard
+                let frozen = await controller.model.freezeDisplay(
+                    size: (size.width, size.height), displayID: displayID)
+            else {
+                return
+            }
+            let overlay = CapturePanel.make(frame: screen.frame)
+            overlay.contentView = NSHostingView(
+                rootView: FreezeOverlayView(frozen: frozen, size: size) { outcome, rect, marks in
+                    finish(
+                        outcome, rect, marks: marks, frozen: frozen, size: size, controller: controller,
+                        destination: destination)
+                } switchToWindow: {
+                    close()
+                    WindowCapture.start(controller: controller, destination: destination)
+                })
+            overlay.setFrame(screen.frame, display: true)
+            panel = overlay
+            overlay.makeKeyAndOrderFront(nil)
+            NSCursor.crosshair.push()
+        }
     }
 
-    static var isActive: Bool { panel != nil }
+    static var isActive: Bool { panel != nil || freezing }
 
     private static func close() {
         NSCursor.pop()
@@ -42,11 +58,20 @@ enum AreaCapture {
     }
 
     private static func finish(
-        _ rect: LayoutRect?, displayID: UInt32, controller: DocumentController, destination: GlobalCaptureDestination
+        _ outcome: FreezeOutcome, _ rect: LayoutRect?, marks: [Annotation], frozen: CGImage, size: CGSize,
+        controller: DocumentController,
+        destination: GlobalCaptureDestination
     ) {
         close()
-        guard let rect, AreaSelection.isCapturable(rect) else { return }
-        CaptureDelivery.deliver(.area(rect, displayID: displayID), controller: controller, destination: destination)
+        guard outcome != .cancel, let rect, AreaSelection.isCapturable(rect) else { return }
+        // ⌘C always copies with the default style applied, whatever "After a shortcut capture" says (that setting
+        // only decides what a plain drag does elsewhere); Studio always opens the studio.
+        let destination: GlobalCaptureDestination = outcome == .studio ? .editor : .styledClipboard
+        Task {
+            let copied = await controller.deliverFrozen(
+                frozen, displaySize: (size.width, size.height), crop: rect, marks: marks, to: destination)
+            CaptureDelivery.show(copied: copied, destination: destination, controller: controller)
+        }
     }
 }
 
@@ -60,12 +85,16 @@ enum CaptureDelivery {
             // Let the window server remove the overlay before the screen is read.
             try? await Task.sleep(for: .milliseconds(150))
             let copied = await controller.deliverCapture(source, to: destination)
-            if destination.copies {
-                // Only a failure brings Sunshot forward to explain it.
-                if copied { CaptureToast.show(UIStrings.copiedToClipboard) } else { Studio.show(controller) }
-            } else {
-                Studio.show(controller)
-            }
+            show(copied: copied, destination: destination, controller: controller)
+        }
+    }
+
+    static func show(copied: Bool, destination: GlobalCaptureDestination, controller: DocumentController) {
+        if destination.copies {
+            // Only a failure brings Sunshot forward to explain it.
+            if copied { CaptureToast.show(UIStrings.copiedToClipboard) } else { Studio.show(controller) }
+        } else {
+            Studio.show(controller)
         }
     }
 }
@@ -88,67 +117,4 @@ enum CapturePanel {
 /// Borderless panels don't become key by default; this one must, to receive Esc.
 private final class KeyPanel: NSPanel {
     override var canBecomeKey: Bool { true }
-}
-
-private struct AreaSelectionView: View {
-    let size: CGSize
-    let finish: (LayoutRect?) -> Void
-    let switchToWindow: () -> Void
-    @State private var selection: LayoutRect?
-    @FocusState private var focused: Bool
-
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-            Path { path in
-                path.addRect(CGRect(origin: .zero, size: size))
-                if let selection { path.addRect(Self.cgRect(selection)) }
-            }
-            .fill(Color.black.opacity(0.3), style: FillStyle(eoFill: true))
-            if let selection {
-                Rectangle()
-                    .strokeBorder(Color.white, style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
-                    .frame(width: selection.width, height: selection.height)
-                    .offset(x: selection.x, y: selection.y)
-                Text(UIStrings.pixelSize(width: Int(selection.width), height: Int(selection.height)))
-                    .font(.caption.monospacedDigit())
-                    .padding(4)
-                    .background(.black.opacity(0.6), in: .rect(cornerRadius: 4))
-                    .foregroundStyle(.white)
-                    .offset(x: selection.x, y: max(0, selection.y - 24))
-            } else {
-                Text(UIStrings.areaSwitchHint)
-                    .padding(12)
-                    .glassEffect(.regular, in: .capsule)
-                    .frame(width: size.width, height: size.height)
-            }
-        }
-        .frame(width: size.width, height: size.height)
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { value in
-                    selection = AreaSelection.rect(
-                        from: (value.startLocation.x, value.startLocation.y), to: (value.location.x, value.location.y),
-                        displayWidth: size.width, displayHeight: size.height)
-                }
-                .onEnded { _ in finish(selection) }
-        )
-        .focusable()
-        .focusEffectDisabled()
-        .focused($focused)
-        .onAppear { focused = true }
-        .onKeyPress(.escape) {
-            finish(nil)
-            return .handled
-        }
-        .onKeyPress(.space) {
-            guard selection == nil else { return .ignored }
-            switchToWindow()
-            return .handled
-        }
-    }
-
-    private static func cgRect(_ rect: LayoutRect) -> CGRect {
-        CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
-    }
 }

@@ -82,26 +82,61 @@ extension EditorModel {
         capture.isCapturingScreen = true
         defer { capture.isCapturingScreen = false }
         do {
-            let image = try await capturedImage(source)
-            let (data, original) = try await Task.detached(priority: .userInitiated) {
-                let original = try ImageCodec.pngData(image)
-                switch style {
-                case .raw: return (original, Data?.none)
-                case .styled(let quickStyle):
-                    do {
-                        return (try QuickStyleRenderer.pngData(image, style: quickStyle), original)
-                    } catch ExportError.tooLarge {
-                        // Too big to style (over the maximum side): copy the capture itself rather than nothing.
-                        return (original, Data?.none)
-                    }
+            return try await copyImage(try await capturedImage(source), to: pasteboard, as: style)
+        } catch {
+            report(error)
+            return false
+        }
+    }
+
+    /// Writes an already captured `image` to `pasteboard` (raw or styled); the document is unchanged.
+    @discardableResult
+    func copyImage(_ image: CGImage, to pasteboard: NSPasteboard, as style: CaptureCopyStyle) async throws -> Bool {
+        let (data, original) = try await Task.detached(priority: .userInitiated) {
+            let original = try ImageCodec.pngData(image)
+            switch style {
+            case .raw: return (original, Data?.none)
+            case .styled(let quickStyle):
+                do {
+                    return (try QuickStyleRenderer.pngData(image, style: quickStyle), original)
+                } catch ExportError.tooLarge {
+                    // Too big to style (over the maximum side): copy the capture itself rather than nothing.
+                    return (original, Data?.none)
                 }
-            }.value
-            if let original {
-                PasteboardIO.writeStyled(data, original: original, to: pasteboard)
-            } else {
-                PasteboardIO.writePNG(data, to: pasteboard)
             }
-            return true
+        }.value
+        if let original {
+            PasteboardIO.writeStyled(data, original: original, to: pasteboard)
+        } else {
+            PasteboardIO.writePNG(data, to: pasteboard)
+        }
+        return true
+    }
+
+    /// Freeze capture: grabs the whole display now (Sunshot's own windows left out); nil when it can't (the
+    /// permission help or an alert is shown).
+    public func freezeDisplay(size: (width: Double, height: Double), displayID: UInt32) async -> CGImage? {
+        guard ensureScreenCapturePermission() else { return nil }
+        do {
+            return try await capture.screen.captureArea(
+                LayoutRect(x: 0, y: 0, width: size.width, height: size.height), displayID: displayID)
+        } catch {
+            report(error)
+            return nil
+        }
+    }
+
+    /// Freeze capture: the finished image goes into the document, or to the clipboard (raw or styled).
+    @discardableResult
+    public func deliverFrozen(
+        _ image: CGImage, to pasteboard: NSPasteboard? = nil, as style: CaptureCopyStyle? = nil
+    ) async -> Bool {
+        guard let pasteboard, let style else {
+            await setCaptured(image, actionName: EditorSession.captureScreenActionName)
+            return false
+        }
+        do {
+            return try await copyImage(image, to: pasteboard, as: style)
         } catch {
             report(error)
             return false

@@ -109,7 +109,10 @@ struct FrameRenderTests {
     @Test("[S5-AC6] card, stack and stack 2 on 800×500 content")
     func cards() throws {
         let colors = ColorTokens(background: RGBAColor(rgb: 0xFFF4E0))
-        for (kind, name) in [(FrameKind.card, "s5-card"), (.stack, "s5-stack"), (.stack2, "s5-stack2")] {
+        for (kind, name) in [
+            (FrameKind.card, "s5-card"), (.stack, "s5-stack"), (.stack2, "s5-stack2"), (.stack3, "s5-stack3"),
+            (.stack4, "s5-stack4"),
+        ] {
             let image = try Self.render(Self.project(kind, colors: colors))
             let behind = Int(FrameGeometry.insets(for: Frame(kind: kind)).top) - 24
             #expect((image.width, image.height) == (800 + 48 + 128, 500 + 48 + behind + 128))
@@ -158,6 +161,16 @@ struct FrameRenderTests {
         #expect(pixels.pixel(x: 5, y: 5) == reference.pixel(x: 5, y: 5))
         for y in stride(from: Self.pad + 56 + 5, to: Self.pad + 56 + 495, by: 37) {
             #expect(pixels.pixel(x: Self.pad + 401, y: y) == reference.pixel(x: Self.pad + 401, y: y))
+        }
+    }
+
+    @Test("[S19-AC2] dark chrome gives card and stack frames a dark card; auto and light keep the Background token")
+    func darkCards() throws {
+        let colors = ColorTokens(background: RGBAColor(rgb: 0xFFF4E0))
+        for kind in [FrameKind.card, .stack3, .stack4] {
+            let image = try Self.render(Self.project(kind, appearance: .dark, colors: colors))
+            let pixels = try PixelBuffer(image)
+            #expect(Self.near(pixels.pixel(x: Self.pad + 12, y: image.height / 2), ChromePalette.dark.body), "\(kind)")
         }
     }
 

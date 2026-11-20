@@ -26,6 +26,8 @@ extension UIStrings {
         case .card: "Card"
         case .stack: "Stack"
         case .stack2: "Stack 2"
+        case .stack3: "Stack 3"
+        case .stack4: "Stack 4"
         case .thickBorder: "Thick border"
         case .winWindow: "Windows window"
         }
@@ -59,4 +61,24 @@ extension UIStrings {
     }
 
     public static func fontPicker(_ role: FontRole) -> String { role == .text ? "Text font" : "Code font" }
+}
+
+/// Freeze capture overlay copy.
+extension UIStrings {
+    public static let freezeUndo = "Undo last mark"
+    public static let freezeHint = "Drag an area to capture · Esc cancels"
+    public static let freezeMarkHint = "Drag the edges to resize · ⌘C copies · ↩ opens Studio · Esc cancels"
+    public static let freezeCopy = "Copy ⌘C"
+    public static let freezeCopyHelp = "Copy the capture and leave capture mode"
+    public static let freezeStudio = "Studio ↩"
+
+    public static func freezeToolName(_ tool: FreezeTool) -> String {
+        switch tool {
+        case .area: "Capture area (V)"
+        case .arrow: "Arrow (A)"
+        case .rectangle: "Rectangle (R)"
+        case .pen: "Pen (P)"
+        case .highlighter: "Highlighter (H)"
+        }
+    }
 }

@@ -11,10 +11,12 @@ struct FrameModelTests {
         return project
     }
 
-    @Test("[S5-AC1] eight frame kinds in picker order")
+    @Test("[S5-AC1] ten frame kinds in picker order")
     func kinds() {
         #expect(
-            FrameKind.allCases == [.none, .macWindow, .browserWindow, .card, .stack, .stack2, .thickBorder, .winWindow])
+            FrameKind.allCases == [
+                .none, .macWindow, .browserWindow, .card, .stack, .stack2, .stack3, .stack4, .thickBorder, .winWindow,
+            ])
         #expect(FrameKind.allCases.filter(\.hasTitle) == [.macWindow, .browserWindow, .winWindow])
     }
 
@@ -57,12 +59,25 @@ struct FrameModelTests {
         #expect(abs(layout.contentRect.y - layout.frameRect.y - 14) < 1e-9)
     }
 
+    @Test("[S19-AC1] stack 3 and 4 add cards at 12 px steps, shrinking and fading")
+    func deepStacks() {
+        #expect(FrameMetrics.stackScales == [0.96, 0.92, 0.88, 0.84])
+        #expect(FrameMetrics.stackOpacities == [0.7, 0.45, 0.3, 0.18])
+        for (kind, count) in [(FrameKind.stack3, 3), (.stack4, 4)] {
+            let insets = FrameGeometry.insets(for: Frame(kind: kind))
+            #expect(insets.top == 24 + Double(count) * 12)
+            let geometry = FrameGeometry(frame: Frame(kind: kind), boxWidth: 848, boxHeight: 548 + insets.top - 24)
+            #expect(geometry.backCards.count == count)
+            #expect(geometry.backCards.first?.rect.y == geometry.window.y - Double(count) * 12)
+        }
+    }
+
     @Test("[S5-AC6] stack cards sit above the front card, inside the frame box, with decreasing opacity")
     func stackGeometry() {
-        for kind in [FrameKind.stack, .stack2] {
+        for kind in [FrameKind.stack, .stack2, .stack3, .stack4] {
             let insets = FrameGeometry.insets(for: Frame(kind: kind))
             let geometry = FrameGeometry(frame: Frame(kind: kind), boxWidth: 848, boxHeight: 548 + insets.top - 24)
-            #expect(geometry.backCards.count == (kind == .stack ? 1 : 2))
+            #expect(geometry.backCards.count == [FrameKind.stack: 1, .stack2: 2, .stack3: 3, .stack4: 4][kind])
             for card in geometry.backCards {
                 #expect(card.rect.y >= 0 && card.rect.x >= 0)
                 #expect(card.rect.x + card.rect.width <= 848)

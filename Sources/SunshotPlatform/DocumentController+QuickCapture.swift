@@ -88,4 +88,31 @@ extension DocumentController {
             return await model.copyCaptured(source, to: pasteboard, as: .styled(effectiveQuickStyle))
         }
     }
+
+    /// Delivers a freeze capture like `deliverCapture`: crops the selected region of the `frozen` display image and
+    /// draws the quick `marks` on it (both in display points), then sends the result to `destination`.
+    @discardableResult
+    public func deliverFrozen(
+        _ frozen: CGImage, displaySize: (width: Double, height: Double), crop: LayoutRect, marks: [Annotation],
+        to destination: GlobalCaptureDestination, pasteboard: NSPasteboard = .general
+    ) async -> Bool {
+        let image: CGImage
+        do {
+            image = try FreezeComposer.compose(frozen: frozen, displaySize: displaySize, crop: crop, marks: marks)
+        } catch {
+            model.alert = AlertContent(
+                title: ScreenCaptureError.failed("").title, message: ScreenCaptureError.selectionTooSmall.reason)
+            return false
+        }
+        switch destination {
+        case .editor:
+            await model.deliverFrozen(image)
+            if settings.annotateOnOpen { model.setAnnotateMode(true) }
+            return false
+        case .clipboard:
+            return await model.deliverFrozen(image, to: pasteboard, as: .raw)
+        case .styledClipboard:
+            return await model.deliverFrozen(image, to: pasteboard, as: .styled(effectiveQuickStyle))
+        }
+    }
 }

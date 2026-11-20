@@ -16,12 +16,13 @@ struct FrameInspectorTests {
         return model
     }
 
-    @Test("[S5-AC1] eight named frame options with live thumbnails; selecting one is \"Change Frame\"")
+    @Test("[S5-AC1] ten named frame options with live thumbnails; selecting one is \"Change Frame\"")
     func framePicker() async throws {
         let names = FrameKind.allCases.map(UIStrings.frameName)
         #expect(
             names == [
-                "None", "Mac window", "Browser window", "Card", "Stack", "Stack 2", "Thick border", "Windows window",
+                "None", "Mac window", "Browser window", "Card", "Stack", "Stack 2", "Stack 3", "Stack 4",
+                "Thick border", "Windows window",
             ])
         let model = try await loadedModel()
         for kind in FrameKind.allCases {

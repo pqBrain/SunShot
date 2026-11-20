@@ -32,7 +32,7 @@ enum FrameChrome {
                 FrameText.draw(title, font: font, color: palette.title, in: rect, alignment: .leading, context: context)
             }
             drawCaptionButtons(geometry: geometry, palette: palette, context: context)
-        case .none, .card, .stack, .stack2, .thickBorder:
+        case .none, .card, .stack, .stack2, .stack3, .stack4, .thickBorder:
             break
         }
     }

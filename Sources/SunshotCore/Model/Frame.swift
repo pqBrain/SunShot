@@ -2,13 +2,13 @@ import Foundation
 
 /// The window or card drawn around the content. All frames are vector-drawn by Sunshot.
 public enum FrameKind: String, Codable, CaseIterable, Sendable {
-    case none, macWindow, browserWindow, card, stack, stack2, thickBorder, winWindow
+    case none, macWindow, browserWindow, card, stack, stack2, stack3, stack4, thickBorder, winWindow
 
     /// Frames with a title bar or toolbar that shows the frame title.
     public var hasTitle: Bool {
         switch self {
         case .macWindow, .browserWindow, .winWindow: true
-        case .none, .card, .stack, .stack2, .thickBorder: false
+        case .none, .card, .stack, .stack2, .stack3, .stack4, .thickBorder: false
         }
     }
 
@@ -29,8 +29,8 @@ public enum FrameMetrics {
     /// Each card behind a stack sits this much higher than the one in front of it.
     public static let stackOffset: Double = 12
     /// Scale and opacity of the cards behind a stack, nearest first.
-    public static let stackScales: [Double] = [0.96, 0.92]
-    public static let stackOpacities: [Double] = [0.7, 0.45]
+    public static let stackScales: [Double] = [0.96, 0.92, 0.88, 0.84]
+    public static let stackOpacities: [Double] = [0.7, 0.45, 0.3, 0.18]
     /// Traffic-light circles: diameter, gap between circles, inset from the left edge.
     public static let trafficLightDiameter: Double = 12
     public static let trafficLightGap: Double = 8

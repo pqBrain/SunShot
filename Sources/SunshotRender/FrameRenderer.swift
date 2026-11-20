@@ -46,8 +46,11 @@ public enum FrameRenderer {
         case .macWindow, .browserWindow, .winWindow:
             drawWindow(image, geometry: geometry, project: project, context: context)
             drawAnnotations(annotations, in: geometry.content.cg, context: context)
-        case .card, .stack, .stack2:
-            drawCards(image, geometry: geometry, project: project, fill: project.tokens.colors.background, context)
+        case .card, .stack, .stack2, .stack3, .stack4:
+            // Explicit dark chrome gives a dark card; light and auto keep the Background token.
+            let fill =
+                project.tokens.chromeAppearance == .dark ? ChromePalette.dark.body : project.tokens.colors.background
+            drawCards(image, geometry: geometry, project: project, fill: fill, context)
             drawAnnotations(annotations, in: geometry.content.cg, context: context)
         case .thickBorder:
             drawCards(image, geometry: geometry, project: project, fill: project.tokens.colors.secondary, context)

@@ -56,7 +56,7 @@ public struct FrameGeometry: Hashable, Sendable {
             return FrameInsets(top: FrameMetrics.browserBarHeight * scale)
         case .winWindow:
             return FrameInsets(top: FrameMetrics.winBarHeight * scale)
-        case .card, .stack, .stack2:
+        case .card, .stack, .stack2, .stack3, .stack4:
             let pad = FrameMetrics.cardPadding * scale
             let behind = Double(backCardCount(frame.kind)) * FrameMetrics.stackOffset * scale
             return FrameInsets(top: pad + behind, left: pad, bottom: pad, right: pad)
@@ -79,6 +79,8 @@ public struct FrameGeometry: Hashable, Sendable {
         switch kind {
         case .stack: 1
         case .stack2: 2
+        case .stack3: 3
+        case .stack4: 4
         default: 0
         }
     }
@@ -111,7 +113,7 @@ public struct FrameGeometry: Hashable, Sendable {
         backCards = cards
 
         switch frame.kind {
-        case .card, .stack, .stack2: outerRadiusExtra = FrameMetrics.cardPadding * scale
+        case .card, .stack, .stack2, .stack3, .stack4: outerRadiusExtra = FrameMetrics.cardPadding * scale
         case .thickBorder: outerRadiusExtra = FrameMetrics.thickBorderWidth * scale
         default: outerRadiusExtra = 0
         }
