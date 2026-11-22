@@ -41,9 +41,13 @@ extension UIStrings {
     public static let showMenuBarIconSetting = "Show Sunshot in the menu bar"
     public static let showMenuBarIconHint =
         "Sunshot keeps running in the menu bar after its window closes, so the shortcut always works."
+    public static let launchAtLoginSetting = "Open Sunshot at login"
+    public static let launchAtLoginHint = "Starts Sunshot in the menu bar when you log in to your Mac."
+    public static let launchAtLoginApproval =
+        "Approve Sunshot in System Settings ▸ General ▸ Login Items to finish."
     public static let styleSystemScreenshotsSetting = "Style macOS screenshots on the clipboard"
     public static let styleSystemScreenshotsHint =
-        "Screenshots copied with ⌃⌘⇧4 or ⌘⇧5 (Clipboard) are swapped for the default style, without a frame."
+        "On: screenshots copied with ⌃⌘⇧3/4 or ⌘⇧5 (Clipboard) are swapped for the default style, without a frame. Off: they stay untouched."
     public static let systemScreenshotStyled = "Screenshot styled on the clipboard"
     public static let annotateOnOpenSetting = "Open captures in Annotate mode"
     public static let annotateOnOpenHint = "Captures opened in the studio start with the annotation tools."

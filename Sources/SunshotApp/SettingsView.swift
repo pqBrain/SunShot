@@ -69,6 +69,7 @@ struct GeneralSettingsView: View {
                     Text(UIStrings.showMenuBarIconSetting)
                     Text(UIStrings.showMenuBarIconHint)
                 }
+                LaunchAtLoginSetting()
                 GlobalCaptureSettings(controller: controller, hotkey: hotkey)
                 DefaultStyleSetting(controller: controller)
                 Toggle(isOn: $controller.settings.styleSystemScreenshots) {
@@ -152,6 +153,31 @@ struct FilenameFormatField: View {
             Text(UIStrings.filenameTokensHint)
                 .font(.caption)
                 .foregroundStyle(Color(nsColor: SunshotPalette.secondaryText))
+        }
+    }
+}
+
+/// Settings ▸ Open Sunshot at login. Reads the system's state, so a login item removed in System Settings shows off.
+struct LaunchAtLoginSetting: View {
+    private let login = LaunchAtLogin()
+    @State private var enabled = LaunchAtLogin().isEnabled
+    @State private var status = LaunchAtLogin().status
+
+    var body: some View {
+        Toggle(
+            isOn: Binding(
+                get: { enabled },
+                set: { newValue in
+                    enabled = login.setEnabled(newValue)
+                    status = login.status
+                })
+        ) {
+            Text(UIStrings.launchAtLoginSetting)
+            Text(status == .requiresApproval ? UIStrings.launchAtLoginApproval : UIStrings.launchAtLoginHint)
+        }
+        .onAppear {
+            enabled = login.isEnabled
+            status = login.status
         }
     }
 }

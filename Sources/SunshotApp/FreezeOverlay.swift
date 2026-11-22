@@ -74,6 +74,19 @@ struct FreezeOverlayView: View {
         .focused($focused)
         .onAppear { focused = true }
         .onKeyPress(phases: .down) { press in handle(press) }
+        .background(commandShortcuts)
+    }
+
+    /// ⌘C and ⌘Z are key equivalents: the borderless panel routes them through `performKeyEquivalent`, so they
+    /// never reach `onKeyPress`. Hidden buttons with shortcuts catch them there.
+    private var commandShortcuts: some View {
+        ZStack {
+            Button("") { end(.copy) }.keyboardShortcut("c", modifiers: .command)
+            Button("") { if !marks.isEmpty { marks.removeLast() } }.keyboardShortcut("z", modifiers: .command)
+        }
+        .opacity(0)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 
     // MARK: Drawing
@@ -141,16 +154,9 @@ struct FreezeOverlayView: View {
             return .handled
         }
         guard let key = press.characters.first else { return .ignored }
-        if press.modifiers == .command, key == "z" {
-            if !marks.isEmpty { marks.removeLast() }
-            return .handled
-        }
+        if press.modifiers == .command, key == "z" || key == "c" { return .ignored }
         if press.key == .return {
             end(.studio)
-            return .handled
-        }
-        if press.modifiers == .command, key == "c" {
-            end(.copy)
             return .handled
         }
         guard press.modifiers.isEmpty else { return .ignored }

@@ -39,6 +39,7 @@
       "os",
       "WebKit",
       "ScreenCaptureKit",
+      "ServiceManagement",
       "SunshotCore",
       "SunshotRender"
     ]
